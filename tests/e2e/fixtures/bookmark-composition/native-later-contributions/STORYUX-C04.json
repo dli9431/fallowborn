@@ -1,0 +1,40 @@
+{
+  "description": "The 493 campaigns and the Clovis start name their targets, county names and opening years in player-facing text. Ids, windows, conditions, news and scenario mechanics are unchanged.",
+  "changes": [
+    {
+      "file": "data/bookmark_493_history.js",
+      "before": "    name:'The Upper Rhine Campaign',\n    desc:'A surviving Frankish court may contest the Alamannic seat on the upper Rhine. Ordinary armies decide possession; victory causes no automatic baptism or absorption of the remaining communities.',\n",
+      "after": "    name:'The march on Argentoratum',\n    desc:'From 496 the Franks can march on Argentoratum, seat of the Alamanni on the upper Rhine.',\n"
+    },
+    {
+      "file": "data/bookmark_493_history.js",
+      "before": "    name:'Rival Burgundian Courts',\n    desc:'The Frankish court may challenge the senior Burgundian seat while the separate Genevan court survives. A campaign neither kills Gundobad nor promises the whole kingdom to Godegisel.',\n",
+      "after": "    name:'The war for Lugdunum',\n    desc:'Gundobad and Godegisel head rival Burgundian courts. From 500, while Godegisel holds Genava, the Franks can attack Gundobad at Lugdunum.',\n"
+    },
+    {
+      "file": "data/bookmark_493_history.js",
+      "before": "    name:'The Toulouse Campaign',\n    desc:'A surviving Frankish court may contest the Visigothic capital. The date awards no Aquitanian counties and does not kill Alaric; any surviving Gothic court follows ordinary succession.',\n",
+      "after": "    name:'The march on Tolosa',\n    desc:'From 507 the Franks can march on Alaric’s capital at Tolosa.',\n"
+    },
+    {
+      "file": "data/bookmark_493_history.js",
+      "before": "    name:'The Sirmium Frontier',\n    desc:'The Italian Gothic court may contest Sirmium if it still rules Ravenna and the Gepid court retains its seat. No date extends Italy’s jurisdiction across the frontier.',\n",
+      "after": "    name:'The war for Sirmium',\n    desc:'From 505 the Goths of Italy can attack the Gepids at Sirmium, as long as the Goths still hold Ravenna.',\n"
+    },
+    {
+      "file": "data/bookmark_493_history.js",
+      "before": "    name:'The African Expedition',\n    desc:'A surviving eastern Roman court may contest Carthage against the current Vandal court. Ordinary war governs transport, supply and conquest; no historical successor or expeditionary army appears by date.',\n",
+      "after": "    name:'The expedition against Carthage',\n    desc:'From 533 the eastern court can send an army against the Vandals at Carthage.',\n"
+    },
+    {
+      "file": "data/bookmark_493_history.js",
+      "before": "    name:'The Eastern Italian Campaign',\n    desc:'An eastern Roman court with an actual African foothold may contest Ravenna against the surviving Gothic court. Ordinary armies must win; the opportunity promises no restoration of the whole western empire.',\n",
+      "after": "    name:'The eastern war for Ravenna',\n    desc:'From 535, once it holds Carthage, the eastern court can attack the Goths at Ravenna.',\n"
+    },
+    {
+      "file": "data/starts_clovis_493.js",
+      "before": "    name:'Clovis at Soissons', desc:'Govern the existing Frankish court among Gallic communities and neighboring kingdoms. Decide which commitments your realm can sustain.',\n    tier:6, profession:'noble', gold:120, prestige:150, piety:10,\n    familyPresets:{ standard:{ name:'Existing Frankish household', diff:'age 27 · existing court family',\n      desc:'Theuderic belongs to your court. Supporting relatives are generated campaign characters.' } },\n    onboarding:'ruler',\n    intro:'You are Clovis. Your Frankish court holds Soissons and neighboring Gallic communities. Review your household, holdings and treasury. Decide how to govern among different beliefs and neighboring courts; later campaigns and a public change of faith depend on your choices and circumstances.' }\n",
+      "after": "    name:'Clovis at Augusta Suessionum', desc:'You are Clovis, king of the Franks, at Augusta Suessionum. Your Gallic neighbors are mostly Nicene Christians, and other courts hold the lands around yours.',\n    tier:6, profession:'noble', gold:120, prestige:150, piety:10,\n    familyPresets:{ standard:{ name:'The household of Clovis', diff:'age 27 · with your son Theuderic',\n      desc:'Your son Theuderic is at your court. Clotilde is not in this start, and your other relatives are generated for this campaign.' } },\n    onboarding:'ruler',\n    intro:'You are Clovis, king of the Franks, ruling from Augusta Suessionum in 493. You keep the Germanic gods, while most Gallo-Romans around you are Nicene Christians. From 496 you can march on the Alamanni at Argentoratum. Open Governance in Deeds to begin.' }\n"
+    }
+  ]
+}

@@ -8,6 +8,7 @@ dependsOnRuntime(__filename, [
   'data/story_courts_476.js',
   'index.html', 'data/bookmark_493.js', 'data/bookmark_493_history.js',
   'data/bookmark_476.js', 'data/bookmark_476_italy.js',
+  'data/starts_clovis_493.js',
   'data/bookmark_476_dalmatia_east.js', 'data/bookmark_476_gaul_iberia.js',
   'data/bookmark_476_africa.js', 'data/bookmarks.js', 'data/counties.js',
   'data/distribution_crazygames.js',
@@ -292,4 +293,53 @@ test('493 church and curial households begin wherever a see or a council is decl
   });
   const expected = { cleric:true, curialis:true, several:true, retained:true };
   expect(result).toEqual({ world:expected, baseline:expected, unfixed:true, pure:true });
+});
+
+test('493 campaign and Clovis start text names the mapped target county and opening year', async function ({ page }, testInfo) {
+  await openGame(page, testInfo);
+  expect(await page.evaluate(function () {
+    return new Promise(function (resolve) {
+      FB.activateBookmark('493', null, function (error) { resolve(error && error.message || null); });
+    });
+  })).toBeNull();
+  const result = await page.evaluate(function (ids) {
+    const banned = /grants? no |creates? no |Record (a |an )?(costless )?(priority|intention|preference)|Record attention|\bordinary\b|\bactual(ly)?\b|\bexisting\b|\boriginal\b|\bauthored\b|historical opportunity|political opportunity/i;
+    const lostApostrophe = /[A-Za-z]\?[A-Za-z]/;
+    const places = {};
+    FB.bookmark('493').provinces.forEach(function (p) { places[p.id] = p.name; });
+    const faults = [];
+    function check(owner, field, value, prose) {
+      if (typeof value !== 'string' || !value) { faults.push(owner + ' ' + field + ' is missing'); return; }
+      if (lostApostrophe.test(value)) faults.push(owner + ' ' + field + ' has a lost apostrophe');
+      if (prose && banned.test(value)) faults.push(owner + ' ' + field + ' uses banned wording');
+    }
+    const campaigns = ids.map(function (id) {
+      const def = FBDATA.storyCampaigns493[id], county = places[def.target.provinceId];
+      const intro = FB.stories.get(id).intro(null);
+      check(id, 'name', def.name, false);
+      check(id, 'desc', def.desc, true);
+      return [id, county, def.firstYear, def.name.indexOf(county) >= 0,
+        intro === def.desc && intro.indexOf(county) >= 0 && intro.indexOf(String(def.firstYear)) >= 0];
+    });
+    const sc = FBDATA.startScenarios.find(function (row) { return row.id === 'clovis_493'; });
+    const family = sc.familyPresets.standard, seat = places[sc.fixedProvinceId];
+    check(sc.id, 'name', sc.name, false);
+    check(sc.id, 'desc', sc.desc, true);
+    check(sc.id, 'intro', sc.intro, true);
+    check(sc.id, 'family name', family.name, false);
+    check(sc.id, 'family diff', family.diff, false);
+    check(sc.id, 'family desc', family.desc, true);
+    return { campaigns:campaigns, faults:faults, seat:seat,
+      seatNamed:[sc.name, sc.desc, sc.intro].every(function (text) { return text.indexOf(seat) >= 0; }),
+      shortIntro:sc.intro.split(/[.!?](?:\s+|$)/).filter(Boolean).length <= 4,
+      whereToBegin:/Open Governance in Deeds to begin\.$/.test(sc.intro) };
+  }, CAMPAIGNS);
+  expect(result).toEqual({ campaigns:[
+    ['alamannic_campaign_493', 'Argentoratum', 496, true, true],
+    ['burgundian_campaign_493', 'Lugdunum', 500, true, true],
+    ['visigothic_campaign_493', 'Tolosa', 507, true, true],
+    ['sirmium_campaign_493', 'Sirmium', 505, true, true],
+    ['african_campaign_493', 'Carthage', 533, true, true],
+    ['italian_campaign_493', 'Ravenna', 535, true, true]
+  ], faults:[], seat:'Augusta Suessionum', seatNamed:true, shortIntro:true, whereToBegin:true });
 });
