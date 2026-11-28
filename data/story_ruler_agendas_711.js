@@ -14,16 +14,12 @@ FBDATA.rulerAgendas_711 = {
           { id:'roderic_keep_recognition', label:'Retain present arrangements', detail:'Leave recognition and the other Gothic court to their ordinary decisions.', operation:'agenda_priority' }
         ] },
       { id:'roderic_coast_review_711', name:'The southern coast', year:711, season:1,
-        text:'The crossing is an Umayyad opportunity against the southern Gothic coast. Its current source card decides what remains possible; no battle or victory follows from this review.', choices:[
-          { id:'roderic_face_crossing', label:'Face the existing campaign', detail:'Authorize this opportunity only if the source currently permits it. Ordinary war decides the result.', operation:'agenda_story_choice', storyId:'strait_crossing_711', choiceId:'face_campaign' },
-          { id:'roderic_leave_crossing', label:'Use ordinary diplomacy', detail:'Close only this authored opportunity if the source permits. Independent wars and diplomacy remain available.', operation:'agenda_story_choice', storyId:'strait_crossing_711', choiceId:'leave_campaign' },
+        text:'The crossing is an Umayyad opportunity against the southern Gothic coast. Its current source card decides what remains possible; no battle or victory follows from this review.', retiredChoiceIds:['roderic_face_crossing','roderic_leave_crossing'], choices:[
           { id:'roderic_record_crossing', label:'Record the actual conclusion', detail:'Acknowledge a completed source result without creating a new campaign or reward.', operation:'agenda_story_fact', storyId:'strait_crossing_711', stateField:'result', values:['won','failed','diverted','interrupted'] },
           { id:'roderic_keep_coast', label:'Retain present arrangements', detail:'Make no campaign decision here. The source card and ordinary government remain available.', operation:'agenda_priority' }
         ] },
       { id:'roderic_toledo_review_714', name:'The road to Toledo', year:714, season:0,
-        text:'A coastal foothold may open a campaign toward Toledo. Review the actual owner, armies and source decision. Other Gothic possessions do not vanish if the capital changes hands.', choices:[
-          { id:'roderic_face_toledo', label:'Face the existing campaign', detail:'Authorize only the current source opportunity if you still hold the required authority.', operation:'agenda_story_choice', storyId:'toledo_campaign_711', choiceId:'face_campaign' },
-          { id:'roderic_leave_toledo', label:'Use ordinary diplomacy', detail:'Close only this source opportunity if its live review permits it.', operation:'agenda_story_choice', storyId:'toledo_campaign_711', choiceId:'leave_campaign' },
+        text:'A coastal foothold may open a campaign toward Toledo. Review the actual owner, armies and source decision. Other Gothic possessions do not vanish if the capital changes hands.', retiredChoiceIds:['roderic_face_toledo','roderic_leave_toledo'], choices:[
           { id:'roderic_record_toledo', label:'Record the actual conclusion', detail:'Acknowledge the source result without changing possession, people or household choices.', operation:'agenda_story_fact', storyId:'toledo_campaign_711', stateField:'result', values:['won','failed','diverted','interrupted'] },
           { id:'roderic_keep_toledo', label:'Retain present arrangements', detail:'Continue ordinary government without deciding the source campaign here.', operation:'agenda_priority' }
         ] },

@@ -26,7 +26,7 @@
     need(Array.isArray(def.stages) && def.stages.length > 0 && def.stages.length <= 16, 'stages');
     var stages = Object.create(null), choices = Object.create(null);
     def.stages.forEach(function (stage) {
-      need(keys(stage, ['id','name','text','year','season','choices','completion']) && slug(stage.id) && !stages[stage.id], 'stage');
+      need(keys(stage, ['id','name','text','year','season','choices','completion','retiredChoiceIds']) && slug(stage.id) && !stages[stage.id], 'stage');
       stages[stage.id] = true;
       need(text(stage.name) && text(stage.text) && Number.isInteger(stage.year) && stage.year > 0 && stage.year <= 9999 &&
         Number.isInteger(stage.season) && stage.season >= 0 && stage.season <= 3, 'stage date or display');
@@ -97,7 +97,18 @@
         }
         need(Object.keys(c).every(function (k) { return fields.indexOf(k) >= 0; }), 'incompatible choice fields');
       });
+      /* Ids of removed choices that old saves may hold. They restore as a
+         decided priority and are never offered or quoted again. */
+      if (stage.retiredChoiceIds !== undefined) need(!stage.completion && Array.isArray(stage.retiredChoiceIds) &&
+        stage.retiredChoiceIds.length > 0 && stage.retiredChoiceIds.length <= 12 && stage.retiredChoiceIds.every(function (id) {
+          if (!slug(id) || id === 'agenda_stop_program' || choices[id]) return false;
+          choices[id] = true; return true;
+        }), 'retired choices');
     });
+  }
+  function retired(st, id) {
+    return !!st && Array.isArray(st.retiredChoiceIds) && st.retiredChoiceIds.indexOf(id) >= 0 ?
+      { id:id, operation:'agenda_priority' } : null;
   }
   function factory(def, context) {
     var C = FB.governments.support;
@@ -272,7 +283,8 @@
       need(Array.isArray(t.decisions) && t.decisions.length === t.step);
       var lastTurn = t.openedTurn, finish = false;
       t.decisions.forEach(function (d, i) {
-        var st = def.stages[i], c = plain(d) && st.choices.filter(function (row) { return row.id === d.choiceId; })[0];
+        var st = def.stages[i], c = plain(d) && (st.choices.filter(function (row) { return row.id === d.choiceId; })[0] ||
+          retired(st, d.choiceId));
         need(keys(d, ['stageId','choiceId','turn','evidence','office']) && Object.keys(d).length === (st.completion || c && c.operation === 'agenda_mandate' ? 4 : 3) && d.stageId === st.id && c && !finish &&
           Number.isInteger(d.turn) && d.turn >= lastTurn);
         need(c.operation === 'agenda_mandate' ? d.office && d.office.appointmentId === t.mandateId &&

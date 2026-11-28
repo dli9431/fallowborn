@@ -61,7 +61,7 @@
     notice(s, def, result, reason);
   }
   /* Conditions separate permanent divergence from a waitable fact (Clovis
-     must inherit naturally, busy courts can finish their existing wars). */
+     must inherit naturally). Other wars of either court do not delay it. */
   function conditions(s, def) {
     if (!courtLive(s, def.actor.realmId, def)) return { result:'interrupted', reason:'actor_extinct' };
     var expected = characterId(s, def.actor.character);
@@ -113,12 +113,9 @@
     if (!s.realms[rid] || !s.realms[rid].alive || !s.realms[enemy] || !s.realms[enemy].alive ||
         !alive(s, ruler(s, rid)) || !alive(s, ruler(s, enemy))) return out;
     out.actorReadiness = FB.governments.publicAuthorityReadiness(s, rid);
-    // A defender's readiness gates its voluntary player decision, not the
-    // other court's ordinary right to attack a vulnerable government.
-    out.targetReadiness = enemy === 'player' ? FB.governments.publicAuthorityReadiness(s, enemy) : null;
-    if (!out.actorReadiness.allowed || out.targetReadiness && !out.targetReadiness.allowed) {
-      out.reason = 'public_authority'; return out;
-    }
+    // Only the attacking court's readiness matters. A defender, player or
+    // not, takes no decision, so a vulnerable government is still attacked.
+    if (!out.actorReadiness.allowed) { out.reason = 'public_authority'; return out; }
     out.preview = FB.warDeclarationPreview(s, rid, [out.cause]);
     if (def.mobileReview) {
       out.cause={type:def.admission.cause,target:def.target.provinceId,enemy:enemy};
@@ -280,7 +277,12 @@
     if (s.owner[county] === rid) { finish(s, rec, def, 'diverted', 'already_held'); return; }
     var check = conditions(s, def);
     if (check.result) { finish(s, rec, def, check.result, check.reason); return; }
-    if (!check.allowed || FB.isRealmAtWar(s, rid) || FB.isRealmAtWar(s, s.owner[county])) return;
+    if (!check.allowed) return;
+    /* Campaigns run alongside other wars. One ordinary war per opposing pair:
+       admission takes that rule from the declaration preview; others wait. */
+    if (!def.admission && FB.ordinaryWarBetween(s, rid, s.owner[county])) return;
+    if (aiActor(s, def) && FB.realmAttackCommitments(s, rid) >=
+        FB.aiDecisions.parameters(s, rid, 'war').maximumCommitments) return;
     if (playerParty(s, def) && (rec.playerDecision !== 'campaign' ||
         rec.playerDecisionGeneration !== FB.realmRulerGeneration(s, playerRealm(s,def)))) return;
     var admitted = admission(s, def);
@@ -294,19 +296,30 @@
       target:county, legacy:false, casus:{ type:'border', target:county },
       objectives:[{ target:county, type:'border' }] });
     if (!war) return;
+    // A defending player is informed exactly as by any other declaration.
+    if (!def.admission && war.defender === 'player') FB.withOrdinaryWar(s, war.id, function () {
+      FB.warFooting(s); FB.announcePlayerDefense(s, war);
+    });
     stamp(s, rec, def);
     rec.warId = war.id; rec.phase = 'started'; notice(s, def, 'started');
   }
+  /* The player decides only as actor, mobile actor leader or commission
+     issuer. A player who owns the target is informed, never asked. */
   function playerParty(s, def) {
     return !!playerRealm(s,def);
   }
   function playerRealm(s,def) {
-    if (def.mobileReview) {
-      var leader=FB.mobile.leader(s,def.actor.realmId);
-      if (leader && leader.id===s.player.charId && !s.player.dead) return def.actor.realmId;
-    }
-    return def.actor.realmId === 'player' || s.owner[def.target.provinceId] === 'player' ||
+    if (playerLeadsActor(s, def)) return def.actor.realmId;
+    return def.actor.realmId === 'player' ||
       def.commission && def.commission.issuerRealmId === 'player' ? 'player' : null;
+  }
+  function playerLeadsActor(s, def) {
+    if (!def.mobileReview) return false;
+    var leader=FB.mobile.leader(s,def.actor.realmId);
+    return !!(leader && leader.id===s.player.charId && !s.player.dead);
+  }
+  function aiActor(s, def) {
+    return def.actor.realmId !== 'player' && !playerLeadsActor(s, def);
   }
   function playerQuote(s, rec, authored, id) {
     var def = FB.stories.definition(s, authored), check = conditions(s, def);
@@ -320,7 +333,8 @@
       wars:[FB.isRealmAtWar(s, def.actor.realmId), FB.isRealmAtWar(s, s.owner[def.target.provinceId])] };
     return { id:id, allowed:!!(playerParty(s, def) && rec.phase === 'pending' &&
       !rec.playerDecision && !s.player.dead && s.date.year >= def.firstYear && !closed(s, def) &&
-      (id === 'leave_campaign' || id === 'face_campaign' && check.allowed && admitted.allowed && !facts.wars[0] && !facts.wars[1])),
+      (id === 'leave_campaign' || id === 'face_campaign' && check.allowed && admitted.allowed &&
+        (def.admission || !FB.ordinaryWarBetween(s, def.actor.realmId, s.owner[def.target.provinceId])))),
       reason:admitted.reason || 'campaign_conditions', facts:facts, stamp:JSON.stringify(facts) };
   }
   function validate(rec, id) {
@@ -482,7 +496,7 @@
           return a.preview && a.preview.reason || FB.T('Ordinary war permission, frontier access and a currently offered aggression objective are required.');
         }
         if (reason === 'faith_policy') return FB.T('The ordinary religious policy prevents this declaration.');
-        return FB.T('The campaign needs its living rulers, current territory, date window and peaceful courts. Review the opportunity again when those conditions hold.');
+        return FB.T('The campaign needs its living rulers, current territory and date window. Review the opportunity again when those conditions hold.');
       },
       review:function (s, rec, id, q) {
         if (!def.admission || id !== 'face_campaign') return [];

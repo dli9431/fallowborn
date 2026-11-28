@@ -165,7 +165,35 @@ for (const bad of [{ date:'1066', county:'nicaea' }, { date:'1204', county:'cons
   });
 }
 
-for (const id of ['latin_bithynia_1204','nicaean_return_1204']) {
+test('latin_bithynia_1204 informs the Nicaean defender and keeps an earlier defender decision', async function ({ page }, info) {
+  await beginLaskaris(page, info);
+  expect(await page.evaluate(function () {
+    const id = 'latin_bithynia_1204', s = FB.state, story = FB.stories.get(id), rec = s.stories[id];
+    const authored = FBDATA.bookmarkContent['1204'].campaigns[id], def = FB.stories.definition(s,authored);
+    const mapping = def.target.ownerIds[0] === 'player' && def.actor.realmId !== 'player';
+    // Stage the campaign's own opening boundary; no daily simulation or historical victory.
+    s.date.year = authored.firstYear;
+    s.turn = (authored.firstYear-1204)*360;
+    const choices = FB.stories.choices(s,id).length, face = FB.stories.quote(s,id,'face_campaign').allowed;
+    const pending = JSON.parse(FB.save.serialize());
+    story.day(s,rec);
+    const war = FB.ordinaryWarById(s,rec.warId);
+    const started = rec.phase === 'started' && rec.playerDecision === null && !!war &&
+      war.attacker === def.actor.realmId && war.defender === 'player' && war.defenseAnnounced === true;
+    // A save written before defenders became informational may hold their decline.
+    const old = pending.state.stories[id];
+    Object.assign(old, { phase:'resolved', result:'diverted', reason:'player_declined', outcomeTurn:s.turn,
+      playerDecision:'declined', playerDecisionGeneration:FB.realmRulerGeneration(s,'player') });
+    const wire = JSON.stringify(old);
+    FB.save.restore(pending);
+    const restored = wire === JSON.stringify(FB.state.stories[id]);
+    FB.stories.get(id).day(FB.state,FB.state.stories[id]);
+    return { mapping, choices, face, started, restored, kept:wire === JSON.stringify(FB.state.stories[id]),
+      noWar:!FB.ordinaryWarBetween(FB.state,def.actor.realmId,'player') };
+  })).toEqual({ mapping:true, choices:0, face:false, started:true, restored:true, kept:true, noWar:true });
+});
+
+for (const id of ['nicaean_return_1204']) {
   test(id + ' follows the adopted court and waits for its reviewed decision', async function ({ page }, info) {
     await beginLaskaris(page, info);
     expect(await page.evaluate(function (id) {

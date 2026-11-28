@@ -156,19 +156,29 @@ test('Tariq cannot choose the sovereign crossing', async function ({ page }, inf
   })).toEqual({ none:true, own:true, sovereign:'umayyad_711', actor:'umayyad_711', initial:null });
 });
 
-test('Roderic forwards only the current defensive source decision and refuses a stale review', async function ({ page }, info) {
+test('Roderic is informed of the crossing and an earlier forwarded defender decision restores as decided', async function ({ page }, info) {
   await beginRuler(page, info, rulers[0], false);
   expect(await page.evaluate(function () {
     const s = FB.state, agenda = 'roderic_agenda_711';
+    const retired = ['roderic_face_crossing','roderic_leave_crossing','roderic_face_toledo','roderic_leave_toledo'];
     const first = FB.stories.quote(s,agenda,'roderic_keep_recognition');
     const advanced = FB.stories.apply(s,agenda,'roderic_keep_recognition',first);
     s.date = {year:711,season:1,day:1}; s.turn++;
-    const source = FB.stories.quote(s,'strait_crossing_711','face_campaign');
-    const forwarded = FB.stories.quote(s,agenda,'roderic_face_crossing');
+    const offered = FB.stories.choices(s,agenda).map(function (c) { return c.id; });
+    const refused = retired.every(function (id) { return !FB.stories.quote(s,agenda,id).allowed; });
     const prior = JSON.stringify(s.stories.strait_crossing_711);
-    s.player.gold++;
-    const stale = FB.stories.apply(s,agenda,'roderic_face_crossing',forwarded);
-    return { advanced:advanced, sourceAllowed:source.allowed, forwarded:forwarded.allowed,
-      stale:stale, sourceUnchanged:prior === JSON.stringify(s.stories.strait_crossing_711) };
-  })).toEqual({ advanced:true, sourceAllowed:true, forwarded:true, stale:false, sourceUnchanged:true });
+    const source = FB.stories.choices(s,'strait_crossing_711').length;
+    const sourceAllowed = FB.stories.quote(s,'strait_crossing_711','face_campaign').allowed;
+    // Rebuild the decision an earlier save could hold for the removed forwarding row.
+    const saved = JSON.parse(FB.save.serialize()), t = saved.state.stories[agenda];
+    t.decisions.push({ stageId:'roderic_coast_review_711', choiceId:'roderic_face_crossing', turn:s.turn }); t.step++;
+    const wire = JSON.stringify(t);
+    FB.save.restore(saved);
+    const r = FB.state.stories[agenda];
+    return { advanced:advanced, offered:offered, refused:refused, source:source, sourceAllowed:sourceAllowed,
+      sourceUnchanged:prior === JSON.stringify(FB.state.stories.strait_crossing_711), restored:wire === JSON.stringify(r),
+      step:r.step, name:FB.stories.get(agenda).status(FB.state,r).name,
+      next:FB.stories.choices(FB.state,agenda).map(function (c) { return c.id; }) };
+  })).toEqual({ advanced:true, offered:['roderic_record_crossing','roderic_keep_coast','agenda_stop_program'], refused:true,
+    source:0, sourceAllowed:false, sourceUnchanged:true, restored:true, step:2, name:'The road to Toledo', next:['agenda_stop_program'] });
 });

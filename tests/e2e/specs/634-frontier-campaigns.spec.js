@@ -13,7 +13,7 @@ dependsOnRuntime(__filename,['data/bookmark_manifest.js','index.html','data/book
   'js/story_campaign.js','js/stories.js','js/starts.js','js/actions.js','js/wars.js','js/world.js',
   'js/government_selection.js','js/government_lineage.js','js/government_aristocracy.js',
   'js/governments.js','js/politics.js','js/bookmark_composition.js','js/bookmark_sources.js',
-  'js/armies.js','js/save.js','js/save_v4.js','js/mods.js']);
+  'js/armies.js','js/save.js','js/save_v4.js','js/mods.js','js/ai_decisions.js','data/ai_decisions.js']);
 
 async function load(page,info) {
   await openGame(page,info); await prepareGameContent(page);
@@ -275,16 +275,89 @@ for (const id of ['syrian_front_634','iraqi_front_634']) test(id+' observes cont
   await roundTrip(page);
 });
 
-test('Heraclius can decline, and defender adoption after initialization preserves the same commitment',async function ({page},info) {
+test('Heraclius as defender sees no choices, is attacked without a decision and keeps an earlier defender decision',async function ({page},info) {
   await start(page,info,'heraclius_634');
   expect(await page.evaluate(function () {
     const s=FB.state,id='syrian_front_634'; FT.allow(s,id);
-    const before=JSON.stringify([s.owner,s.player.gold,s.realms.player.treasury,s.wars]);
-    const q=FB.stories.quote(s,id,'face_campaign'),declined=FT.choose(s,id,'leave_campaign');
-    return {party:q.allowed,declined:declined,reason:s.stories[id].reason,
-      unchanged:before===JSON.stringify([s.owner,s.player.gold,s.realms.player.treasury,s.wars]),other:s.stories.iraqi_front_634.phase};
-  })).toEqual({party:true,declined:true,reason:'player_declined',unchanged:true,other:'pending'});
+    const before=FT.bytes(s),choices=FB.stories.choices(s,id).length;
+    const face=FB.stories.quote(s,id,'face_campaign'),leave=FB.stories.quote(s,id,'leave_campaign');
+    const refused=!FB.stories.apply(s,id,'leave_campaign',leave) && !FB.stories.apply(s,id,'face_campaign',face) && before===FT.bytes(s);
+    const status=FB.stories.get(id).status(s,s.stories[id]).name;
+    FT.tick(s,id); const r=s.stories[id],w=FB.ordinaryWarById(s,r.warId);
+    return {choices:choices,face:face.allowed,leave:leave.allowed,refused:refused,status:status,phase:r.phase,decision:r.playerDecision,
+      attacker:w && w.attacker,defender:w && w.defender,announced:!!w && w.defenseAnnounced===true,other:s.stories.iraqi_front_634.phase};
+  })).toEqual({choices:0,face:false,leave:false,refused:true,status:'Awaiting the courts',phase:'started',decision:null,
+    attacker:'rashidun_634',defender:'player',announced:true,other:'pending'});
   await roundTrip(page);
+  // A save written before defenders became informational may hold their decision.
+  expect(await page.evaluate(function () {
+    const id='syrian_front_634',saved=JSON.parse(FB.save.serialize()),rec=saved.state.stories[id];
+    rec.playerDecision='campaign'; rec.playerDecisionGeneration=FB.realmRulerGeneration(FB.state,'player');
+    const wire=JSON.stringify(rec);
+    FB.save.restore(saved);
+    const restored=wire===JSON.stringify(FB.state.stories[id]);
+    FT.tick(FB.state,id);
+    return {restored:restored,kept:wire===JSON.stringify(FB.state.stories[id]),choices:FB.stories.choices(FB.state,id).length,
+      war:!!FB.ordinaryWarById(FB.state,FB.state.stories[id].warId)};
+  })).toEqual({restored:true,kept:true,choices:0,war:true});
+});
+
+test('Umar may face a campaign while the court fights another opponent',async function ({page},info) {
+  await start(page,info,'umar_634');
+  expect(await page.evaluate(function () {
+    const s=FB.state,id='syrian_front_634'; FT.allow(s,id);
+    // Stage the other war directly; no daily simulation.
+    const other=FB.registerOrdinaryWar(s,'player',{enemy:'sasanian_634',target:'kufa',legacy:false,
+      casus:{type:'aggression',target:'kufa'},objectives:[{type:'aggression',target:'kufa'}]});
+    const q=FB.stories.quote(s,id,'face_campaign'),accepted=FT.choose(s,id,'face_campaign');
+    const r=s.stories[id],w=FB.ordinaryWarById(s,r.warId);
+    return {other:!!other,busy:q.facts.wars[0],allowed:q.allowed,accepted:accepted,phase:r.phase,
+      defender:w && w.defender,running:!!FB.ordinaryWarById(s,other.id),wars:FB.realmWars(s,'player').length};
+  })).toEqual({other:true,busy:true,allowed:true,accepted:true,phase:'started',defender:'byzantium_634',running:true,wars:2});
+});
+
+test('story campaigns run alongside third-court wars within the pair rule and the AI commitment cap',async function ({page},info) {
+  await start(page,info);
+  expect(await page.evaluate(function () {
+    const id='syrian_front_634',rid='rashidun_634',enemy='byzantium_634',third='sasanian_634';
+    FT.allow(FB.state,id);
+    const base=FT.copy(FB.state),cap=FB.aiDecisions.parameters(base,rid,'war').maximumCommitments;
+    function copy() { const t=FT.copy(base); FB.invalidateRealmCache(); return t; }
+    function county(t,realm,except) {
+      return Object.keys(t.owner).sort().find(function (p) { return t.owner[p]===realm && p!==except && !FB.world.byId[p].wasteland; });
+    }
+    function war(t,attacker,defender) {
+      const target=county(t,defender,'damascus');
+      return FB.registerOrdinaryWar(t,attacker,{enemy:defender,target:target,legacy:false,
+        casus:{type:'aggression',target:target},objectives:[{type:'aggression',target:target}]});
+    }
+    function declared(t) {
+      const r=t.stories[id],w=r.warId && FB.ordinaryWarById(t,r.warId);
+      return r.phase==='started' && !!w && w.attacker===rid && w.defender===enemy && w.objectives[0].target==='damascus';
+    }
+    // 1. The actor already defends against a third court.
+    const actorBusy=copy(),actorWar=war(actorBusy,third,rid); FT.tick(actorBusy,id);
+    // 2. The target controller already fights a third court.
+    const targetBusy=copy(),targetWar=war(targetBusy,enemy,third); FT.tick(targetBusy,id);
+    // 3. The AI actor is at its war policy cap, then one of its wars ends.
+    const capped=copy(),sovereigns=Object.keys(base.realms).sort().filter(function (r) {
+      return r!==rid && r!==enemy && r!=='player' && base.realms[r].alive && !base.realms[r].liege &&
+        base.realms[rid].liege!==r && !!county(base,r);
+    });
+    const capWars=sovereigns.slice(0,cap).map(function (r) { return war(capped,rid,r); });
+    const counted=FB.realmAttackCommitments(capped,rid),before=FT.bytes(capped); FT.tick(capped,id);
+    const waited=before===FT.bytes(capped) && capped.stories[id].warId===null;
+    FB.settleOrdinaryWar(capped,capWars[0].id,'white_peace'); FB.invalidateRealmCache(); FT.tick(capped,id);
+    // 4. One ordinary war already runs between the same pair.
+    const paired=copy(),pairWar=war(paired,rid,enemy),wars=Object.keys(paired.wars).length,pairBefore=FT.bytes(paired);
+    FT.tick(paired,id);
+    return {actor:!!actorWar && declared(actorBusy) && !!FB.ordinaryWarById(actorBusy,actorWar.id),
+      target:!!targetWar && declared(targetBusy) && !!FB.ordinaryWarById(targetBusy,targetWar.id),
+      cap:cap>=1 && capWars.length===cap && capWars.every(Boolean) && counted===cap,waited:waited,
+      afterEnd:declared(capped) && FB.realmAttackCommitments(capped,rid)===cap,
+      pair:!!pairWar && pairBefore===FT.bytes(paired) && paired.stories[id].warId===null && paired.stories[id].phase==='pending' &&
+        Object.keys(paired.wars).length===wars && pairWar.objectives.length===1};
+  })).toEqual({actor:true,target:true,cap:true,waited:true,afterEnd:true,pair:true});
 });
 
 for (const court of ['umar_634','heraclius_634']) for (const phase of ['pending','started']) {
@@ -386,7 +459,7 @@ test('pending and started provenance reject malformed saves before any live muta
   })).toEqual(Array(9).fill(true));
 });
 
-test('no frontier, busy courts and unrelated household land never manufacture an eligible court',async function ({page},info) {
+test('no frontier, war law and unrelated household land never manufacture an eligible court, and busy courts still declare',async function ({page},info) {
   await start(page,info);
   expect(await page.evaluate(function () {
     const base=FT.copy(FB.state),id='syrian_front_634',d=FT.def(base,id),checks=[];
@@ -397,7 +470,9 @@ test('no frontier, busy courts and unrelated household land never manufacture an
     FT.tick(without,id); checks.push(without.stories[id].phase==='pending' && without.stories[id].deadline===null);
     const busy=FT.copy(base); FT.allow(busy,id);
     FB.registerOrdinaryWar(busy,'byzantium_634',{enemy:'sasanian_634',target:'kufa',legacy:false,casus:{type:'aggression',target:'kufa'}});
-    FT.tick(busy,id); checks.push(busy.stories[id].phase==='pending' && busy.stories[id].warId===null);
+    // A target controller fighting a third court no longer delays the campaign.
+    FT.tick(busy,id); checks.push(busy.stories[id].phase==='started' &&
+      FB.ordinaryWarById(busy,busy.stories[id].warId).defender==='byzantium_634');
     const law=FT.copy(base); FT.allow(law,id); law.realms.rashidun_634.liege='sasanian_634';
     law.warLaws=law.warLaws || {}; law.warLaws.sasanian_634={external_campaigns:{level:'prohibited',setYear:634,setTurn:0}};
     FB.invalidateRealmCache(); FT.tick(law,id); checks.push(law.stories[id].phase==='pending' && law.stories[id].deadline===null);
@@ -458,10 +533,17 @@ test('released unopted campaigns retain their ordinary border admission and save
     // court owner before comparing a save with its first restored state.
     FB.ensureRealmCourt(s,'franks_476'); FB.ensureRealmCourt(s,'italy');
     const rec=s.stories[id],def=FB.stories.get(id).declaration;
+    // An unopted campaign never adopts an ordinary war already running between the pair.
+    const paired=JSON.parse(JSON.stringify(s)); FB.invalidateRealmCache();
+    const existing=FB.registerOrdinaryWar(paired,'franks_476',{enemy:'west_francia',target:'laon',legacy:false,
+      casus:{type:'border',target:'laon'},objectives:[{type:'border',target:'laon'}]});
+    FB.stories.get(id).day(paired,paired.stories[id]);
+    const pairWaits=!!existing && paired.stories[id].phase==='pending' && paired.stories[id].warId===null;
+    FB.invalidateRealmCache();
     FB.stories.get(id).day(s,rec);
     const w=FB.ordinaryWarById(s,rec.warId);
-    return {policy:!!def.admission,phase:rec.phase,cause:w && w.casus.type,
+    return {policy:!!def.admission,phase:rec.phase,cause:w && w.casus.type,pairWaits:pairWaits,
       deadline:rec.deadline===rec.startedTurn+def.durationDays,owner:s.owner.laon};
-  })).toEqual({policy:false,phase:'started',cause:'border',deadline:true,owner:'west_francia'});
+  })).toEqual({policy:false,phase:'started',cause:'border',pairWaits:true,deadline:true,owner:'west_francia'});
   await roundTrip(page);
 });

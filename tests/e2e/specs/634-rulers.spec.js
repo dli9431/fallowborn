@@ -325,7 +325,12 @@ test('Yazdegerd conditional reviews respect the empty royal household and a real
     const noPublicEffects=before===JSON.stringify([s.player,s.realms,s.owner,s.holder,s.authority,s.armies]);
     const provinces=FB.stories.apply(s,id,'yazdegerd_keep_provinces',FB.stories.quote(s,id,'yazdegerd_keep_provinces'));
     const pending=!FB.stories.quote(s,id,'yazdegerd_observe_iraq').allowed;
-    const declined=FB.stories.apply(s,'iraqi_front_634','leave_campaign',FB.stories.quote(s,'iraqi_front_634','leave_campaign'));
+    // The defending court takes no campaign decision. Stage the source's own closed window instead.
+    const undecided=FB.stories.choices(s,'iraqi_front_634').length===0 &&
+      !FB.stories.quote(s,'iraqi_front_634','leave_campaign').allowed;
+    s.date={year:635,season:3,day:90}; s.turn=539;
+    FB.stories.get('iraqi_front_634').day(s,s.stories.iraqi_front_634);
+    const declined=undecided && s.stories.iraqi_front_634.reason==='window_closed';
     const source=JSON.stringify(s.stories.iraqi_front_634),funds=FB.treasuryAvailable(s,'player');
     const acknowledged=FB.stories.apply(s,id,'yazdegerd_observe_iraq',FB.stories.quote(s,id,'yazdegerd_observe_iraq'));
     const sourceUnchanged=source===JSON.stringify(s.stories.iraqi_front_634) && funds===FB.treasuryAvailable(s,'player');
