@@ -118,8 +118,8 @@ FBDATA.bookmarkRegions476['africa'] = {
   crossingClasses:{ 'siracusa|tunis':'open' },
   campaigns:{
     eastern_africa_476:{ id:'eastern_africa_476', type:'campaign', requires:['western_court_476'],
-      name:'The Eastern African Campaign',
-      desc:'An eastern court retaining Constantinople may contest Carthage against its current sovereign. The Syracuse crossing supplies a route; armies and peace decide possession.',
+      name:'The Eastern Campaign for Carthage',
+      desc:'From 533 to 550, while it holds Constantinople, the Eastern Roman Court can attack whoever then holds Carthage, the Vandal seat in 476, to win back Africa.',
       firstYear:533, lastYear:550, durationDays:2880,
       actor:{ realmId:'byzantium' }, target:{ provinceId:'tunis' },
       conditions:[{ kind:'owner', provinceId:'constantinople', realmId:'byzantium' }],

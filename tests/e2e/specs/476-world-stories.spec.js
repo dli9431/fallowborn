@@ -11,6 +11,7 @@ dependsOnRuntime(__filename, [
   'js/util.js',
   'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',
   'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_africa.js',
+  'data/bookmark_476_outer.js', 'data/geographies.js',
   'data/political_institutions.js', 'data/technology.js', 'data/starts.js',
   'js/stories.js', 'js/story_campaign.js', 'data/story_instances.js', 'js/bookmark_setup.js', 'js/story_agreements.js',
   'js/story_courts.js', 'js/story_track.js',
@@ -118,6 +119,57 @@ test('world status sheets retain their originating card and registration remains
       return rejected;
     });
     expect(result).toEqual([true,true]);
+  });
+
+// Also shares the booted 476 page: it reads declarations and opens one sheet.
+test('476 campaign and treaty text names who acts, which county and which years',
+  async function ({ page }, testInfo) {
+    // Each row lists the counties the description must name as the 476 map shows them.
+    const rows = [
+      ['eastern_africa_476', 'Eastern Roman Court', ['tunis']],
+      ['eastern_italy_476', 'Eastern Roman Court', ['ravenna']],
+      ['theoderic_italy_476', 'Theoderic the Amal', ['ravenna']],
+      ['thracian_pressure_476', 'Theoderic Strabo’s Thracian Goths', ['constantinople']],
+      ['amal_epirus_476', 'Theoderic the Amal', ['dyrrachion']],
+      ['clovis_alamanni_476', 'Clovis', ['strasbourg', 'laon']],
+      ['clovis_syagrius_476', 'Clovis', ['laon']],
+      ['suevic_frontier_476', 'Suevic Kingdom', ['astorga', 'lugo']],
+      ['cantabrian_campaign_476', 'Visigothic Kingdom', ['santander', 'toledo']],
+      ['vasconian_campaign_476', 'Visigothic Kingdom', ['alava', 'pamplona']],
+      ['gallaecian_campaign_476', 'Visigothic Kingdom', ['lugo', 'toledo']],
+      ['rugian_frontier_476', 'Odoacer', ['wien', 'ravenna']],
+      ['sicilian_tribute_476', 'Odoacer', ['messina', 'siracusa', 'palermo', 'ravenna']],
+      ['norican_evacuation_476', 'Federate Host in Italy', ['wien', 'ravenna']],
+      // A succession contest has no window, and its text names the seat, not the district.
+      ['cashel_recognition_476', 'Cashel', []]
+    ];
+    const declarations = await page.evaluate(function (rows) {
+      return rows.map(function (row) {
+        const def = FBDATA.storyCampaigns[row[0]] || FBDATA.storyGovernmentSelections[row[0]];
+        return { id:row[0], name:def.name, desc:def.desc,
+          years:def.firstYear === undefined ? [] : [def.firstYear, def.lastYear],
+          counties:row[2].map(function (pid) { return FB.world.byId[pid].name; }) };
+      });
+    }, rows);
+    const banned = /grants? no |creates? no |Record (a |an )?(costless )?(priority|intention|preference)|Record attention|\bordinary\b|\bactual(ly)?\b|\bexisting\b|\boriginal\b|\bauthored\b|historical opportunity|political opportunity/i;
+    declarations.forEach(function (entry, index) {
+      for (const field of [entry.name, entry.desc]) {
+        expect(field, entry.id).not.toMatch(banned);
+        expect(field, entry.id).not.toMatch(/[A-Za-z]\?[A-Za-z]/);
+        expect(field, entry.id).not.toContain('—');
+      }
+      expect(entry.desc, entry.id).toContain(rows[index][1]);
+      for (const county of entry.counties) expect(entry.desc, entry.id).toContain(county);
+      for (const year of entry.years) expect(entry.desc, entry.id).toContain(String(year));
+    });
+    expect(declarations.filter(function (entry) { return entry.years[0] > 476; })
+      .map(function (entry) { return entry.years[0]; }).sort())
+      .toEqual([477,479,486,487,487,488,496,533,535,574,581,585]);
+
+    await start(page, testInfo);
+    await page.evaluate(function () { FB.ui.showStorySheet('clovis_syagrius_476'); });
+    const intro = page.locator('#gm-body .gm-body-text > p').first();
+    for (const part of ['Clovis', 'Soissons', '486']) await expect(intro).toContainText(part);
   });
 });
 

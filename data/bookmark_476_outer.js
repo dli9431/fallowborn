@@ -545,6 +545,6 @@ FBDATA.events = (FBDATA.events || []).concat(FBDATA.bookmarkRegions476.outer.eve
 
 FBDATA.storyGovernmentSelections = {
   cashel_recognition_476:{ id:'cashel_recognition_476', type:'government_contest', realmId:'cashel_local_476',
-    name:'Local succession at Cashel', desc:'Recognized kin seek local assent. A divided kingship preserves households and administration while public demands await recognition.' }
+    name:'The Kingship of Cashel', desc:'Rival kinsmen each seek the backing of Cashel’s lords for the kingship.' }
 };
 });

@@ -77,8 +77,8 @@ FBDATA.bookmarkRegions476['dalmatia_east'] = {
   storyIds:['thracian_pressure_476','amal_epirus_476'],
   campaigns:{
   theoderic_italy_476:{ id:'theoderic_italy_476', type:'campaign',
-    requires:['western_court_476'], name:'The Amal Commission for Italy',
-    desc:'Theoderic the Amal can receive Zeno’s commission and lead his existing host and court toward Ravenna. Theoderic Strabo’s Thracian host remains a separate body.',
+    requires:['western_court_476'], name:'Theoderic’s March on Italy',
+    desc:'From 488 to 493, Zeno can send Theoderic the Amal and his Gothic host to take Ravenna from the Western Roman Court or the Federate Host in Italy.',
     firstYear:488, lastYear:493, durationDays:2160,
     actor:{ realmId:'pannonia', character:{ storyId:'western_court_476', field:'theodericId' } },
     target:{ provinceId:'ravenna', ownerIds:['italy','federates_476'] },
@@ -100,7 +100,7 @@ FBDATA.bookmarkRegions476['dalmatia_east'] = {
       interrupted:{ key:'news.476.theoderic_interrupted', text:'📜 The host or living imperial mandate needed for the Amal campaign is lost.' }
     } },
     thracian_pressure_476:{ id:'thracian_pressure_476', type:'campaign', requires:['western_court_476','zeno_return_476'],
-      name:'The Thracian Gothic Challenge', desc:'The Thracian host can contest Constantinople after Zeno’s return. Office and service disputes create an opportunity for ordinary war; the capital is never awarded by a date.',
+      name:'The Thracian Goths’ Bid for Constantinople', desc:'Between 477 and 481, once Zeno is back on the throne, Theoderic Strabo’s Thracian Goths can attack Constantinople.',
       firstYear:477, lastYear:481, durationDays:720, settlementForm:'regnum',
       actor:{realmId:'thracian_goths_476'}, target:{provinceId:'constantinople',ownerIds:['byzantium'],character:{storyId:'western_court_476',field:'zenoId'}},
       conditions:[{kind:'ruler',realmId:'byzantium',character:{storyId:'western_court_476',field:'zenoId'}},
@@ -113,7 +113,7 @@ FBDATA.bookmarkRegions476['dalmatia_east'] = {
         interrupted:{key:'news.476.thracian_pressure_interrupted',text:'📜 The living court or host needed for the Thracian challenge is lost.'}
       } },
     amal_epirus_476:{ id:'amal_epirus_476', type:'campaign', requires:['western_court_476','zeno_return_476'],
-      name:'The Amal Host in Epirus', desc:'The Amal host may contest Dyrrachium during the Balkan disputes. A successful territorial settlement changes its later eligibility for the Italian commission.',
+      name:'Theoderic’s March on Dyrrachium', desc:'Between 479 and 483, after Zeno’s return, Theoderic the Amal can seize Dyrrachium from the Eastern Roman Court. Winning gives his Goths land and rules out the later march on Italy.',
       firstYear:479, lastYear:483, durationDays:720, settlementForm:'regnum',
       actor:{realmId:'pannonia',character:{storyId:'western_court_476',field:'theodericId'}}, target:{provinceId:'dyrrachion',ownerIds:['byzantium']},
       conditions:[{kind:'ruler',realmId:'byzantium',character:{storyId:'western_court_476',field:'zenoId'}},
