@@ -4,8 +4,8 @@ FB.bookmarkSources.stage({"source":"data/bookmark_493_history.js","bookmarks":["
 window.FBDATA = window.FBDATA || {};
 FBDATA.storyCampaigns493 = {
   alamannic_campaign_493:{ id:'alamannic_campaign_493', type:'campaign',
-    name:'The Upper Rhine Campaign',
-    desc:'A surviving Frankish court may contest the Alamannic seat on the upper Rhine. Ordinary armies decide possession; victory causes no automatic baptism or absorption of the remaining communities.',
+    name:'The march on Argentoratum',
+    desc:'From 496 the Franks can march on Argentoratum, seat of the Alamanni on the upper Rhine.',
     firstYear:496, lastYear:506, durationDays:1440,
     actor:{ realmId:'franks_493' },
     target:{ provinceId:'strasbourg', ownerIds:['alamanni_493'] },
@@ -18,8 +18,8 @@ FBDATA.storyCampaigns493 = {
       interrupted:{ key:'news.493.alamanni.interrupted', text:'📜 A change of ruling court interrupts the upper Rhine campaign.' }
     } },
   burgundian_campaign_493:{ id:'burgundian_campaign_493', type:'campaign',
-    name:'Rival Burgundian Courts',
-    desc:'The Frankish court may challenge the senior Burgundian seat while the separate Genevan court survives. A campaign neither kills Gundobad nor promises the whole kingdom to Godegisel.',
+    name:'The war for Lugdunum',
+    desc:'Gundobad and Godegisel head rival Burgundian courts. From 500, while Godegisel holds Genava, the Franks can attack Gundobad at Lugdunum.',
     firstYear:500, lastYear:503, durationDays:1080,
     actor:{ realmId:'franks_493' },
     target:{ provinceId:'lyon', ownerIds:['burgundy_493'] },
@@ -33,8 +33,8 @@ FBDATA.storyCampaigns493 = {
       interrupted:{ key:'news.493.burgundy.interrupted', text:'📜 A change of ruling court interrupts the Burgundian campaign.' }
     } },
   visigothic_campaign_493:{ id:'visigothic_campaign_493', type:'campaign',
-    name:'The Toulouse Campaign',
-    desc:'A surviving Frankish court may contest the Visigothic capital. The date awards no Aquitanian counties and does not kill Alaric; any surviving Gothic court follows ordinary succession.',
+    name:'The march on Tolosa',
+    desc:'From 507 the Franks can march on Alaric’s capital at Tolosa.',
     firstYear:507, lastYear:511, durationDays:1800,
     actor:{ realmId:'franks_493' },
     target:{ provinceId:'toulouse', ownerIds:['visigoths_493'] },
@@ -47,8 +47,8 @@ FBDATA.storyCampaigns493 = {
       interrupted:{ key:'news.493.toulouse.interrupted', text:'📜 A change of ruling court interrupts the Toulouse campaign.' }
     } },
   sirmium_campaign_493:{ id:'sirmium_campaign_493', type:'campaign',
-    name:'The Sirmium Frontier',
-    desc:'The Italian Gothic court may contest Sirmium if it still rules Ravenna and the Gepid court retains its seat. No date extends Italy’s jurisdiction across the frontier.',
+    name:'The war for Sirmium',
+    desc:'From 505 the Goths of Italy can attack the Gepids at Sirmium, as long as the Goths still hold Ravenna.',
     firstYear:505, lastYear:510, durationDays:1440,
     actor:{ realmId:'ostrogoths_493' },
     target:{ provinceId:'sirmium', ownerIds:['gepids_493'] },
@@ -61,8 +61,8 @@ FBDATA.storyCampaigns493 = {
       interrupted:{ key:'news.493.sirmium.interrupted', text:'📜 A change of ruling court interrupts the Sirmium campaign.' }
     } },
   african_campaign_493:{ id:'african_campaign_493', type:'campaign',
-    name:'The African Expedition',
-    desc:'A surviving eastern Roman court may contest Carthage against the current Vandal court. Ordinary war governs transport, supply and conquest; no historical successor or expeditionary army appears by date.',
+    name:'The expedition against Carthage',
+    desc:'From 533 the eastern court can send an army against the Vandals at Carthage.',
     firstYear:533, lastYear:535, durationDays:1800,
     actor:{ realmId:'east_493' },
     target:{ provinceId:'tunis', ownerIds:['vandals_493'] },
@@ -75,8 +75,8 @@ FBDATA.storyCampaigns493 = {
       interrupted:{ key:'news.493.africa.interrupted', text:'📜 A change of ruling court interrupts the African expedition.' }
     } },
   italian_campaign_493:{ id:'italian_campaign_493', type:'campaign',
-    name:'The Eastern Italian Campaign',
-    desc:'An eastern Roman court with an actual African foothold may contest Ravenna against the surviving Gothic court. Ordinary armies must win; the opportunity promises no restoration of the whole western empire.',
+    name:'The eastern war for Ravenna',
+    desc:'From 535, once it holds Carthage, the eastern court can attack the Goths at Ravenna.',
     firstYear:535, lastYear:540, durationDays:2520,
     actor:{ realmId:'east_493' },
     target:{ provinceId:'ravenna', ownerIds:['ostrogoths_493'] },
