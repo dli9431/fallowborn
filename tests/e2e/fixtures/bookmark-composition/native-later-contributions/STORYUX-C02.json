@@ -1,0 +1,80 @@
+{
+  "description": "Names and descriptions of the 476 campaign, treaty, evacuation and succession declarations.",
+  "changes": [
+    {
+      "file": "data/bookmark_476_africa.js",
+      "before": "      name:'The Eastern African Campaign',\n      desc:'An eastern court retaining Constantinople may contest Carthage against its current sovereign. The Syracuse crossing supplies a route; armies and peace decide possession.',\n",
+      "after": "      name:'The Eastern Campaign for Carthage',\n      desc:'From 533 to 550, while it holds Constantinople, the Eastern Roman Court can attack whoever then holds Carthage, the Vandal seat in 476, to win back Africa.',\n"
+    },
+    {
+      "file": "data/story_campaigns.js",
+      "before": "    requires:['western_court_476'], name:'The Eastern Italian Campaign',\n    desc:'The eastern court may contest the present ruler of Ravenna. No historical date guarantees an Italian conquest.',\n",
+      "after": "    requires:['western_court_476'], name:'The Eastern Campaign for Ravenna',\n    desc:'From 535 to 560, while it holds Constantinople, the Eastern Roman Court can attack whoever then holds Ravenna, the Western Roman Court’s seat in 476, to win back Italy.',\n"
+    },
+    {
+      "file": "data/bookmark_476_dalmatia_east.js",
+      "before": "    requires:['western_court_476'], name:'The Amal Commission for Italy',\n    desc:'Theoderic the Amal can receive Zeno’s commission and lead his existing host and court toward Ravenna. Theoderic Strabo’s Thracian host remains a separate body.',\n",
+      "after": "    requires:['western_court_476'], name:'Theoderic’s March on Italy',\n    desc:'From 488 to 493, Zeno can send Theoderic the Amal and his Gothic host to take Ravenna from the Western Roman Court or the Federate Host in Italy.',\n"
+    },
+    {
+      "file": "data/bookmark_476_dalmatia_east.js",
+      "before": "      name:'The Thracian Gothic Challenge', desc:'The Thracian host can contest Constantinople after Zeno’s return. Office and service disputes create an opportunity for ordinary war; the capital is never awarded by a date.',\n",
+      "after": "      name:'The Thracian Goths’ Bid for Constantinople', desc:'Between 477 and 481, once Zeno is back on the throne, Theoderic Strabo’s Thracian Goths can attack Constantinople.',\n"
+    },
+    {
+      "file": "data/bookmark_476_dalmatia_east.js",
+      "before": "      name:'The Amal Host in Epirus', desc:'The Amal host may contest Dyrrachium during the Balkan disputes. A successful territorial settlement changes its later eligibility for the Italian commission.',\n",
+      "after": "      name:'Theoderic’s March on Dyrrachium', desc:'Between 479 and 483, after Zeno’s return, Theoderic the Amal can seize Dyrrachium from the Eastern Roman Court. Winning gives his Goths land and rules out the later march on Italy.',\n"
+    },
+    {
+      "file": "data/bookmark_476_gaul_iberia.js",
+      "before": "      requires:['western_court_476'], name:'The Frankish Upper Rhine Challenge',\n      desc:'A living Clovis ruling the Franks and holding Soissons may contest the Alamannic seat. An ordinary war decides possession; victory does not baptize the court or its communities.',\n",
+      "after": "      requires:['western_court_476'], name:'Clovis against the Alamanni',\n      desc:'From 496 to 506, once Clovis rules the Franks and holds Augusta Suessionum, he can attack the Alamanni at Argentoratum on the upper Rhine.',\n"
+    },
+    {
+      "file": "data/bookmark_476_gaul_iberia.js",
+      "before": "      requires:['western_court_476'], name:'The Roman Domain at Soissons',\n      desc:'Clovis may contest Syagrius after inheriting the Frankish court. Their living courts and an ordinary campaign decide the outcome.',\n",
+      "after": "      requires:['western_court_476'], name:'Clovis against Syagrius',\n      desc:'From 486 to 500, once Clovis is king of the Franks, he can attack Syagrius at Augusta Suessionum (Soissons).',\n"
+    },
+    {
+      "file": "data/bookmark_476_gaul_iberia.js",
+      "before": "      name:'Pressure on Asturica',\n      desc:'The Suevic court may contest the Gothic frontier near Asturica while it holds Lucus Augusti. The frontier’s present rulers decide whether the campaign can proceed.',\n",
+      "after": "      name:'The Suevi against Asturica Augusta',\n      desc:'From 476 to 490, while it holds Lucus Augusti, the Suevic Kingdom can attack the Visigoths at Asturica Augusta to push its frontier east.',\n"
+    },
+    {
+      "file": "data/bookmark_476_gaul_iberia.js",
+      "before": "      name:'The Cantabrian Frontier',\n      desc:'A surviving Visigothic court may press into autonomous Cantabria. Present control and an ordinary war decide whether the northern communities submit.',\n",
+      "after": "      name:'The Visigoths against the Cantabrians',\n      desc:'From 574 to 590, while it holds Toletum, the Visigothic Kingdom can attack the Cantabrian Communities on the Cantabrian coast to bring them under its rule.',\n"
+    },
+    {
+      "file": "data/bookmark_476_gaul_iberia.js",
+      "before": "      name:'The Vasconian Frontier',\n      desc:'A surviving Visigothic court may contest the Alavese uplands while it holds Pompaelo. Local households defend their customary rights as the royal host approaches.',\n",
+      "after": "      name:'The Visigoths against the Basques',\n      desc:'From 581 to 600, while it holds Pompaelo, the Visigothic Kingdom can attack the Basque Communities in the Alavese uplands, where households defend their customary rights.',\n"
+    },
+    {
+      "file": "data/bookmark_476_gaul_iberia.js",
+      "before": "      name:'The Suevic Kingdom in Gallaecia',\n      desc:'A surviving Visigothic court may challenge the Suevic seat at Lucus Augusti. Its capture would establish a Gothic foothold among the Gallaecian communities.',\n",
+      "after": "      name:'The Visigoths against Lucus Augusti',\n      desc:'From 585 to 600, while it holds Toletum, the Visigothic Kingdom can attack the Suevi at Lucus Augusti to gain a foothold in Gallaecia.',\n"
+    },
+    {
+      "file": "data/bookmark_476_italy.js",
+      "before": "      requires:['western_court_476'], name:'The Rugian Frontier',\n      desc:'An Odoacer court holding Ravenna may contest the Rugian Danube frontier. Local communities remain in place, and an ordinary campaign decides possession.',\n",
+      "after": "      requires:['western_court_476'], name:'Odoacer against the Rugians',\n      desc:'Between 487 and 488, while his court holds Ravenna, Odoacer can attack the Rugian Kingdom at Vindobona to secure the Danube frontier.',\n"
+    },
+    {
+      "file": "data/bookmark_476_italy.js",
+      "before": "      name:'The Sicilian Agreement', desc:'The Ravenna court and the Vandal king may agree to a Sicilian cession for annual tribute. Western Sicily, including Lilybaeum, remains a Vandal foothold.',\n",
+      "after": "      name:'Odoacer’s Sicilian Bargain', desc:'From winter 476 through 477, once Odoacer holds Ravenna, the Vandal king can cede Messana and Syracusae to him for a yearly tribute. The Vandals keep Panormus.',\n"
+    },
+    {
+      "file": "data/bookmark_476_italy.js",
+      "before": "      name:'The Norican Evacuation',desc:'After a successful frontier campaign, the Ravenna court may relocate Roman civilian households from the Danube to safer Italian homes. Community identity and population are conserved.',\n",
+      "after": "      name:'Vindobona’s Romans Move to Ravenna',desc:'From 487 to 493, after defeating the Rugians and while it holds Ravenna, the Federate Host in Italy can move Roman households from Vindobona to safer homes at Ravenna.',\n"
+    },
+    {
+      "file": "data/bookmark_476_outer.js",
+      "before": "    name:'Local succession at Cashel', desc:'Recognized kin seek local assent. A divided kingship preserves households and administration while public demands await recognition.' }\n",
+      "after": "    name:'The Kingship of Cashel', desc:'Rival kinsmen each seek the backing of Cashel’s lords for the kingship.' }\n"
+    }
+  ]
+}
