@@ -222,6 +222,50 @@ test('restore retains absent optional tracks without attaching an opening or res
   })).toEqual({agenda:false,goals:false,original:true,legacy:true,rng:true,uid:true,gold:true,samePeople:true,childless:true});
 });
 
+test('Matilda’s agenda, goals and start name Welf, Henry IV and the papacy without process boilerplate', async function ({page}, info) {
+  await start(page,info);
+  expect(await page.evaluate(function () {
+    const banned = /grants? no |creates? no |Record (a |an )?(costless )?(priority|intention|preference)|Record attention|\bordinary\b|\bactual(ly)?\b|\bexisting\b|\boriginal\b|\bauthored\b|historical opportunity|political opportunity/i;
+    const labelWords = /\b(ordinary|actual|actually|existing|current|original|authored|declared)\b/i;
+    const prose = ['intro','desc','text','detail'], faults = [], seen = {};
+    function field(where,kind,value) {
+      seen[kind] = (seen[kind] || 0)+1;
+      if (typeof value !== 'string' || !value) { faults.push(where+' '+kind+' is missing'); return; }
+      if (/[A-Za-z]\?[A-Za-z]/.test(value)) faults.push(where+' '+kind+' has a question mark for an apostrophe: '+value);
+      if (kind === 'label' && value.trim().split(/\s+/).length > 8) faults.push(where+' label is longer than eight words: '+value);
+      if (kind === 'label' && labelWords.test(value)) faults.push(where+' label uses a process word: '+value);
+      if (prose.indexOf(kind) >= 0 && banned.test(value)) faults.push(where+' '+kind+' uses boilerplate: '+value);
+    }
+    const agenda = FB.stories.get('matilda_agenda_1096').declaration;
+    field('matilda_agenda_1096','title',agenda.title); field('matilda_agenda_1096','intro',agenda.intro);
+    agenda.stages.forEach(function (st) {
+      field(st.id,'name',st.name); field(st.id,'text',st.text);
+      st.choices.forEach(function (c) { field(c.id,'label',c.label); field(c.id,'detail',c.detail); });
+    });
+    const goals = FB.stories.get('opening_matilda_1096').declaration;
+    field('opening_matilda_1096','title',goals.title); field('opening_matilda_1096','intro',goals.intro);
+    goals.goals.forEach(function (g) { field(g.id,'name',g.name); field(g.id,'text',g.text); });
+    goals.contacts.forEach(function (c) { field(c.id,'name',c.label); field(c.id,'text',c.text); });
+    const row = FBDATA.startScenarios.find(function (r) { return r.id === 'matilda_1096'; });
+    field('matilda_1096','name',row.name); field('matilda_1096','desc',row.desc); field('matilda_1096','intro',row.intro);
+    Object.keys(row.familyPresets).forEach(function (key) {
+      field('matilda_1096.'+key,'name',row.familyPresets[key].name); field('matilda_1096.'+key,'desc',row.familyPresets[key].desc);
+    });
+    const household = agenda.stages.find(function (st) { return st.id === 'matilda_household'; });
+    return {faults:faults,seen:seen,title:agenda.title,
+      household:/\bWelf\b/.test(household.text) && /\bHenry IV\b/.test(household.text),
+      householdDetails:household.choices.map(function (c) { return c.detail; }),
+      negations:agenda.stages.reduce(function (list,st) {
+        return list.concat(st.choices.filter(function (c) { return /\b(no|without)\b/i.test(c.detail); }).map(function (c) { return c.id; }));
+      },[]),
+      contacts:goals.contacts.map(function (c) { return [c.id,c.label]; }),
+      close:row.intro.slice(-'Open your court agenda in Deeds.'.length)};
+  })).toEqual({faults:[],seen:{title:2,intro:3,name:15,text:13,label:17,detail:17,desc:2},
+    title:'Matilda: estates and allegiances',household:true,
+    householdDetails:['Your attention turns to your household at Canossa.','You leave the separation as it is and turn to governing.'],
+    negations:[],contacts:[['imperial_court','The emperor'],['papal_court','The pope']],close:'Open your court agenda in Deeds.'});
+});
+
 test('an ordinary 1096 household receives neither the agenda nor its opening contacts', async function ({page}, info) {
   await startParityGame(page,info,{bookmark:'1096',scenario:'pilgrim_household_1096',declaredOpening:true});
   expect(await page.evaluate(function () {

@@ -215,3 +215,50 @@ test('ordinary succession ends Rodrigo’s personal program and retains its orig
   expect(result).toEqual({ succeeded:true, heir:true, agenda:'agenda_interrupted', original:true,
     defense:'archived', conclusion:'archived', fixedContacts:true });
 });
+
+test('Rodrigo’s agenda, goals and start name Valencia, its Muslim residents and Jimena’s household without process boilerplate', async function ({ page }, info) {
+  await start(page, info);
+  const result = await page.evaluate(function () {
+    const banned = /grants? no |creates? no |Record (a |an )?(costless )?(priority|intention|preference)|Record attention|\bordinary\b|\bactual(ly)?\b|\bexisting\b|\boriginal\b|\bauthored\b|historical opportunity|political opportunity/i;
+    const labelWords = /\b(ordinary|actual|actually|existing|current|original|authored|declared)\b/i;
+    const prose = ['intro','desc','text','detail'], faults = [], seen = {};
+    function field(where,kind,value) {
+      seen[kind] = (seen[kind] || 0)+1;
+      if (typeof value !== 'string' || !value) { faults.push(where+' '+kind+' is missing'); return; }
+      if (/[A-Za-z]\?[A-Za-z]/.test(value)) faults.push(where+' '+kind+' has a question mark for an apostrophe: '+value);
+      if (kind === 'label' && value.trim().split(/\s+/).length > 8) faults.push(where+' label is longer than eight words: '+value);
+      if (kind === 'label' && labelWords.test(value)) faults.push(where+' label uses a process word: '+value);
+      if (prose.indexOf(kind) >= 0 && banned.test(value)) faults.push(where+' '+kind+' uses boilerplate: '+value);
+    }
+    const agenda = FB.stories.get('valencia_agenda_1096').declaration;
+    field('valencia_agenda_1096','title',agenda.title); field('valencia_agenda_1096','intro',agenda.intro);
+    agenda.stages.forEach(function (st) {
+      field(st.id,'name',st.name); field(st.id,'text',st.text);
+      st.choices.forEach(function (c) { field(c.id,'label',c.label); field(c.id,'detail',c.detail); });
+    });
+    const profile = FB.stories.get('valencia_opening_profile_1096').declaration;
+    field('valencia_opening_profile_1096','title',profile.title); field('valencia_opening_profile_1096','intro',profile.intro);
+    profile.goals.forEach(function (g) { field(g.id,'name',g.name); field(g.id,'text',g.text); });
+    profile.contacts.forEach(function (c) { field(c.id,'name',c.label); field(c.id,'text',c.text); });
+    const row = FBDATA.startScenarios.find(function (r) { return r.id === 'rodrigo_diaz_1096'; });
+    field('rodrigo_diaz_1096','name',row.name); field('rodrigo_diaz_1096','desc',row.desc); field('rodrigo_diaz_1096','intro',row.intro);
+    Object.keys(row.familyPresets).forEach(function (key) {
+      field('rodrigo_diaz_1096.'+key,'name',row.familyPresets[key].name); field('rodrigo_diaz_1096.'+key,'desc',row.familyPresets[key].desc);
+    });
+    function stage(id) { return agenda.stages.find(function (st) { return st.id === id; }); }
+    const residents = stage('communities').text, reserve = profile.goals.find(function (g) { return g.id === 'reserve'; });
+    return { faults:faults, seen:seen, title:agenda.title,
+      residents:residents.split(/[.!?](?:\s|$)/).filter(Boolean).length === 1 && /\bMuslims?\b/.test(residents) && /\bValencia/.test(residents),
+      disclaimer:/charter|guarantee/i.test(residents),
+      worship:stage('worship').choices.find(function (c) { return c.id === 'worship_household'; }).label,
+      household:['Jimena','Diego','Cristina','Maria'].every(function (name) { return stage('household').text.indexOf(name) >= 0; }),
+      reserve:[reserve.name.indexOf('{money:120}') >= 0, reserve.text.indexOf('{money:120}') >= 0, reserve.criterion],
+      contacts:profile.contacts.map(function (c) { return [c.id,c.person.memberId]; }),
+      close:row.intro.slice(-'Open your court agenda in Deeds.'.length) };
+  });
+  expect(result).toEqual({ faults:[], seen:{title:2,intro:3,name:17,text:15,label:20,detail:20,desc:2},
+    title:'Valencia: Household and Lordship', residents:true, disclaimer:false, worship:'Attend to family and church', household:true,
+    reserve:[true,true,{kind:'reserve',amount:120}],
+    contacts:[['jimena','jimena_diaz'],['diego','diego_rodriguez'],['cristina','cristina_rodriguez'],['maria','maria_rodriguez']],
+    close:'Open your court agenda in Deeds.' });
+});
