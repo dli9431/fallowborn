@@ -1,4 +1,7 @@
 'use strict';
+const fs = require('fs');
+const path = require('path');
+const {applyLaterContributions} = require('../support/game/bookmark-sources-legacy');
 const {installRestoreFacts} = require('../support/game/restore-facts');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
@@ -231,6 +234,74 @@ test('the Bithynian claim tells the Nicaean defender who may attack and when', a
   expect(result.stage).toBe('War for Nicaea · Underway');
   expect(result.started[0]).toEqual(['Your role','Defender']);
   expect(result.started[3][1]).toMatch(new RegExp('^War underway since \\w+ 1204: ' + result.latin + ' against ' + result.court + '\\.$'));
+  // The same third-person introduction serves the defender.
+  expect(await page.evaluate(function () { return FB.stories.get('latin_bithynia_1204').intro(FB.state); }))
+    .toBe('The crusaders’ partition gave Bithynia to the Latin crown, but Theodore Laskaris holds Nicaea and rallies the Greeks there.');
+});
+
+test('1204 campaign, partition, crusade, start and office text says who wants what', async function ({ page }, info) {
+  await openGame(page, info);
+  const result = await page.evaluate(function () {
+    const disclaimers = /grants? no |creates? no |Record (a |an )?(costless )?(priority|intention|preference)|Record attention|\bordinary\b|\bactual(ly)?\b|\bexisting\b|\boriginal\b|\bauthored\b|historical opportunity|political opportunity/i;
+    const lostApostrophe = /[A-Za-z]\?[A-Za-z]/;
+    const faults = [];
+    let checked = 0;
+    // These declarations carry no choice labels of their own; the engine writes them.
+    function prose(where, value) {
+      checked++;
+      if (!value || disclaimers.test(value) || lostApostrophe.test(value) || /—|\bgold\b/i.test(value))
+        faults.push(where + ': ' + value);
+    }
+    function sentences(value) { return value.split(/[.!?](?:\s|$)/).filter(Boolean).length; }
+    const campaigns = FBDATA.bookmarkContent['1204'].campaigns;
+    Object.keys(campaigns).forEach(function (id) {
+      const d = campaigns[id];
+      prose(id + ' desc', d.desc);
+      // Attacker, defender and observer read the same card, in at most two sentences.
+      if (sentences(d.desc) > 2 || /\byou(r)?\b/i.test(d.desc)) faults.push(id + ' voice: ' + d.desc);
+    });
+    ['laskaris_1204','baldwin_1204','muhammad_1204','siwa_delegate_1204'].forEach(function (id) {
+      const sc = FBDATA.startScenarios.find(function (row) { return row.id === id; });
+      prose(id + ' desc', sc.desc);
+      prose(id + ' intro', sc.intro);
+      prose(id + ' family', sc.familyPresets.standard.desc);
+      if (sentences(sc.desc) > 2 || sentences(sc.intro) > 4 || !/^You /.test(sc.intro)) faults.push(id + ' shape');
+    });
+    prose('venetian_offices_1204 desc', FBDATA.storyCivicSelections.venetian_offices_1204.desc);
+    return { faults:faults, checked:checked, campaigns:Object.keys(campaigns).length,
+      bithynia:campaigns.latin_bithynia_1204.desc };
+  });
+  expect(result.faults).toEqual([]);
+  expect(result.campaigns).toBe(15);
+  expect(result.checked).toBe(28);
+  for (const name of ['partition', 'Bithynia', 'Theodore Laskaris', 'Nicaea']) expect(result.bithynia).toContain(name);
+  // The facts block owns the window and the outcome rule.
+  expect(result.bithynia).not.toMatch(/\d{4}|possession|years? of war|window/i);
+});
+
+test('the 1204 text changes stay exact against the frozen predecessor sources', async function () {
+  const root = path.resolve(__dirname, '../../..');
+  const frozen = path.resolve(__dirname, '../fixtures/bookmark-composition/native-before-shared');
+  for (const name of ['bookmark_1204.js', 'bookmark_1204_campaigns.js', 'bookmark_1204_terrain.js',
+    'starts_laskaris_1204.js']) {
+    const former = fs.readFileSync(path.join(frozen, name), 'utf8');
+    // Each recorded span must occur exactly once on both sides.
+    const applied = applyLaterContributions('data/' + name, former);
+    expect(applied, name).not.toBe(former);
+    if (name !== 'starts_laskaris_1204.js') continue;
+    const current = fs.readFileSync(path.join(root, 'data', name), 'utf8');
+    const declarations = /FBDATA\.startScenarios_laskaris_1204 = \[[\s\S]*?\n\];\n/;
+    expect(applied.match(declarations)[0]).toBe(current.match(declarations)[0]);
+  }
+});
+
+test('the Siwa delegate begins without a spouse or children, as the start card says', async function ({ page }, info) {
+  await startHistoricalGame(page, info, { bookmark:'1204',
+    code:'SIWATEXT-1204-siwa_delegate_1204-siwa_oasis-m-Review' });
+  expect(await page.evaluate(function () {
+    const me = FB.state.chars[FB.state.player.charId];
+    return { scenario:FB.state.start.scenarioId, spouse:me.spouseId || null, children:(me.childrenIds || []).length };
+  })).toEqual({ scenario:'siwa_delegate_1204', spouse:null, children:0 });
 });
 
 test('Baldwin sees the Bithynian claim stage, facts, action labels and specific blockers', async function ({ page }, info) {
@@ -306,6 +377,11 @@ for (const view of [{ name:'phone', size:{ width:390, height:844 } }, { name:'de
     await expect(facts.locator('.kv')).toHaveCount(4);
     await expect(facts.locator('.kv').first()).toHaveText(/Your role\s*Attacker/);
     await expect(facts).toContainText('Ready once you approve.');
+    await expect(page.locator('#gm-body')).toContainText(
+      'The crusaders’ partition gave Bithynia to the Latin crown, but Theodore Laskaris holds Nicaea and rallies the Greeks there.');
+    // The partition introduction renders its political term in this campaign.
+    expect(await page.evaluate(function () { return FB.stories.get('thessalonica_partition_1204').intro(FB.state); }))
+      .toContain('wants Thessalonica as his own kingdom under the Latin emperor.');
     await expect(page.locator('#gm-body h3')).toHaveCount(0);
     await expect(page.locator('#gm-body')).not.toContainText('Awaiting your decision');
     await expect(page.locator('[data-story-choice="face_campaign"] b')).toHaveText('Approve the war for Nicaea');

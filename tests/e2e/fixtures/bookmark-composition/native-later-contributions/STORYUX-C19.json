@@ -1,0 +1,120 @@
+{
+  "description": "The 1204 campaign, partition and crusade descriptions, the Nicaean, Latin, Khwarazmian and Siwa start texts and the Venetian office contest description say who wants what. The Nicaean entry also covers the earlier addition of the Latin start. Names, ids, operations, conditions, dates, grants and news are unchanged.",
+  "changes": [
+    {
+      "file": "data/bookmark_1204_campaigns.js",
+      "before": "\"desc\": \"The crusader court may contest Greek Thessalonica after the fall of Constantinople. The partition alone grants no county.\"",
+      "after": "\"desc\": \"Boniface of Montferrat wants Thessalonica, where the deposed emperor Alexios III holds a Greek court. The crusaders mean to take the city for their new empire.\""
+    },
+    {
+      "file": "data/bookmark_1204_campaigns.js",
+      "before": "\"desc\": \"The Latin court may press its projected Asian allotment against Nicaea. Laskarid possession must be overcome by an ordinary campaign.\"",
+      "after": "\"desc\": \"The crusaders’ partition gave Bithynia to the Latin crown, but Theodore Laskaris holds Nicaea and rallies the Greeks there.\""
+    },
+    {
+      "file": "data/bookmark_1204_campaigns.js",
+      "before": "\"desc\": \"The Laskarid court may contest the Latin capital while it retains Nicaea. Restoration depends on armies and actual possession.\"",
+      "after": "\"desc\": \"The Laskarid court at Nicaea wants Constantinople back from the Latins and, with it, the seat of the Greek emperors.\""
+    },
+    {
+      "file": "data/bookmark_1204_campaigns.js",
+      "before": "\"desc\": \"The Bulgarian court may challenge Latin possession of Adrianople while its own northern seat survives.\"",
+      "after": "\"desc\": \"The Latins rebuffed Kaloyan’s overtures, and the Greeks of Thrace chafe under their new masters. Bulgaria wants Adrianople from the Latin Empire.\""
+    },
+    {
+      "file": "data/bookmark_1204_campaigns.js",
+      "before": "\"desc\": \"The Epirote court may seek Thessalonica from its current ruler. No date guarantees a Greek restoration.\"",
+      "after": "\"desc\": \"The Komnenos Doukas court of Epirus wants Thessalonica, a prize that would put it at the head of the Greek revival.\""
+    },
+    {
+      "file": "data/bookmark_1204_campaigns.js",
+      "before": "\"desc\": \"Castile may contest Almohad Cordoba during the renewed southern campaigns. This is a county objective, not a predetermined battle or coalition victory.\"",
+      "after": "\"desc\": \"Alfonso VIII of Castile is renewing the war in the south and wants Cordoba from the Almohad Caliphate.\""
+    },
+    {
+      "file": "data/bookmark_1204_campaigns.js",
+      "before": "\"desc\": \"Portugal may renew its campaign toward Silves while Coimbra remains in its hands. A conquest still requires the ordinary army and peace terms.\"",
+      "after": "\"desc\": \"Portugal wants Silves back from the Almohads, who retook the Algarve town in 1191 after the Portuguese crown had held it for two years.\""
+    },
+    {
+      "file": "data/bookmark_1204_campaigns.js",
+      "before": "\"desc\": \"The Aragonese crown may contest Valencia from its current ruler in a later generation. The realm must survive and keep its opening seat.\"",
+      "after": "\"desc\": \"The Crown of Aragon looks south to Valencia and wants its rich coast and farmland under Aragonese rule.\""
+    },
+    {
+      "file": "data/bookmark_1204_campaigns.js",
+      "before": "\"desc\": \"France may complete its campaign against the Angevin court at Rouen. The spring opening retains Norman possession until a campaign changes it.\"",
+      "after": "\"desc\": \"Philip Augustus wants to finish taking Normandy from King John, whose Angevin court still holds Rouen.\""
+    },
+    {
+      "file": "data/bookmark_1204_campaigns.js",
+      "before": "\"desc\":\"Boniface of Montferrat seeks a kingdom beneath the Latin emperor. The projected partition grants no land: the imperial court must first hold Thessalonica directly and peacefully, and all living parties must accept.\"",
+      "after": "\"desc\":\"Boniface of Montferrat, passed over for the imperial crown, wants Thessalonica as his own {term:kingdom} under the Latin emperor. The emperor must hold the city in peace before he can grant it.\""
+    },
+    {
+      "file": "data/bookmark_1204_campaigns.js",
+      "before": "\"desc\":\"Othon de la Roche seeks Athens beneath Boniface's Thessalonican crown. Only a completed Thessalonican settlement, actual peaceful imperial possession of Athens and the consent of the living courts can establish this lordship.\"",
+      "after": "\"desc\":\"Othon de la Roche, who followed Boniface of Montferrat into Greece, wants Athens as a lordship of his own beneath the Thessalonican crown.\""
+    },
+    {
+      "file": "data/bookmark_1204_campaigns.js",
+      "before": "\"desc\":\"William of Champlitte seeks an Achaean principality beneath the Thessalonican crown. The map's coarse Morea county at Sparta must actually be won and held before an accepted grant. It represents the wider Morean campaign rather than exact 1205 borders; Corinth is excluded.\"",
+      "after": "\"desc\":\"William of Champlitte wants an Achaean principality in the Morea, beneath the Thessalonican crown, as his reward for the campaign in Greece.\""
+    },
+    {
+      "file": "data/bookmark_1204_campaigns.js",
+      "before": "\"desc\":\"After securing Thessalonica, the Latin court may contest Athens. Fighting determines possession; Othon's proposed lordship requires a separate accepted partition.\"",
+      "after": "\"desc\":\"The Latin court wants Athens from Leo Sgouros to open central Greece to the crusaders, and Othon de la Roche hopes to rule it.\""
+    },
+    {
+      "file": "data/bookmark_1204_campaigns.js",
+      "before": "\"desc\":\"After securing Thessalonica, the Latin court may contest the mapped Morean county at Sparta. A victory supplies actual possession for William's separate partition opportunity. This coarse county represents a regional campaign, not an exact historical border.\"",
+      "after": "\"desc\":\"The Latin court wants Sparta from the Greeks of the Morea to carry the crusade into the Peloponnese, and William of Champlitte hopes to rule what they win.\""
+    },
+    {
+      "file": "data/bookmark_1204_campaigns.js",
+      "before": "\"desc\":\"The appeals begun in 1213 and renewed at the Fourth Lateran Council open a conditional call for the Holy Land. The current Catholic head must have authority and an eligible hostile target. The existing campaign rules govern preparation, fighting and settlement; this opportunity promises no victory or Egyptian expedition.\"",
+      "after": "\"desc\":\"From 1213 Innocent III preaches a new crusade for the Holy Land, renewed at the Lateran Council of 1215. Whoever is pope then decides whether to call it.\""
+    },
+    {
+      "file": "data/starts_laskaris_1204.js",
+      "before": "name:'Theodore Laskaris at Nicaea', desc:'Hold the Nicaean court after the loss of Constantinople. Gather support in Bithynia and weigh the Latin threat against your own ambitions.',\n    tier:6, profession:'noble', gold:120, prestige:150, piety:10,\n    familyPresets:{ standard:{ name:'Existing Nicaean court household', diff:'about age 29 · existing court family', desc:'Keep Theodore and the generated supporting household. Historical relatives are not individually reconstructed.' } },\n    onboarding:'ruler',\n    intro:'You are Theodore Laskaris. Your court holds Nicaea after the loss of Constantinople, while other Greek courts pursue their own claims. Review your holdings and treasury in Rank & Realm. The Latin partition threatens Bithynia; choose how to face it, and whether your court can sustain a later campaign for Constantinople.' }\n];\n",
+      "after": "name:'Theodore Laskaris at Nicaea', desc:'You rule from Nicaea after the fall of Constantinople. The Latins claim Bithynia, and other Greek courts have ambitions of their own.',\n    tier:6, profession:'noble', gold:120, prestige:150, piety:10,\n    familyPresets:{ standard:{ name:'Existing Nicaean court household', diff:'about age 29 · existing court family', desc:'Theodore and a generated household; his wife Anna and other relatives are not in this start.' } },\n    onboarding:'ruler',\n    intro:'You are Theodore Laskaris, holding Nicaea after the fall of Constantinople. The Latins claim Bithynia, other Greek courts follow their own ambitions, and the old capital is in enemy hands. Begin with your holdings and treasury in Rank & Realm.' },\n  { id:'baldwin_1204', bookmarkIds:['1204'], alwaysUnlocked:true,\n    rulerRealmId:'latin_1204', governmentForm:'territorial', fixedProvinceId:'constantinople',\n    characterName:'Baldwin of Flanders', sex:'m', startCulture:'frankish', startReligion:'catholic',\n    name:'Baldwin of Flanders at Constantinople', desc:'You rule the new Latin Empire from Constantinople. The crusade leaders are still dividing the spoils while Greek courts gather beyond the city.',\n    tier:7, profession:'noble', gold:120, prestige:150, piety:10,\n    familyPresets:{ standard:{ name:'Existing Latin court household', diff:'about age 32 · existing court family', desc:'Baldwin and a generated household; his wife Marie and other relatives are not in this start.' } },\n    onboarding:'ruler',\n    intro:'You are Baldwin of Flanders, newly crowned Latin emperor at Constantinople. The crusade leaders have yet to settle the partition, and Greek courts gather beyond the city. Begin with your holdings and treasury in Rank & Realm.' }\n];\n"
+    },
+    {
+      "file": "data/bookmark_1204_terrain.js",
+      "before": "desc:'Hold the Khwarazmian court under Qara Khitai suzerainty. Later conquests remain opportunities.',",
+      "after": "desc:'You rule Khwarazm from Gurganj under the suzerainty of the Qara Khitai. The Ghurid frontier and the Qipchaqs of the steppe demand your attention.',"
+    },
+    {
+      "file": "data/bookmark_1204_terrain.js",
+      "before": "desc:'Keep Muhammad II and the generated supporting household.'",
+      "after": "desc:'Muhammad II and a generated household; his mother Terken Khatun, his son Jalal al-Din and other relatives are not in this start.'"
+    },
+    {
+      "file": "data/bookmark_1204_terrain.js",
+      "before": "intro:'You are Muhammad II at Gurganj. Your court holds its districts directly, while Qara Khitai suzerainty remains above it. The towns keep their residents. Steppe followers bargain separately for access and service; later conquests supply no opening possessions.'",
+      "after": "intro:'You are Muhammad II at Gurganj, ruling Khwarazm while the Qara Khitai remain your overlords. The Ghurids are your rivals to the south, and the Qipchaq following on the steppe bargains for itself. Open your court agenda in Deeds.'"
+    },
+    {
+      "file": "data/bookmark_1204_terrain.js",
+      "before": "desc:'Represent oasis cultivators and fortified households through local consent.',",
+      "after": "desc:'You speak for the households of Siwa as their delegate. Oasis cultivators and fortified households look to you, and extra dues need their consent.',"
+    },
+    {
+      "file": "data/bookmark_1204_terrain.js",
+      "before": "desc:'You hold the oasis’s public mandate. Your own household and property stay separate from the office.'",
+      "after": "desc:'You begin with no spouse or children. Your own property stays separate from the public office.'"
+    },
+    {
+      "file": "data/bookmark_1204_terrain.js",
+      "before": "intro:'You represent the households at Siwa. Local government in Deeds shows limited dues, defensive service and reserved consent. Gardens, households and public resources remain distinct.'",
+      "after": "intro:'You are the delegate of Siwa, chosen to speak for its oasis cultivators and fortified households. You hold a public office, while their gardens and homes remain their own. Local government in Deeds shows dues, defensive service and the choices that need their consent. Open your court agenda in Deeds.'"
+    },
+    {
+      "file": "data/bookmark_1204.js",
+      "before": "desc:'The civic institution endures beyond a doge. Offices follow civic recognition; households keep their property and foreign quarters remain limited rights.' }",
+      "after": "desc:'Venice’s leading men seek the doge’s office, and the councils of the commune decide who holds it.' }"
+    }
+  ]
+}

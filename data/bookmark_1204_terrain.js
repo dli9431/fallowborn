@@ -90,16 +90,16 @@ FB.bookmarkSources.stage({"source":"data/bookmark_1204_terrain.js","bookmarks":[
       {id:'muhammad_1204',bookmarkIds:['1204'],alwaysUnlocked:true,rulerRealmId:'khwarazm_1204',
         governmentForm:'regnum',fixedProvinceId:'gurganj_district',startCulture:'persian',startReligion:'sunni',
         characterName:'Muhammad II',
-        name:'Muhammad II at Gurganj',desc:'Hold the Khwarazmian court under Qara Khitai suzerainty. Later conquests remain opportunities.',
+        name:'Muhammad II at Gurganj',desc:'You rule Khwarazm from Gurganj under the suzerainty of the Qara Khitai. The Ghurid frontier and the Qipchaqs of the steppe demand your attention.',
         sex:'m',tier:6,profession:'noble',gold:120,prestige:150,piety:10,onboarding:'ruler',
-        familyPresets:{standard:{name:'Existing court household',diff:'age 35 · existing court family',desc:'Keep Muhammad II and the generated supporting household.'}},
-        intro:'You are Muhammad II at Gurganj. Your court holds its districts directly, while Qara Khitai suzerainty remains above it. The towns keep their residents. Steppe followers bargain separately for access and service; later conquests supply no opening possessions.'},
+        familyPresets:{standard:{name:'Existing court household',diff:'age 35 · existing court family',desc:'Muhammad II and a generated household; his mother Terken Khatun, his son Jalal al-Din and other relatives are not in this start.'}},
+        intro:'You are Muhammad II at Gurganj, ruling Khwarazm while the Qara Khitai remain your overlords. The Ghurids are your rivals to the south, and the Qipchaq following on the steppe bargains for itself. Open your court agenda in Deeds.'},
       {id:'siwa_delegate_1204',bookmarkIds:['1204'],alwaysUnlocked:true,rulerRealmId:'siwa_households_1204',
         governmentForm:'assembly_polity',fixedProvinceId:'siwa_oasis',startCulture:'berber',startReligion:'sunni',
-        name:'Siwa Delegate',desc:'Represent oasis cultivators and fortified households through local consent.',
+        name:'Siwa Delegate',desc:'You speak for the households of Siwa as their delegate. Oasis cultivators and fortified households look to you, and extra dues need their consent.',
         sex:'m',tier:1,profession:'farmer',gold:30,prestige:40,piety:0,onboarding:'ruler',
-        familyPresets:{standard:{name:'Existing representative',diff:'local public mandate',desc:'You hold the oasis’s public mandate. Your own household and property stay separate from the office.'}},
-        intro:'You represent the households at Siwa. Local government in Deeds shows limited dues, defensive service and reserved consent. Gardens, households and public resources remain distinct.'}
+        familyPresets:{standard:{name:'Existing representative',diff:'local public mandate',desc:'You begin with no spouse or children. Your own property stays separate from the public office.'}},
+        intro:'You are the delegate of Siwa, chosen to speak for its oasis cultivators and fortified households. You hold a public office, while their gardens and homes remain their own. Local government in Deeds shows dues, defensive service and the choices that need their consent. Open your court agenda in Deeds.'}
     ],
     // Every original scenery anchor retains a remnant. A split is bounded
     // habitation beside that remnant, never ownership of its entire cell.
