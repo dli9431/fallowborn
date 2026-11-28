@@ -331,11 +331,202 @@
       patronGeneration:def.commission && FB.realmRulerGeneration(s, def.commission.issuerRealmId),
       check:check, admission:admitted, definition:def, gold:s.player.gold, owner:s.owner[def.target.provinceId],
       wars:[FB.isRealmAtWar(s, def.actor.realmId), FB.isRealmAtWar(s, s.owner[def.target.provinceId])] };
-    return { id:id, allowed:!!(playerParty(s, def) && rec.phase === 'pending' &&
+    var allowed = !!(playerParty(s, def) && rec.phase === 'pending' &&
       !rec.playerDecision && !s.player.dead && s.date.year >= def.firstYear && !closed(s, def) &&
       (id === 'leave_campaign' || id === 'face_campaign' && check.allowed && admitted.allowed &&
-        (def.admission || !FB.ordinaryWarBetween(s, def.actor.realmId, s.owner[def.target.provinceId])))),
-      reason:admitted.reason || 'campaign_conditions', facts:facts, stamp:JSON.stringify(facts) };
+        (def.admission || !FB.ordinaryWarBetween(s, def.actor.realmId, s.owner[def.target.provinceId]))));
+    // The reason stays outside the stamped facts: it only names the blocker.
+    return { id:id, allowed:allowed,
+      reason:allowed ? admitted.reason || 'campaign_conditions' : quoteReason(s, rec, def, id, check, admitted),
+      facts:facts, stamp:JSON.stringify(facts) };
+  }
+  /* The first unmet condition of a refused quote, in the order the quote
+     checks them: party, decision, window, conditions, admission, war pair. */
+  function quoteReason(s, rec, def, id, check, admitted) {
+    if (!playerParty(s, def)) return 'not_party';
+    if (rec.phase !== 'pending' || rec.playerDecision) return 'decided';
+    if (s.player.dead) return 'campaign_conditions';
+    if (s.date.year < def.firstYear) return 'window_opens';
+    if (closed(s, def)) return 'window_closed';
+    if (id !== 'face_campaign') return 'campaign_conditions';
+    if (check.result) return check.reason;
+    if (check.wait) return 'awaiting_ruler';
+    if (!admitted.allowed) return admitted.reason;
+    if (!def.admission && FB.ordinaryWarBetween(s, def.actor.realmId, s.owner[def.target.provinceId])) return 'pair_war';
+    return 'campaign_conditions';
+  }
+  /* Presentation. Names are live display text for the sheet; saved news
+     keeps its own message parameters. */
+  var STAGE = 'campaign stage';
+  function realmName(s, rid) {
+    return rid && s.realms[rid] ? s.realms[rid].name : FB.T('No current court');
+  }
+  function personName(s, id) { return id && s.chars[id] ? FB.fullName(s.chars[id]) : FB.T('Its ruler'); }
+  function names(s, def) {
+    var pid = def.target.provinceId;
+    return { realm:realmName(s, def.actor.realmId), enemy:realmName(s, s.owner[pid]),
+      province:FB.world.byId[pid].name, first:def.firstYear, last:def.lastYear };
+  }
+  // Attacker and commissioning court decide; a defender or observer is informed.
+  function role(s, def) {
+    if (def.actor.realmId === 'player' || playerLeadsActor(s, def)) return 'attacker';
+    if (def.commission && def.commission.issuerRealmId === 'player') return 'issuer';
+    return s.owner[def.target.provinceId] === 'player' ? 'defender' : 'observer';
+  }
+  function roleName(who) {
+    if (who === 'attacker') return FB.T('Attacker');
+    if (who === 'issuer') return FB.T('Commissioning court');
+    return who === 'defender' ? FB.T('Defender') : FB.T('Observer');
+  }
+  function awaited(s, def) {
+    var expected = characterId(s, def.actor.character);
+    if (expected && ruler(s, def.actor.realmId) !== expected) return { characterId:expected, realmId:def.actor.realmId };
+    for (var row of def.conditions || []) {
+      if (row.kind !== 'ruler') continue;
+      var id = characterId(s, row.character);
+      if (ruler(s, row.realmId) !== id) return { characterId:id, realmId:row.realmId };
+    }
+    return null;
+  }
+  // The condition row behind a permanent reason; the first of its kind if it holds again.
+  function conditionRow(s, def, kind) {
+    var rows = (def.conditions || []).filter(function (row) { return row.kind === kind; });
+    return rows.filter(function (row) {
+      if (kind === 'owner') return s.owner[row.provinceId] !== row.realmId;
+      if (kind === 'ruler') return !courtLive(s, row.realmId, def) || !alive(s, characterId(s, row.character));
+      return true;
+    })[0] || rows[0] || null;
+  }
+  /* Why a campaign closed or failed, as a clause for "Closed: ..." and the
+     blocker of a permanent condition. Unknown reasons have no clause. */
+  function outcomeClause(s, def, reason, who) {
+    var p = names(s, def), row;
+    if (reason === 'player_declined') return who === 'issuer' ? FB.T('you withheld the commission') :
+      who === 'attacker' ? FB.T('you dropped the claim to {province}', p) : FB.T('the attack was called off');
+    if (reason === 'window_closed') return FB.T('the window ended in {last}', p);
+    if (reason === 'already_held') return FB.T('{realm} already holds {province}', p);
+    if (reason === 'actor_extinct') return FB.T('{realm} has fallen', p);
+    if (reason === 'actor_dead') return FB.T('{person} has died', { person:personName(s, characterId(s, def.actor.character)) });
+    if (reason === 'target_lost') return FB.T('{province} no longer has a living court', p);
+    if (reason === 'target_changed') return FB.T('{province} passed to {enemy}', p);
+    if (reason === 'target_dead') return FB.T('{person} has died', { person:personName(s, characterId(s, def.target.character)) });
+    if (reason === 'target_succeeded') return FB.T('{person} no longer rules {enemy}',
+      { person:personName(s, characterId(s, def.target.character)), enemy:p.enemy });
+    if (reason === 'capital_lost' && (row = conditionRow(s, def, 'owner')))
+      return FB.T('{court} lost {county}, which this campaign required',
+        { court:realmName(s, row.realmId), county:FB.world.byId[row.provinceId].name });
+    if (reason === 'patron_lost' && (row = conditionRow(s, def, 'ruler')))
+      return FB.T('{person} of {court} is gone', { person:personName(s, characterId(s, row.character)), court:realmName(s, row.realmId) });
+    if (reason === 'already_settled' && (row = conditionRow(s, def, 'landless')))
+      return FB.T('{court} already holds land', { court:realmName(s, row.realmId) });
+    if (reason === 'host_lost' && (row = conditionRow(s, def, 'host')))
+      return FB.T('the host of {court} was lost', { court:realmName(s, row.realmId) });
+    if (reason === 'authority_lost') return FB.T('a court that began it changed rulers');
+    if (reason === 'third_party_control') return FB.T('{province} passed to a third court', p);
+    if (reason === 'campaign_timeout') return FB.T('the war passed its time limit without taking {province}', p);
+    if (reason === 'campaign_ended') return FB.T('the war ended without taking {province}', p);
+    if (reason === 'campaign_lost') return FB.T('the host lost its campaign for {province}', p);
+    if (reason === 'term_ended') return FB.T('the service term ended before {province} was taken', p);
+    if (reason === 'migration_lost') return FB.T('the migration was lost');
+    if (reason === 'terms_lapsed') return FB.T('the service terms lapsed');
+    return null;
+  }
+  /* One specific sentence for each blocking reason: the court, person or
+     county involved and what would change it. Unknown reasons return null and
+     the shared sheet supplies its fallback. */
+  function blockerText(s, def, reason) {
+    var p = names(s, def), wait;
+    if (reason==='mobile_consent') return FB.T('The current coalition leader needs member assent to this exact war objective. In Mobile coalition, propose war with this target and obtain the members’ decisions before reviewing again. Membership alone grants no command.');
+    if (reason === 'public_authority') return FB.T('The court needs a capable current public authority before making this commitment.');
+    if (reason === 'ordinary_declaration') {
+      var a = admission(s, def);
+      return a.preview && a.preview.reason || FB.T('Ordinary war permission, frontier access and a currently offered aggression objective are required.');
+    }
+    if (reason === 'faith_policy') return FB.T('The ordinary religious policy prevents this declaration.');
+    if (reason === 'not_party') return FB.T('{realm} decides this attack, not you.', p);
+    if (reason === 'decided') return FB.T('This campaign has already been decided.');
+    if (reason === 'window_opens') return FB.T('Opens in {first}.', p);
+    if (reason === 'window_closed') return FB.T('The window closed at the end of {last}.', p);
+    if (reason === 'awaiting_ruler' && (wait = awaited(s, def)))
+      return FB.T('{person} must rule {court} first.', { person:personName(s, wait.characterId), court:realmName(s, wait.realmId) });
+    if (reason === 'pair_war') return FB.T('{realm} is already at war with {enemy}. This opens again once that war ends.', p);
+    if (reason === 'commitments') return FB.T('{realm} is at its limit of wars.', p);
+    if (reason === 'living_courts') return FB.T('{realm} and {enemy} must both have a living ruler.', p);
+    var clause = outcomeClause(s, def, reason, role(s, def));
+    return clause ? FB.T('The opportunity has closed: {reason}.', { reason:clause }) : null;
+  }
+  /* The campaign's present state, in the order day() decides it: a short
+     state for the card's stage line and one sentence for the Now fact. */
+  function progress(s, rec, def, who) {
+    var p = names(s, def), rid = def.actor.realmId, county = def.target.provinceId;
+    function out(state, text, flags) { return Object.assign({ state:state, text:text }, flags || {}); }
+    function closing(reason, failed) {
+      var clause = outcomeClause(s, def, reason, who);
+      if (failed) return out(FB.TC(STAGE, 'Failed'), clause ? FB.T('Failed: {reason}.', { reason:clause }) :
+        FB.T('Failed: the campaign did not take {province}.', p), { closed:true });
+      return out(FB.TC(STAGE, 'Closed'), clause ? FB.T('Closed: {reason}.', { reason:clause }) :
+        FB.T('Closed: history took another course.'), { closed:true });
+    }
+    function waiting(reason) {
+      var text = blockerText(s, def, reason);
+      return out(FB.TC(STAGE, 'Waiting'), text ? FB.T('Waiting: {reason}', { reason:text }) :
+        FB.T('Waiting for its conditions to hold.'), { wait:true });
+    }
+    if (rec.phase === 'resolved') {
+      if (rec.result === 'won') return out(FB.TC(STAGE, 'Won'), FB.T('Won: {realm} holds {province}.', p), { closed:true });
+      return closing(rec.reason, rec.result === 'failed');
+    }
+    if (rec.phase === 'negotiating') return out(FB.TC(STAGE, 'Negotiating'),
+      FB.T('{realm} is settling its commission and service terms.', p));
+    if (rec.phase === 'started') {
+      var since = FB.dateAtTurn(s, rec.startedTurn);
+      return out(FB.TC(STAGE, 'Underway'), FB.T('War underway since {season} {year}: {realm} against {enemy}.',
+        { season:FB.seasonName(since.season), year:since.year, realm:p.realm, enemy:realmName(s, rec.targetOwnerId) }));
+    }
+    if (closed(s, def)) return closing('window_closed');
+    if (s.owner[county] === rid) return closing('already_held');
+    var check = conditions(s, def);
+    if (check.result) return closing(check.reason);
+    if (check.wait) return waiting('awaiting_ruler');
+    if (!def.admission && FB.ordinaryWarBetween(s, rid, s.owner[county])) return waiting('pair_war');
+    if (aiActor(s, def) && FB.realmAttackCommitments(s, rid) >=
+        FB.aiDecisions.parameters(s, rid, 'war').maximumCommitments) return waiting('commitments');
+    var admitted = admission(s, def);
+    if (!admitted.allowed) return waiting(admitted.reason);
+    if (playerParty(s, def)) {
+      if (rec.playerDecision === 'campaign') return out(FB.TC(STAGE, 'Approved'),
+        FB.T('Approved: war begins on the next day the conditions hold.'));
+      return out(FB.TC(STAGE, 'Ready'), who === 'issuer' ? FB.T('Ready once you approve the commission.') :
+        FB.T('Ready once you approve.'));
+    }
+    return out(FB.TC(STAGE, 'Imminent'), FB.T('{realm} may declare war on {enemy} any day now.', p));
+  }
+  function windowText(s, def) {
+    // Game years are 360 days; a duration that is not whole years keeps one decimal.
+    return FB.renderMessage(FB.msg('fx.ui.story_campaign_window', { forms:{ select:'plural', param:'years', cases:{
+      one:'{first} to {last}, at most {years} year of war once it starts',
+      other:'{first} to {last}, at most {years} years of war once it starts' } } },
+      { first:def.firstYear, last:def.lastYear, years:Math.round(def.durationDays / 36) / 10 }),
+      { state:s, viewer:s.player && s.player.charId });
+  }
+  /* The shared story status shape (docs/designs/stories.md): name for older
+     readers, a one-line stage for the Deeds card, labeled facts for the
+     sheet and any further sentences as lines. */
+  function campaignStatus(s, rec, def) {
+    var who = role(s, def), p = names(s, def), now = progress(s, rec, def, who), lines = [];
+    if (who === 'defender' && rec.phase === 'pending' && !now.closed) {
+      // A defender is told who may attack and that the attack is not theirs to decide.
+      if (now.wait) lines.push(now.text);
+      now = { state:now.state,
+        text:FB.T('{realm} may declare war on you over {province} until {last}; the attack is theirs to decide.', p) };
+    }
+    var stage = FB.T('War for {province} · {state}', { province:p.province, state:now.state });
+    return { phase:rec.phase, name:stage, stage:stage, lines:lines, facts:[
+      [FB.T('Your role'), roleName(who)],
+      [FB.T('Objective'), FB.T('{province}, held by {enemy}', p)],
+      [FB.T('Window'), windowText(s, def)],
+      [FB.T('Now'), now.text]
+    ] };
   }
   function validate(rec, id) {
     function bad(field) { throw new Error(FB.T('Invalid v4 save field at {path}.',
@@ -480,24 +671,24 @@
         var effective = FB.stories.definition(s, def);
         if (!playerParty(s, effective) || rec.phase !== 'pending' || rec.playerDecision ||
             s.date.year < def.firstYear || closed(s, def)) return [];
+        // Labels name the action and its object from the declaration and the player's role.
+        var p = names(s, effective);
+        if (role(s, effective) === 'issuer') return [
+          { id:'face_campaign', label:FB.T('Commission {realm} to take {province}', p),
+            detail:FB.T('{realm} declares war on {enemy} as soon as the conditions hold. Winning {province} depends on its armies.', p) },
+          { id:'leave_campaign', label:FB.T('Withhold the commission'),
+            detail:FB.T('{realm} does not attack {province}. The opportunity closes for good.', p) }
+        ];
         return [
-          { id:'face_campaign', label:FB.T('Face the campaign'), detail:def.admission ?
-            FB.T('Commit to an ordinary war of aggression, with its political costs and uncertain outcome. No payment or territory grant accompanies this decision.') :
-            FB.T('Authorize this political opportunity to proceed through ordinary war and its existing conditions. No territory is awarded by this decision.') },
-          { id:'leave_campaign', label:FB.T('Use ordinary diplomacy instead'), detail:FB.T('Close this historical opportunity without a declaration, commission or payment. Neighboring courts retain their ordinary political choices.') }
+          { id:'face_campaign', label:FB.T('Approve the war for {province}', p), detail:def.admission ?
+            FB.T('War is declared on {enemy} at once. Winning {province} depends on your armies. The declaration’s costs are shown on review.', p) :
+            FB.T('War is declared on {enemy} as soon as the conditions hold. Winning {province} depends on your armies.', p) },
+          { id:'leave_campaign', label:FB.T('Drop the claim to {province}', p),
+            detail:FB.T('No war. The opportunity closes for good.') }
         ];
       },
       quote:function (s, rec, id) { return playerQuote(s, rec, def, id); },
-      blocker:function (s, rec, reason) {
-        if (reason==='mobile_consent') return FB.T('The current coalition leader needs member assent to this exact war objective. In Mobile coalition, propose war with this target and obtain the members’ decisions before reviewing again. Membership alone grants no command.');
-        if (reason === 'public_authority') return FB.T('The court needs a capable current public authority before making this commitment.');
-        if (reason === 'ordinary_declaration') {
-          var a = admission(s, FB.stories.definition(s, def));
-          return a.preview && a.preview.reason || FB.T('Ordinary war permission, frontier access and a currently offered aggression objective are required.');
-        }
-        if (reason === 'faith_policy') return FB.T('The ordinary religious policy prevents this declaration.');
-        return FB.T('The campaign needs its living rulers, current territory and date window. Review the opportunity again when those conditions hold.');
-      },
+      blocker:function (s, rec, reason) { return blockerText(s, FB.stories.definition(s, def), reason); },
       review:function (s, rec, id, q) {
         if (!def.admission || id !== 'face_campaign') return [];
         if (def.mobileReview) return [FB.T('Declare through the current coalition war review and its exact member assent. No money, fighters or land are granted. The actual host campaigns independently; success and later settlement are uncertain.'),
@@ -544,20 +735,7 @@
       intro:function (s) { return FB.dataText(s, null, def.mobileReview ? 'expeditionStory' : 'storyCampaign', def.id, def, 'desc', {}); },
       status:function (s, rec) {
         if (rec.phase === 'pending' && s.date.year < def.firstYear) return null;
-        var names = { pending:playerParty(s, FB.stories.definition(s, def)) && !rec.playerDecision
-            ? FB.T('Awaiting your decision') : FB.T('Awaiting the courts'), negotiating:FB.T('Commission and service terms'),
-          started:FB.T('Campaign underway'), won:FB.T('Objective secured'), failed:FB.T('Campaign ended'),
-          diverted:FB.T('History took another course'), interrupted:FB.T('Political opportunity interrupted') };
-        var lines = [FB.T('Territory depends on the campaign’s armies and any agreed settlement.')];
-        if (def.admission) {
-          var effective = FB.stories.definition(s, def), pid = effective.target.provinceId;
-          var owner = s.realms[s.owner[pid]], actor = s.realms[effective.actor.realmId];
-          lines.push(FB.T('Objective: {province}. Current controller: {realm}.',
-            { province:FB.world.byId[pid].name, realm:owner ? owner.name : FB.T('No current court') }));
-          lines.push(FB.T('Initiating court: {realm}. A secured objective describes that court’s campaign result.',
-            { realm:actor ? actor.name : FB.T('No current court') }));
-        }
-        return { phase:rec.phase, name:names[rec.result || rec.phase], lines:lines };
+        return campaignStatus(s, rec, FB.stories.definition(s, def));
       } };
   }, 'js/story_campaign.js', validateDefinition);
 })();

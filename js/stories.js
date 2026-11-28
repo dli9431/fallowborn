@@ -362,7 +362,7 @@
     return FB.stories.cards(s).map(function (card) {
       var story = FB.stories.get(card.id);
       return { id:card.id, kind:card.kind, title:card.title,
-        stage:card.name && card.name !== card.title ? card.name : '',
+        stage:card.stage && card.stage !== card.title ? card.stage : '',
         progress:card.progress, decision:FB.stories.choices(s, card.id).length > 0,
         storyline:isStoryline(story), row:placementRow(story) };
     });
@@ -537,8 +537,8 @@
         if (!status) return;
         out.push({ id:story.id, kind:story.kind,
           title:story.title ? story.title(s, record(s, story.id)) : story.id,
-          phase:status.phase, name:status.name, lines:status.lines || [],
-          progress:status.progress || null });
+          phase:status.phase, name:status.name, stage:status.stage || status.name || '',
+          lines:status.lines || [], facts:status.facts || null, progress:status.progress || null });
       });
       return out;
     },
@@ -639,11 +639,17 @@
       var esc = FB.esc, status = FB.stories.status(s, id);
       var html = '<div class="gm-body-text">';
       if (story.intro) html += '<p>' + esc(story.intro(s, rec)) + '</p>';
-      if (status) {
+      if (status && !status.facts) {
         html += '<h3>' + esc(status.name) + '</h3>';
         for (var line of status.lines || []) html += '<p class="hint">' + esc(line) + '</p>';
       }
       html += '</div>';
+      // A status with facts reads as the shared labeled list, without a heading.
+      if (status && status.facts) html += UI._shared.reviewFactsCard('', status.facts.map(function (pair) {
+        return UI._shared.rawKv(pair[0], esc(pair[1]));
+      }).join('') + (status.lines || []).map(function (line) {
+        return '<p class="hint">' + esc(line) + '</p>';
+      }).join(''), ' data-story-facts="' + esc(id) + '"');
       var people = story.people ? story.people(s, rec) : [];
       people.forEach(function (person) {
         var c = person.characterId && s.chars[person.characterId];
@@ -718,8 +724,8 @@
         body += facts ? shared.reviewActionsHtml(shared.reviewActionCardHtml({ id:'gm-story-confirm', label:confirmLabel })) :
           '<button type="button" class="btn primary" id="gm-story-confirm">' + esc(confirmLabel) + '</button>';
       }
-      UI.openModal(FB.T('Review {choice}', { choice:selected.label }),
-        body, navigation);
+      // The review is titled by the action itself.
+      UI.openModal(selected.label, body, navigation);
       if (people.length) FB.paintFaces(document.getElementById('gm-body'), FB.state);
       var confirm = document.getElementById('gm-story-confirm');
       if (!confirm) return;
