@@ -238,6 +238,79 @@ for (const boundary of ['death','succession','jurisdiction']) {
   });
 }
 
+test('Henry’s agenda, goals and start name the Mongol columns and Little Poland without disclaimers', async function ({page}, info) {
+  await openGame(page, info);
+  const result = await page.evaluate(function () {
+    const banned = /grants? no |creates? no |Record (a |an )?(costless )?(priority|intention|preference)|Record attention|\bordinary\b|\bactual(ly)?\b|\bexisting\b|\boriginal\b|\bauthored\b|historical opportunity|political opportunity/i;
+    const labelWords = /\b(ordinary|actual|actually|existing|current|original|authored|declared)\b/i;
+    const faults = [];
+    function check(owner, field, value, prose) {
+      if (typeof value !== 'string' || !value) { faults.push(owner + ' ' + field + ' is missing'); return; }
+      if (/[A-Za-z]\?[A-Za-z]/.test(value)) faults.push(owner + ' ' + field + ' has a lost apostrophe');
+      if (value.indexOf('—') >= 0 || /\bgold\b/i.test(value)) faults.push(owner + ' ' + field + ' has an em dash or gold');
+      if (prose && banned.test(value)) faults.push(owner + ' ' + field + ' uses boilerplate: ' + value);
+    }
+    const declaration = function (id) { const story = FB.stories.get(id); return FBDATA.storyInstances[id] || story && story.declaration; };
+    const agenda = declaration('silesia_agenda_1241'), opening = declaration('opening_silesia_1241');
+    const sc = FBDATA.startScenarios.find(function (row) { return row.id === 'henry_pious_1241'; });
+    check('agenda', 'title', agenda.title, false);
+    check('agenda', 'intro', agenda.intro, true);
+    let choices = 0;
+    const details = [];
+    agenda.stages.forEach(function (st) {
+      check(st.id, 'name', st.name, false);
+      check(st.id, 'text', st.text, true);
+      st.choices.forEach(function (c) {
+        choices++;
+        check(c.id, 'label', c.label, false);
+        check(c.id, 'detail', c.detail, true);
+        details.push(c.detail);
+        if (c.label.trim().split(/\s+/).length > 8 || labelWords.test(c.label)) faults.push(c.id + ' label: ' + c.label);
+      });
+    });
+    check('opening', 'title', opening.title, false);
+    check('opening', 'intro', opening.intro, true);
+    opening.goals.forEach(function (g) { check(g.id, 'goal name', g.name, false); check(g.id, 'goal text', g.text, true); });
+    opening.contacts.forEach(function (c) { check(c.id, 'contact label', c.label, false); check(c.id, 'contact text', c.text, true); });
+    check(sc.id, 'desc', sc.desc, true);
+    check(sc.id, 'intro', sc.intro, true);
+    check(sc.id, 'family', sc.familyPresets.standard.desc, true);
+    const sentences = function (value) { return value.split(/[.!?](?:\s|$)/).filter(Boolean).length; };
+    if (sentences(sc.desc) > 2 || sentences(sc.intro) > 4 || !/^You /.test(sc.intro)) faults.push('start shape');
+    const information = agenda.stages.find(function (st) { return st.id === 'ducal_information'; });
+    return {faults:faults, counts:[agenda.stages.length, choices, opening.goals.length, opening.contacts.length],
+      title:agenda.title, name:sc.name, information:information.text,
+      nothing:details.filter(function (d) { return /\b(no|nothing|without|unchanged|none)\b/i.test(d); }),
+      limit:/These priorities shape your court’s story; orders, payments and wars go through Rank & Realm, Land and the map\.$/.test(agenda.intro),
+      begin:/Open your court agenda in Deeds to begin\.$/.test(sc.intro)};
+  });
+  expect(result.faults).toEqual([]);
+  expect(result.counts).toEqual([8, 16, 3, 1]);
+  expect([result.title, result.name]).toEqual(['Henry: a continuing ducal court', 'Henry the Pious: the Silesian court']);
+  expect(result.information).toContain('Mongol columns');
+  expect(result.information).toContain('Little Poland');
+  expect(result.nothing).toEqual([]);
+  expect(result.limit).toBe(true);
+  expect(result.begin).toBe(true);
+});
+
+test('the Henry text changes stay exact against the frozen predecessor sources', async function () {
+  const fs = require('fs');
+  const path = require('path');
+  const {applyLaterContributions} = require('../support/game/bookmark-sources-legacy');
+  const root = path.resolve(__dirname, '../../..');
+  const frozen = path.resolve(__dirname, '../fixtures/bookmark-composition/native-before-shared');
+  for (const name of ['story_silesia_1241.js', 'starts_silesia_1241.js']) {
+    const former = fs.readFileSync(path.join(frozen, name), 'utf8');
+    // Each recorded span occurs exactly once on both sides.
+    const applied = applyLaterContributions('data/' + name, former);
+    expect(applied, name).not.toBe(former);
+    // Only the source staging wrapper lines differ afterwards.
+    const lines = fs.readFileSync(path.join(root, 'data', name), 'utf8').split('\n');
+    expect(applied, name).toBe(lines.slice(1, lines.length - 2).join('\n') + '\n');
+  }
+});
+
 test('a neighboring household receives no ducal agenda or personal goals', async function ({page}, info) {
   await beginBookmark(page,info,'1241','hungarian_village_household_1241');
   expect(await page.evaluate(function () {

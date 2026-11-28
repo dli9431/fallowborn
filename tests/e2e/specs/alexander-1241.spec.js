@@ -320,3 +320,82 @@ test('the shared review cancels without a decision and restores focus to the ori
   await page.keyboard.press('Escape');await expect(card).toBeFocused();
   expect(await page.evaluate(function () {return {phase:FB.state.stories.alexander_household_1241.phase,gold:FB.state.player.gold};})).toEqual({phase:'household',gold:25});
 });
+
+test('Alexander’s household story, goals and start state the Novgorod office limit once without process wording',async function ({page},info) {
+  await openGame(page,info);
+  const result=await page.evaluate(function () {
+    const ID='alexander_household_1241';
+    const banned=/grants? no |creates? no |Record (a |an )?(costless )?(priority|intention|preference)|Record attention|\bordinary\b|\bactual(ly)?\b|\bexisting\b|\boriginal\b|\bauthored\b|historical opportunity|political opportunity/i;
+    const labelWords=/\b(ordinary|actual|actually|existing|current|original|authored|declared)\b/i;
+    const faults=[],office=[];
+    function check(owner,field,value,prose) {
+      if (typeof value!=='string' || !value) {faults.push(owner+' '+field+' is missing');return;}
+      if (/[A-Za-z]\?[A-Za-z]/.test(value)) faults.push(owner+' '+field+' has a lost apostrophe');
+      if (value.indexOf('—')>=0 || /\bgold\b/i.test(value)) faults.push(owner+' '+field+' has an em dash or gold');
+      if (prose && banned.test(value)) faults.push(owner+' '+field+' uses boilerplate: '+value);
+    }
+    function declaration(id) {const story=FB.stories.get(id);return FBDATA.storyInstances[id] || story && story.declaration;}
+    function track(owner,field,value) {if (/\boffice|\bprince/i.test(value)) office.push(owner+' '+field);}
+    const def=declaration(ID),opening=declaration('opening_alexander_1241');
+    const sc=FBDATA.startScenarios.find(function (row) {return row.id==='alexander_1241';});
+    check(ID,'title',def.title,false);
+    check(ID,'intro',def.intro,true);
+    track(ID,'intro',def.intro);
+    let active=0,terminal=0,choices=0;
+    Object.keys(def.stages).forEach(function (key) {
+      const st=def.stages[key];
+      if (st.terminal) terminal++; else active++;
+      check(key,'name',st.name,false);
+      check(key,'text',st.text,true);
+      track(key,'text',st.text);
+      st.choices.forEach(function (c) {
+        choices++;
+        check(c.id,'label',c.label,false);
+        check(c.id,'detail',c.detail,true);
+        track(c.id,'detail',c.detail);
+        if (c.label.trim().split(/\s+/).length>8 || labelWords.test(c.label)) faults.push(c.id+' label: '+c.label);
+      });
+    });
+    check('opening','title',opening.title,false);
+    check('opening','intro',opening.intro,true);
+    opening.goals.forEach(function (g) {check(g.id,'goal name',g.name,false);check(g.id,'goal text',g.text,true);});
+    opening.contacts.forEach(function (c) {check(c.id,'contact label',c.label,false);check(c.id,'contact text',c.text,true);});
+    check(sc.id,'desc',sc.desc,true);
+    check(sc.id,'intro',sc.intro,true);
+    function sentences(value) {return value.split(/[.!?](?:\s|$)/).filter(Boolean).length;}
+    if (sentences(sc.desc)>2 || sentences(sc.intro)>4 || !/^You /.test(sc.intro)) faults.push('start shape');
+    const goNorth=def.stages.road.choices.find(function (c) {return c.id==='go_north';});
+    return {faults:faults,office:office,counts:[active,terminal,choices,opening.goals.length,opening.contacts.length],
+      titles:[def.title,opening.title,sc.name],goNorth:goNorth.detail,operation:goNorth.operation,
+      terminalWords:Object.keys(def.stages).filter(function (key) {
+        return def.stages[key].terminal && /\b(ordinary|actual)\b/i.test(def.stages[key].text);
+      }),
+      deeds:/in Deeds/.test(sc.intro)};
+  });
+  expect(result.faults).toEqual([]);
+  expect(result.counts).toEqual([12,9,21,3,4]);
+  expect(result.titles).toEqual(['Alexander: a northern request','Alexander’s first goals','Alexander at Pereslavl']);
+  expect(result.goNorth).toBe('Pay the fare and travel alone. Arriving does not make you Novgorod’s prince.');
+  expect(result.operation).toEqual({kind:'travel_site',travelSiteId:'alexander_novgorod_1241'});
+  // The office limit is said once, where the player commits to the journey.
+  expect(result.office).toEqual(['go_north detail']);
+  expect(result.terminalWords).toEqual([]);
+  expect(result.deeds).toBe(true);
+});
+
+test('the Alexander text changes stay exact against the frozen predecessor sources',async function () {
+  const fs=require('fs');
+  const path=require('path');
+  const {applyLaterContributions}=require('../support/game/bookmark-sources-legacy');
+  const root=path.resolve(__dirname,'../../..');
+  const frozen=path.resolve(__dirname,'../fixtures/bookmark-composition/native-before-shared');
+  for (const name of ['story_alexander_1241.js','starts_alexander_1241.js']) {
+    const former=fs.readFileSync(path.join(frozen,name),'utf8');
+    // Each recorded span occurs exactly once on both sides.
+    const applied=applyLaterContributions('data/'+name,former);
+    expect(applied,name).not.toBe(former);
+    // Only the source staging wrapper lines differ afterwards.
+    const lines=fs.readFileSync(path.join(root,'data',name),'utf8').split('\n');
+    expect(applied,name).toBe(lines.slice(1,lines.length-2).join('\n')+'\n');
+  }
+});

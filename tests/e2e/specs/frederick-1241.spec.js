@@ -164,3 +164,61 @@ test('a matching retained baseline save keeps its Ravenna layout and has no Fred
   });
   expect(result).toEqual({revision:'baseline',first:'ravenna_head',agenda:false});
 });
+
+test('Frederick’s opening goals and start name Faenza, Gregory IX and the council without disclaimers',async function ({page},info) {
+  await openGame(page,info);
+  const result=await page.evaluate(function () {
+    const banned=/grants? no |creates? no |Record (a |an )?(costless )?(priority|intention|preference)|Record attention|\bordinary\b|\bactual(ly)?\b|\bexisting\b|\boriginal\b|\bauthored\b|historical opportunity|political opportunity/i;
+    const faults=[];
+    function check(owner,field,value,prose) {
+      if (typeof value!=='string' || !value) {faults.push(owner+' '+field+' is missing');return;}
+      if (/[A-Za-z]\?[A-Za-z]/.test(value)) faults.push(owner+' '+field+' has a lost apostrophe');
+      if (value.indexOf('—')>=0 || /\bgold\b/i.test(value)) faults.push(owner+' '+field+' has an em dash or gold');
+      if (prose && banned.test(value)) faults.push(owner+' '+field+' uses boilerplate: '+value);
+    }
+    function declaration(id) {const story=FB.stories.get(id);return FBDATA.storyInstances[id] || story && story.declaration;}
+    const opening=declaration('opening_frederick_1241'),agenda=declaration('frederick_agenda_1241');
+    const sc=FBDATA.startScenarios.find(function (row) {return row.id==='frederick_1241';});
+    check('opening','title',opening.title,false);
+    check('opening','intro',opening.intro,true);
+    opening.goals.forEach(function (g) {check(g.id,'goal name',g.name,false);check(g.id,'goal text',g.text,true);});
+    opening.contacts.forEach(function (c) {check(c.id,'contact label',c.label,false);check(c.id,'contact text',c.text,true);});
+    check(sc.id,'desc',sc.desc,true);
+    check(sc.id,'intro',sc.intro,true);
+    check(sc.id,'family',sc.familyPresets.standard.desc,true);
+    function sentences(value) {return value.split(/[.!?](?:\s|$)/).filter(Boolean).length;}
+    if (sentences(sc.desc)>2 || sentences(sc.intro)>4 || !/^You /.test(sc.intro)) faults.push('start shape');
+    // Goal criteria still point at live rows of the shared agenda.
+    const live={};
+    agenda.stages.forEach(function (st) {st.choices.forEach(function (c) {live[c.id]=true;});});
+    const dangling=[];
+    opening.goals.forEach(function (g) {g.criterion.choiceIds.forEach(function (c) {if (!live[c]) dangling.push(c);});});
+    return {faults:faults,counts:[opening.goals.length,opening.contacts.length],dangling:dangling,
+      titles:[opening.title,sc.name,agenda.title],intro:opening.intro,desc:sc.desc,
+      begin:/Open your court agenda in Deeds to begin\.$/.test(sc.intro)};
+  });
+  expect(result.faults).toEqual([]);
+  expect(result.counts).toEqual([3,1]);
+  expect(result.dangling).toEqual([]);
+  expect(result.titles).toEqual(['The Emperor’s First Goals','Frederick II outside Faenza','Frederick II: campaign and crowns']);
+  expect(result.intro).toBe('Three aims for your first months before Faenza.');
+  for (const name of ['Faenza','Gregory IX','council']) expect(result.desc).toContain(name);
+  expect(result.begin).toBe(true);
+});
+
+test('the Frederick text changes stay exact against the frozen predecessor sources',async function () {
+  const fs=require('fs');
+  const path=require('path');
+  const {applyLaterContributions}=require('../support/game/bookmark-sources-legacy');
+  const root=path.resolve(__dirname,'../../..');
+  const frozen=path.resolve(__dirname,'../fixtures/bookmark-composition/native-before-shared');
+  for (const name of ['story_frederick_1241.js','starts_frederick_1241.js']) {
+    const former=fs.readFileSync(path.join(frozen,name),'utf8');
+    // Each recorded span occurs exactly once on both sides.
+    const applied=applyLaterContributions('data/'+name,former);
+    expect(applied,name).not.toBe(former);
+    // Only the source staging wrapper lines differ afterwards.
+    const lines=fs.readFileSync(path.join(root,'data',name),'utf8').split('\n');
+    expect(applied,name).toBe(lines.slice(1,lines.length-2).join('\n')+'\n');
+  }
+});
