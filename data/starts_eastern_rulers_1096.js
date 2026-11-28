@@ -6,23 +6,23 @@ FBDATA.startScenarios_eastern_rulers_1096 = [
   { id:'alexios_1096', bookmarkIds:['1096'], alwaysUnlocked:true,
     rulerRealmId:'byzantium_1096', governmentForm:'administrative_monarchy', fixedProvinceId:'constantinople',
     characterName:'Alexios I Komnenos', sex:'m', startCulture:'greek', startReligion:'orthodox',
-    name:'Alexios at Constantinople', desc:'Govern the imperial court, review effective provincial service and choose priorities for defense, resources and passage through the changing frontier.',
+    name:'Alexios at Constantinople', desc:'Rule the empire from Constantinople in 1096, with Kilij Arslan at Nicaea across the Bosporus and western armies on the road east.',
     tier:7, profession:'noble', gold:120, prestige:150, piety:10,
     familyPresets:{ standard:{ name:'The Komnenian household', diff:'age 39 · named court family',
-      desc:'Irene Doukaina and six named children share the capital household. Eudokia uses an approximate birth year; Theodora is absent at this opening.' } },
+      desc:'Your wife Irene Doukaina and six of your children live with you in the capital. Your daughter Theodora is not in this start.' } },
     tracks:['alexios_agenda_1096','opening_alexios_1096'],
     trackLocations:{ alexios_agenda_1096:['constantinople'], opening_alexios_1096:['constantinople'] }, onboarding:'ruler',
-    intro:'You are Alexios I Komnenos at Constantinople. Your household and the imperial administration have different responsibilities. Review appointments, public resources and the actual frontier. Approaching travellers may seek passage, but an imperial priority alone makes no agreement and gives you no command over their contingents.' },
+    intro:'You are Alexios I Komnenos, emperor at Constantinople. Kilij Arslan rules Nicaea across the Bosporus, and armies answering the pope’s call are marching toward your lands. Your governors and treasury must hold the empire together. Open your court agenda in Deeds.' },
   { id:'kilij_arslan_1096', bookmarkIds:['1096'], alwaysUnlocked:true,
     rulerRealmId:'rum_1096', governmentForm:'territorial', fixedProvinceId:'nicaea',
     characterName:'Kilij Arslan I', sex:'m', startCulture:'turkic', startReligion:'sunni',
-    name:'Kilij Arslan at Nicaea', desc:'Rule from Nicaea, review current jurisdiction and affordable defense, and choose between local responsibilities and eastern diplomacy.',
+    name:'Kilij Arslan at Nicaea', desc:'Rule the Sultanate of Rum from Nicaea in 1096, between the empire across the Bosporus and rival Turkish courts to the east.',
     tier:6, profession:'noble', gold:120, prestige:150, piety:10,
     familyPresets:{ standard:{ name:'The Nicaean ruler', diff:'working age 17 · no seeded consort',
-      desc:'A working birth year of 1079 supplies the age. No wife or children are reconstructed for the opening.' } },
+      desc:'You rule alone at seventeen. Your wife and children are not in this start.' } },
     tracks:['rum_agenda_1096','opening_rum_1096'],
     trackLocations:{ rum_agenda_1096:['nicaea'], opening_rum_1096:['nicaea'] }, onboarding:'ruler',
-    intro:'You are Kilij Arslan I at Nicaea. The county represents a broader jurisdiction than the city itself. Review your resources and choose between local defense, eastern interests or continued rule. Ordinary diplomacy and war remain available; no siege, family captivity or move to Konya is predetermined.' }
+    intro:'You are Kilij Arslan I, the young Seljuk ruler at Nicaea. Alexios rules across the Bosporus, the Danishmendid court contests the east, and western armies are on the road toward you. Open your court agenda in Deeds.' }
 ];
 
 Array.prototype.push.apply(FBDATA.startScenarios, FBDATA.startScenarios_eastern_rulers_1096);

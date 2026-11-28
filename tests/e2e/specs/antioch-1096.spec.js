@@ -177,3 +177,66 @@ test('malformed program or contact saves reject before campaign adoption',async 
     });
   })).toEqual([{rejected:true,pure:true},{rejected:true,pure:true}]);
 });
+
+test('Antioch governing, goal and start text names the city, the sultan and its neighbors plainly',async function ({page},info) {
+  await openGame(page,info);
+  const result = await page.evaluate(function () {
+    const processWords = /\b(ordinary|actual|actually|existing|current|original|authored|declared)\b/i;
+    const disclaimers = /grants? no |creates? no |Record (a |an )?(costless )?(priority|intention|preference)|Record attention|\bordinary\b|\bactual(ly)?\b|\bexisting\b|\boriginal\b|\bauthored\b|historical opportunity|political opportunity/i;
+    const lostApostrophe = /[A-Za-z]\?[A-Za-z]/;
+    const limit = 'These priorities shape your court’s story; orders, payments and wars go through Rank & Realm, Land and the map.';
+    const faults = [];
+    let checked = 0;
+    function prose(where,value) {
+      checked++;
+      if (!value || disclaimers.test(value) || lostApostrophe.test(value)) faults.push(where + ': ' + value);
+    }
+    const start = FBDATA.startScenarios.find(function (s) { return s.id === 'yaghi_siyan_1096'; });
+    prose('yaghi_siyan_1096 desc',start.desc);
+    prose('yaghi_siyan_1096 intro',start.intro);
+    prose('yaghi_siyan_1096 family',start.familyPresets.standard.desc);
+    if (!start.intro.endsWith('Open your court agenda in Deeds.')) faults.push('yaghi_siyan_1096 beginning');
+    const agenda = FBDATA.storyInstances.antioch_agenda_1096;
+    prose('antioch_agenda_1096 intro',agenda.intro);
+    if (!agenda.intro.endsWith(limit)) faults.push('antioch_agenda_1096 limit sentence');
+    agenda.stages.forEach(function (st) {
+      prose(st.id + ' text',st.text);
+      if (lostApostrophe.test(st.name)) faults.push(st.id + ' name: ' + st.name);
+      st.choices.forEach(function (c) {
+        checked++;
+        if (c.label.trim().split(/\s+/).length > 8 || processWords.test(c.label) || lostApostrophe.test(c.label)) faults.push(c.id + ' label: ' + c.label);
+        prose(c.id + ' detail',c.detail);
+      });
+    });
+    const profile = FBDATA.storyInstances.opening_antioch_1096;
+    prose('opening_antioch_1096 intro',profile.intro);
+    profile.goals.forEach(function (g) {
+      prose(g.id + ' text',g.text);
+      if (lostApostrophe.test(g.name) || processWords.test(g.name)) faults.push(g.id + ' name: ' + g.name);
+    });
+    profile.contacts.forEach(function (c) {
+      prose(c.id + ' text',c.text);
+      if (lostApostrophe.test(c.label)) faults.push(c.id + ' label: ' + c.label);
+    });
+    const first = agenda.stages[0];
+    return {faults:faults,checked:checked,firstId:first.id,
+      firstNames:/Antioch/.test(first.text) && /sultan/i.test(first.text),
+      territorial:/ordinary territorial rules/i.test(first.text),
+      name:start.name,title:agenda.title,
+      operations:agenda.stages.map(function (st) { return st.choices.map(function (c) { return c.operation; }).join(','); }),
+      goals:profile.goals.map(function (g) { return [g.id,g.criterion.kind,g.criterion.choiceIds || g.criterion.eventKind]; })};
+  });
+  expect(result.faults).toEqual([]);
+  // One start, an eight-stage agenda with 13 choices and a profile with three goals and one contact.
+  expect(result.checked).toBeGreaterThan(35);
+  expect(result.firstId).toBe('as01_authority');
+  expect(result.firstNames).toBe(true);
+  expect(result.territorial).toBe(false);
+  expect(result.name).toBe('Yaghi-Siyan at Antioch');
+  expect(result.title).toBe('Antioch: governing a changing frontier');
+  expect(result.operations).toEqual(['agenda_priority','agenda_priority','agenda_priority,agenda_priority',
+    'agenda_priority,agenda_priority','agenda_priority','agenda_priority,agenda_finish',
+    'agenda_priority,agenda_priority','agenda_priority,agenda_finish']);
+  expect(result.goals).toEqual([['antioch_accounts','event','profile_receipt'],['antioch_upkeep','story_choice',['as02_upkeep']],
+    ['antioch_continuation','story_choice',['as06_conclude','as08_continue','as08_finish']]]);
+});
