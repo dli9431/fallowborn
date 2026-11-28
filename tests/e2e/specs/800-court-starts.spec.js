@@ -147,6 +147,35 @@ test('all three 800 starts validate on each retained revision without changing d
     locations:[true,true,true], absent:true });
 });
 
+test('Harun and Irene start text names the ruler, seat, household and first step', async function ({ page }, info) {
+  await useReleasedStartRules(page);
+  await openGame(page, info);
+  const starts = await page.evaluate(function () {
+    return ['harun_800','irene_800'].map(function (id) {
+      const row = FBDATA.startScenarios_courts_800.find(function (sc) { return sc.id === id; });
+      return { desc:row.desc, family:row.familyPresets.standard.desc, intro:row.intro };
+    });
+  });
+  const banned = /grants? no |creates? no |Record (a |an )?(costless )?(priority|intention|preference)|Record attention|\bordinary\b|\bactual(ly)?\b|\bexisting\b|\boriginal\b|\bauthored\b|historical opportunity|political opportunity/i;
+  starts.forEach(function (start, index) {
+    const court = COURTS[index];
+    [start.desc, start.family, start.intro].forEach(function (text) {
+      expect(text).not.toMatch(banned);
+      expect(text).not.toMatch(/[A-Za-z]\?[A-Za-z]/);
+    });
+    [start.desc, start.intro].forEach(function (text) {
+      expect(text).toContain('You are ' + court.name);
+      expect(text).toContain(court.id === 'harun_800' ? 'Raqqa' : 'Constantinople');
+    });
+    expect(start.desc.split(/[.!?](?:\s|$)/).filter(Boolean).length).toBeLessThanOrEqual(2);
+    expect(start.intro.split(/[.!?](?:\s|$)/).filter(Boolean).length).toBeLessThanOrEqual(4);
+    expect(start.intro).toContain('Begin in Rank & Realm');
+    expect(start.family).toContain('invented for this campaign');
+    expect(start.family).toContain('not in this start');
+  });
+  expect(starts[0].family).toContain('al-Amin and al-Ma’mun');
+});
+
 test('codes and direct creation reject a different county or date and only standard court families are offered', async function ({ page }, info) {
   await datePicker(page, info);
   await page.locator('#btn-ng-back').click();
