@@ -602,7 +602,8 @@ test('later study has two bounded regional consumers and seven openings retain h
     const dates = ['476','493','711','800','867','1066','1204'];
     const rows = ['800','867'].map(function (date) {
       const d = FBDATA.religiousActivities['zoroastrian_household_learning_' + date], b = FB.bookmark(date);
-      return {opening:d.openings[0].revision === b.revision,period:d.period,places:d.provinceIds,
+      return {opening:d.openings.some(function (o) { return o.id === date && o.revision === b.revision; }),
+        period:d.period,places:d.provinceIds,
         mapped:d.provinceIds.every(function (id) {
           return b.provinces.some(function (p) { return p.id === id && !p.wasteland; });
         }),house:d.institutionId,roles:d.roleIds,faiths:d.faithIds};

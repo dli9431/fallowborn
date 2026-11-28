@@ -19,25 +19,25 @@ dependsOnRuntime(__filename, [
 const baseline = {
   play:[
     { name:'day', result:'day', turn:10, date:{ year:867, season:0, day:11 }, rng:2013589264, uid:1574,
-      refreshes:2, autosaves:0, stateBytes:1983674, sha256:'8d6551d8c57d3f72d590cf277d963ee0ff6d17efa80b8181240bae3173bc79ca',
-      sortedSha256:'8db7eb5a0698e8e82d0017c5d40311b84ca8b5138b261b541de8d020c868654a' },
+      refreshes:2, autosaves:0, stateBytes:1983264, sha256:'d562571407ef5eee6880d631e7061d3b20fb5429b2f36e5712b1f146e2638970',
+      sortedSha256:'8ad60831e22fcca3ce0036cea9b5710e792ba5d35b4fbf76f53759f2a5c8fa3c' },
     { name:'season', result:'season', turn:90, date:{ year:867, season:1, day:1 }, rng:512636533, uid:1580,
-      refreshes:4, autosaves:1, stateBytes:2103810, sha256:'0b20ba1135c7a8afba4aaaae31e67349b0088b2d91ba39a5521b41fd2e3e0252',
-      sortedSha256:'c3de0aacd48b91a42d94412f3169de4d3cac392c138fa4ad9a260e0c9769c0d3' },
+      refreshes:4, autosaves:1, stateBytes:2103394, sha256:'9bee97d03efd5ee292c37f822d6d7457d2355fdb578140b9c7b0dd14dd7b2433',
+      sortedSha256:'c31cbfe8d8fa586c0a2beb5931f20ed8470e4a05729b55223cb21c207eed7914' },
     { name:'year', result:'season', turn:360, date:{ year:868, season:0, day:1 }, rng:2191761640, uid:1595,
-      refreshes:6, autosaves:2, stateBytes:2500271, sha256:'9b6441a467c2a40d2940a7e7abd151b3a5de21e0c015b91b64129bd2c2cff5a8',
-      sortedSha256:'dbfebaf7dd865289f6e1b3dd111b353f09594b520af47e6f00145747ebd26158' }
+      refreshes:6, autosaves:2, stateBytes:2499852, sha256:'82d2d81ce843ce8efd1edd67d5a1717c4161ca5e96c3cbcf1aa6468acc055f95',
+      sortedSha256:'ec31218def9679b54e7a991fdb250d8bf6b7da98ced4de0e2da7251f6449c887' }
   ],
   observe:[
     { name:'day', result:'day', turn:10, date:{ year:867, season:0, day:11 }, rng:1765797802, uid:3124,
-      refreshes:1, autosaves:0, stateBytes:1936351, sha256:'11fb357a2baa3e1432f49fc92fb4b80091363ad4a4e6bf0fb8da055a3dfec0c8',
-      sortedSha256:'79de3fe30943bea9b6e1aac5a23501a275428ca3ac114e8adf4ed80024566e14' },
+      refreshes:1, autosaves:0, stateBytes:1935956, sha256:'17864c1f89b94d7dd9099c6b4685f90b7b60b39d8e77d2a50ef6d3790d052757',
+      sortedSha256:'30bdb77e30489c028472584b065fbc3810a074554c541ecfbccca6479fd40b2b' },
     { name:'season', result:'season', turn:90, date:{ year:867, season:1, day:1 }, rng:1592457608, uid:3126,
-      refreshes:2, autosaves:0, stateBytes:2046047, sha256:'182b918ce5412d5b1d9c858405db03f31377768e9a5c67caa419e50cabd07e8e',
-      sortedSha256:'8bc2491e3fb892cff52a8741737f584471fdcffe41a09674a484f8ae160037e5' },
+      refreshes:2, autosaves:0, stateBytes:2045650, sha256:'4b82f2c8ca21884df469ca639d2da136562e8a68020d83acc8374ddbcb7b5ac0',
+      sortedSha256:'7e2e3ffd6bd23bd672fe34b0563ab45dde7657b78486d63990e1cbeca05e46da' },
     { name:'year', result:'season', turn:360, date:{ year:868, season:0, day:1 }, rng:2959453030, uid:3132,
-      refreshes:3, autosaves:0, stateBytes:2454260, sha256:'faa1e41b2c74894668b544aea5bbef1a74cadbd0d4ae234ad4d03c92cb2698f2',
-      sortedSha256:'99efeaa5bb06054cddc4499915935eecbc958804e1674c6323f6a7c104aa4120' }
+      refreshes:3, autosaves:0, stateBytes:2453863, sha256:'edc3ce3afad43044ce58d7fb4489e7be2da408f5ca93b2065f974d72dfcb2ea6',
+      sortedSha256:'c998ba2d0e9136ac1dce480076431190a2b8e742249b2ca0e61271b7456159f2' }
   ]
 };
 

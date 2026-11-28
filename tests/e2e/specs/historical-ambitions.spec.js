@@ -347,6 +347,7 @@ test('later-bookmark defaults and realm dissolution cannot replay a foundation',
     const repeat = FB.completeHistoricalAmbition(s, 'normandy');
     delete s.historicalAmbitions;
     s.start.id = '1066';
+    s.start.revision = FB.bookmark('1066').revision;
     s.start.year = 1066;
     FB.ensureHistoricalAmbitions(s);
     return { revivedBonus:revivedBonus, repeat:repeat,
