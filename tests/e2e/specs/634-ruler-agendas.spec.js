@@ -174,7 +174,7 @@ test('the compact agenda shows its original portrait and retains the scrolled re
   });
   const link = page.locator('[data-story-person="'+person+'"]');
   await expect(link.locator('canvas.pface')).toHaveCount(1);
-  await expect(page.locator('#gm-body p').filter({hasText:/^The Syrian frontier:/})).toHaveCount(1);
+  await expect(page.locator('#gm-body [data-story-facts] .kv b').filter({hasText:/^The Syrian frontier: War for /})).toHaveCount(1);
   await expect(page.locator('#gm-body')).toContainText('Available public funds:');
   await link.focus();
   const scroll = await page.evaluate(function () { const b = document.getElementById('gm-body'); b.scrollTop = 120; return b.scrollTop; });
@@ -277,20 +277,23 @@ for (const who of ['umar','heraclius']) {
       if (who === 'umar') RA.choose(id,'umar_keep_accounts');
       else { RA.choose(id,'heraclius_keep_administration'); RA.choose(id,'heraclius_keep_accounts'); }
       const before = RA.resources(s), rng = FB.getRngState(), uid = FB.getUidCounter(), t = s.stories[id];
-      const initial = story.status(s,t).lines;
+      const initial = story.status(s,t).facts.map(function (f) { return f[1]; });
       const pure = before === RA.resources(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
       // Heraclius defends Syria, so his stale review is the outcome record quoted before the diversion.
       const old = FB.stories.quote(s,id,who === 'umar' ? 'umar_decline_syria' : 'heraclius_record_syria');
       FB.transferProvince(s,'damascus','sasanian_634');
       FB.stories.get('syrian_front_634').day(s,s.stories.syrian_front_634);
-      const lines = story.status(s,t).lines, unchanged = RA.resources(s);
+      // The agenda names the linked campaign by its own stage line; the campaign's facts name the live controller.
+      const facts = JSON.stringify(story.status(s,t).facts), source = FB.stories.status(s,'syrian_front_634'), unchanged = RA.resources(s);
       const stale = !FB.stories.apply(s,id,old.id,old) && unchanged === RA.resources(s);
       const record = RA.choose(id,who+'_record_syria');
       return {pure:pure,initialFunds:initial.indexOf(FB.T('Available public funds: {money:funds}. Private purse: {money:privateFunds}.',
         {funds:FB.treasuryAvailable(s,'player'),privateFunds:s.player.gold})) >= 0,
-        controller:lines.indexOf(FB.T('Objective: {province}. Current controller: {realm}.',
-          {province:FB.world.byId.damascus.name,realm:s.realms.sasanian_634.name})) >= 0,
-        diverted:lines.indexOf(FB.T('{story}: {status}.',{story:FB.stories.get('syrian_front_634').title(s),status:FB.T('History took another course')})) >= 0,
+        controller:JSON.stringify(source.facts).indexOf(JSON.stringify([FB.T('Objective'),FB.T('{province}, held by {enemy}',
+          {province:FB.world.byId.damascus.name,enemy:s.realms.sasanian_634.name})])) >= 0,
+        diverted:source.stage === FB.T('War for {province} · {state}',{province:FB.world.byId.damascus.name,state:FB.TC('campaign stage','Closed')}) &&
+          facts.indexOf(JSON.stringify([FB.T('Linked story'),FB.T('{story}: {stage}',
+            {story:FB.stories.get('syrian_front_634').title(s,s.stories.syrian_front_634),stage:source.stage})])) >= 0,
         stale:stale,result:s.stories.syrian_front_634.result,record:record,unchanged:unchanged === RA.resources(s),
         armies:s.stories.syrian_front_634.warId === null};
     },who)).toEqual({pure:true,initialFunds:true,controller:true,diverted:true,stale:true,result:'diverted',record:true,unchanged:true,armies:true});

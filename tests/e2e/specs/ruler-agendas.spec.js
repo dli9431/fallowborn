@@ -201,6 +201,80 @@ test('Peroz observes actual provincial offices and current-generation royal supp
   expect(result).toEqual({ service:true, recognition:true, unchanged:true, step:3 });
 });
 
+test('Syagrius in 486 lists the Soissons campaign by its own stage line and keeps its record and policy rows', async function ({ page }, info) {
+  await start(page, info, 'syagrius_476');
+  const result = await page.evaluate(function () {
+    function nowFact(status) { return status.facts.find(function (f) { return f[0] === FB.T('Now'); })[1]; }
+    const s = FB.state, id = 'syagrius_agenda_476', source = 'clovis_syagrius_476', d = FB.stories.get(id).declaration;
+    function apply(c) { return FB.stories.apply(s,id,c,FB.stories.quote(s,id,c)); }
+    apply('syagrius_keep_receipts'); s.date.year = 477; apply('syagrius_keep_independence');
+    // Stage the boundary the way the retired-choice cases do: Clovis rules the Franks in 486.
+    FB.assignRealmRulerCharacter(s,'franks_476',s.stories.western_court_476.clovisId,{replaceAuthored:true});
+    s.date.year = 486;
+    const status = FB.stories.status(s,id), campaign = FB.stories.status(s,source);
+    const linked = [FB.T('Linked story'),FB.T('{story}: {stage}',{story:FB.stories.get(source).title(s,s.stories[source]),stage:campaign.stage})];
+    const card = FB.stories.cards(s).find(function (c) { return c.id === id; });
+    return { linked:JSON.stringify(status.facts).indexOf(JSON.stringify(linked)) >= 0, campaignStage:/^War for /.test(campaign.stage),
+      step:status.facts[0], now:nowFact(status) === FB.T('Ready.'), text:status.lines[0] === FB.T(d.stages[2].text),
+      stage:status.stage === FB.T(d.stages[2].name), card:card.stage === status.stage,
+      offered:FB.stories.choices(s,id).map(function (c) { return c.id; }) };
+  });
+  expect(result).toEqual({ linked:true, campaignStage:true, step:['Step','3 of 4'], now:true, text:true, stage:true, card:true,
+    offered:['syagrius_record_challenge','syagrius_keep_policy','agenda_stop_program'] });
+});
+
+test('Peroz names the next review date and the missing appointment instead of a catch-all', async function ({ page }, info) {
+  await start(page, info, 'peroz_476');
+  const result = await page.evaluate(function () {
+    function nowFact(status) { return status.facts.find(function (f) { return f[0] === FB.T('Now'); })[1]; }
+    const s = FB.state, id = 'peroz_agenda_476', story = FB.stories.get(id), t = s.stories[id];
+    function blocker(c) { const q = FB.stories.quote(s,id,c); return q.allowed ? null : story.blocker(s,t,q.reason); }
+    const kept = FB.stories.apply(s,id,'peroz_keep_terms',FB.stories.quote(s,id,'peroz_keep_terms'));
+    const spring = FB.stories.status(s,id), opens = FB.T('Opens in {season} {year}.',{season:FB.seasonName(1),year:476});
+    const early = blocker('peroz_record_service');
+    s.date.season = 1;
+    // Stage a court without any public appointment since the program opened.
+    s.authority.appointments = s.authority.appointments.filter(function (r) { return !(r.publicTerms && r.institutionId === 'player'); });
+    const summer = FB.stories.status(s,id);
+    return { kept:kept, date:[s.date.year,s.date.season], springNow:nowFact(spring) === opens,
+      springStage:spring.stage === FB.T('{stage}: opens {season} {year}',{stage:FB.T(story.declaration.stages[1].name),season:FB.seasonName(1),year:476}),
+      early:early === opens, summerNow:nowFact(summer) === FB.T('Ready.'), summerStage:summer.stage === FB.T(story.declaration.stages[1].name),
+      service:blocker('peroz_record_service') === FB.T('No new appointment since the program began. Make one in Public administration first.'),
+      keep:FB.stories.quote(s,id,'peroz_keep_officers').allowed };
+  });
+  expect(result).toEqual({ kept:true, date:[476,1], springNow:true, springStage:true, early:true, summerNow:true, summerStage:true,
+    service:true, keep:true });
+});
+
+test('Odoacer reads as the ruler without process boilerplate and names a source that no longer offers its choice', async function ({ page }, info) {
+  await start(page, info, 'odoacer_476');
+  const result = await page.evaluate(function () {
+    const s = FB.state, id = 'odoacer_agenda_476', story = FB.stories.get(id), t = s.stories[id], w = 'western_court_476';
+    const title = FB.stories.get(w).title(s,s.stories[w]), name = FB.realmNameParam(s,'player');
+    const realm = name && name.$realmName ? FB.renderRealmNameSnapshot(name.$realmName) : name;
+    function blocker(c) { const q = FB.stories.quote(s,id,c); return q.allowed ? null : story.blocker(s,t,q.reason); }
+    const status = FB.stories.status(s,id), people = story.people(s,t), choices = FB.stories.choices(s,id);
+    const paid = FB.stories.quote(s,id,'odoacer_paid_service');
+    const text = [status.stage].concat(status.facts.map(function (f) { return f[0] + ' ' + f[1]; }), status.lines,
+      people.map(function (p) { return p.label + ' ' + p.detail; }), choices.map(function (c) { return c.label + ' ' + c.detail; }),
+      paid.allowed ? story.review(s,t,'odoacer_paid_service',paid) : []).join('\n');
+    const banned = ['Recording this agenda adds no reward','This program waits','Original incumbent','Original person'].filter(function (p) {
+      return text.indexOf(p) >= 0;
+    });
+    const stop = choices.find(function (c) { return c.id === 'agenda_stop_program'; });
+    const unreached = blocker('odoacer_record_bargain');
+    // The western court's own refusal closes its paid service; the agenda stays on this stage.
+    const declined = FB.stories.apply(s,w,'keep_host',FB.stories.quote(s,w,'keep_host'));
+    return { banned:banned, person:people[0].label, personDetail:people[0].detail === FB.T('The program ends if you lose {realm}.',{realm:realm}),
+      stop:[stop.label,stop.detail], paidAllowed:paid.allowed,
+      unreached:unreached === FB.T('{story} has not reached this point yet.',{story:title}), declined:declined, step:t.step,
+      offered:FB.stories.get(w).choices(s,s.stories[w]).some(function (c) { return c.id === 'accept_service'; }),
+      refused:blocker('odoacer_paid_service') === FB.T('{story} does not offer this choice to you now.',{story:title}) };
+  });
+  expect(result).toEqual({ banned:[], person:'Ruler', personDetail:true, stop:['Set this program aside','Ends the program.'], paidAllowed:true,
+    unreached:true, declined:true, step:0, offered:false, refused:true });
+});
+
 test('Muhammad accepts only a real outside-party offer and observes its canonical agreement without duplicating payment', async function ({ page }, info) {
   await start(page, info, 'muhammad_1204');
   const result = await page.evaluate(function () {
