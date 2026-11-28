@@ -208,6 +208,61 @@ test('cold 476 retains healthy service starts when the later date is unloaded',a
   expect(result).toEqual({published:true,worldFaults:[],rejected:[],complete:false,track:true});
 });
 
+test('imperial service households, agendas and goal profiles use plain player text without disclaimers',async function ({page},info) {
+  await openTitle(page,info);
+  await page.evaluate(function () {return new Promise(function (resolve,reject) {
+    FB.bookmarkSources.loadDates(['476','493'],function (e) {if (e) reject(e);else resolve();});
+  });});
+  const result = await page.evaluate(function () {
+    const report = FB.bookmarkSources.prepareSetup('493');
+    const ids = ['salona_service_household','eastern_service_household_493','imperial_service_emperor','imperial_service_commander',
+      'imperial_service_emperor_493','imperial_service_commander_493','imperial_service_eastern_commander_476',
+      'opening_imperial_service','opening_imperial_service_493'];
+    const banned = /grants? no |creates? no |Record (a |an )?(costless )?(priority|intention|preference)|Record attention|\bordinary\b|\bactual(ly)?\b|\bexisting\b|\boriginal\b|\bauthored\b|historical opportunity|political opportunity/i;
+    const labelWords = /\b(ordinary|actual|actually|existing|current|original|authored|declared)\b/i;
+    const table = FBDATA.householdTracks_imperial_service || {},faults = [],details = {},missing = [];
+    function check(owner,field,value,prose) {
+      if (typeof value !== 'string' || !value) {faults.push(owner + ' ' + field + ' is missing');return;}
+      if (/[A-Za-z]\?[A-Za-z]/.test(value)) faults.push(owner + ' ' + field + ' has a lost apostrophe');
+      if (value.indexOf('—') >= 0) faults.push(owner + ' ' + field + ' has an em dash');
+      if (prose && banned.test(value)) faults.push(owner + ' ' + field + ' uses boilerplate: ' + value);
+      if (/[{}]/.test(FB.T(value))) faults.push(owner + ' ' + field + ' leaves an unrendered placeholder');
+    }
+    function choice(owner,c) {
+      check(owner + '/' + c.id,'label',c.label,false);
+      check(owner + '/' + c.id,'detail',c.detail,true);
+      if (typeof c.label === 'string' && (c.label.trim().split(/\s+/).length > 8 || labelWords.test(c.label))) faults.push(owner + '/' + c.id + ' label: ' + c.label);
+      details[c.detail] = (details[c.detail] || 0) + 1;
+    }
+    const counts = ids.map(function (id) {
+      const def = FBDATA.storyInstances[id] || table[id];
+      if (!def) {missing.push(id);return [id,0,0];}
+      check(id,'title',def.title,false);
+      check(id,'intro',def.intro,true);
+      let stages = 0,choices = 0;
+      if (def.type === 'opening_profile') {
+        def.goals.forEach(function (g) {check(id + '/' + g.id,'name',g.name,false);check(id + '/' + g.id,'text',g.text,true);stages++;});
+        (def.contacts || []).forEach(function (c) {check(id + '/' + c.id,'contact label',c.label,false);check(id + '/' + c.id,'contact text',c.text,true);});
+        return [id,stages,choices];
+      }
+      const list = Array.isArray(def.stages) ? def.stages : Object.keys(def.stages).map(function (key) {return Object.assign({id:key},def.stages[key]);});
+      list.forEach(function (st) {
+        stages++;check(id + '/' + st.id,'name',st.name,false);check(id + '/' + st.id,'text',st.text,true);
+        st.choices.forEach(function (c) {choices++;choice(id + '/' + st.id,c);});
+      });
+      if (def.type === 'ruler_agenda' && !/These priorities shape your court’s story; orders, payments and wars go through Rank & Realm, Land and the map\.$/.test(def.intro)) faults.push(id + ' intro lacks the limit sentence');
+      return [id,stages,choices];
+    });
+    return {published:report.published,missing:missing,faults:faults,counts:counts,
+      repeated:Object.keys(details).filter(function (d) {return details[d] > 2;})};
+  });
+  expect(result).toEqual({published:true,missing:[],faults:[],repeated:[],counts:[
+    ['salona_service_household',22,38],['eastern_service_household_493',12,17],
+    ['imperial_service_emperor',3,7],['imperial_service_commander',3,8],['imperial_service_emperor_493',3,7],
+    ['imperial_service_commander_493',3,8],['imperial_service_eastern_commander_476',3,8],
+    ['opening_imperial_service',3,0],['opening_imperial_service_493',3,0]]});
+});
+
 test('typed mandate stories and bindings reject malformed ordinary JSON candidates atomically',async function ({page},info) {
   await openGame(page,info);
   const result = await page.evaluate(function (fixture) {
