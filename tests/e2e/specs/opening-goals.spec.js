@@ -1,8 +1,11 @@
 'use strict';
+const fs = require('fs');
+const path = require('path');
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startParityGame } = require('../support/game/parity');
 const { beginBookmark } = require('../support/game/bookmark-acceptance');
+const { applyLaterContributions } = require('../support/game/bookmark-sources-legacy');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, ['index.html','data/start_ambitions.js','data/starts.js','data/story_courts_476.js',
   'data/story_ruler_agendas.js','data/story_campaigns.js','data/story_households_711.js','data/story_households_800.js',
@@ -40,10 +43,12 @@ for (const pair of starts) {
       return { profiles:profiles, ready:t.ready, actor:t.actorId === s.player.charId, goals:Object.keys(t.goals).length,
         people:people.length, person:!!person, noFriend:!friends[person.id], pure:pure, retained:retained,
         named:person.name,
+        cardTitle:FB.stories.cards(restored).filter(function (card) { return card.id === id; }).map(function (card) { return card.title; }),
         faithSame:restored.chars[restored.player.charId].religion === s.chars[s.player.charId].religion };
     }, pair);
     expect(result).toMatchObject({ profiles:[pair[1]], ready:true, actor:true, goals:3, people:1, person:true,
       noFriend:true, pure:true, retained:true, faithSame:true });
+    if (pair[0] === 'odoacer_476') expect(result.cardTitle).toEqual(['Odoacer’s first goals']);
     if (pair[0].startsWith('peroz')) expect(result.named).toBe('Balash');
     if (pair[0] === 'constantinople_merchant_household_1204') expect(result.named).toBe('Baldwin of Flanders');
   });
@@ -66,6 +71,70 @@ test('all offering revisions validate their profiles and retain the two separate
   expect(result.errors).toEqual([]);
   expect(result.peroz.every(function (n) { return n <= 1; })).toBe(true);
   expect(result).toMatchObject({ profiles:13, goals:39, technology:['none','none'] });
+});
+
+test('every opening profile names its own place, goals and people in plain words', async function ({ page }, info) {
+  await openGame(page, info);
+  const places = {
+    opening_peroz_476:'Ctesiphon', opening_nepos_476:'Salona', opening_odoacer_476:'Ticinum',
+    opening_syagrius_476:'Soissons', opening_federate_476:'Ravenna', opening_curialis_476:'Ravenna',
+    opening_pontic_476:'Cherson', opening_toledo_711:'Toledo', opening_aachen_800:'Aachen',
+    opening_constantinople_1204:'Constantinople', opening_constantinople_merchant_1204:'Constantinople',
+    opening_muhammad_1204:'Gurganj', opening_siwa_1204:'Siwa'
+  };
+  const result = await page.evaluate(function (places) {
+    const process = /\b(ordinary|actual|actually|existing|current|original|authored|declared)\b/i;
+    const boilerplate = /grants? no |creates? no |Record (a |an )?(costless )?(priority|intention|preference)|Record attention|\bordinary\b|\bactual(ly)?\b|\bexisting\b|\boriginal\b|\bauthored\b|historical opportunity|political opportunity/i;
+    const lostApostrophe = /[A-Za-z]\?[A-Za-z]/;
+    const faults = [], titles = [], counts = { profiles:0, goals:0, contacts:0, holds:0, choices:0 };
+    Object.keys(FBDATA.openingProfiles).forEach(function (id) {
+      const d = FBDATA.openingProfiles[id], record = { goals:{} };
+      // Declarations use {money:n}; rendered choice text may name the currency.
+      function field(where, value, prose, rendered) {
+        if (typeof value !== 'string' || !value) faults.push(id + ' ' + where + ' is empty');
+        else if (lostApostrophe.test(value)) faults.push(id + ' ' + where + ' has a question mark inside a word');
+        else if (!rendered && /\bgold\b/i.test(value)) faults.push(id + ' ' + where + ' names a currency');
+        else if (prose && boilerplate.test(value)) faults.push(id + ' ' + where + ' has boilerplate');
+      }
+      counts.profiles++;
+      titles.push(d.title);
+      field('title', d.title);
+      field('intro', d.intro, true);
+      if (!/^[^.!?]+\.$/.test(d.intro) || d.intro.indexOf(places[id]) < 0) faults.push(id + ' intro is not one sentence naming ' + places[id]);
+      d.goals.forEach(function (g) {
+        counts.goals++;
+        record.goals[g.id] = { status:'pending' };
+        field(g.id + ' name', g.name);
+        field(g.id + ' text', g.text, true);
+        if (g.criterion.kind === 'hold') { counts.holds++; field(g.id + ' reason', g.criterion.reason, true); }
+      });
+      d.contacts.forEach(function (c) {
+        counts.contacts++;
+        field(c.id + ' label', c.label);
+        field(c.id + ' text', c.text, true);
+      });
+      FB.stories.get(id).choices(null, record).forEach(function (choice) {
+        counts.choices++;
+        field(choice.id + ' label', choice.label, false, true);
+        field(choice.id + ' detail', choice.detail, true, true);
+        if (choice.label.trim().split(/\s+/).length > 8 || process.test(choice.label)) faults.push(id + ' choice label: ' + choice.label);
+      });
+    });
+    return { faults:faults, counts:counts, uniqueTitles:new Set(titles).size };
+  }, places);
+  expect(result).toEqual({ faults:[], counts:{ profiles:13, goals:39, contacts:13, holds:2, choices:39 }, uniqueTitles:13 });
+});
+
+test('the recorded text changes turn the frozen opening profile source into the current declarations', async function ({ page }, info) {
+  const frozen = fs.readFileSync(path.resolve(__dirname, '../fixtures/bookmark-composition/native-before-shared/start_ambitions.js'), 'utf8');
+  const replayed = applyLaterContributions('data/start_ambitions.js', frozen);
+  await openGame(page, info);
+  const result = await page.evaluate(function (body) {
+    const detached = { storyInstances:{}, startScenarios:[] };
+    new Function('FBDATA', body)(detached);
+    return { replayed:detached.openingProfiles, current:FBDATA.openingProfiles };
+  }, replayed);
+  expect(result.replayed).toEqual(result.current);
 });
 
 test('merchant market earnings stay separate from the opening purse and private reserve', async function ({ page }, info) {
@@ -183,7 +252,7 @@ test('held operations remain explicit, pending and dismissible', async function 
   await startParityGame(page,info,{ bookmark:'1204',scenario:'siwa_delegate_1204',declaredOpening:true });
   const result = await page.evaluate(function () {
     const s = FB.state, id = 'opening_siwa_1204', t = s.stories[id], cash = s.player.gold;
-    const visible = FB.stories.status(s,id).facts.some(function (pair) { return pair[1].indexOf('No ordinary private-to-institution') >= 0; });
+    const visible = FB.stories.status(s,id).facts.some(function (pair) { return pair[1].indexOf('cannot be given to the oasis reserve') >= 0; });
     const pending = t.goals.oasis_reserve_1204.status;
     const choice = 'dismiss_oasis_reserve_1204', applied = FB.stories.apply(s,id,choice,FB.stories.quote(s,id,choice));
     return { visible:visible, pending:pending, applied:applied, status:t.goals.oasis_reserve_1204.status, cashSame:cash === s.player.gold };
