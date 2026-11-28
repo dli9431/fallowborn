@@ -8,7 +8,8 @@ dependsOnRuntime(__filename, ['index.html','data/story_courts_476.js','data/stor
   'data/settlements.js','data/geographies.js',
   'js/stories.js','js/story_courts.js','js/story_track.js','js/bookmark_setup.js','js/starts.js',
   'js/authority.js','js/federates.js','js/institutions.js','js/lordships.js','js/treasury.js','js/world.js','js/model.js',
-  'js/main.js','js/save.js','js/save_v4.js','js/messages.js','js/i18n.js','js/mods.js','js/bookmark_sources.js']);
+  'js/main.js','js/save.js','js/save_v4.js','js/messages.js','js/i18n.js','js/mods.js','js/bookmark_sources.js',
+  'js/ui_misc.js']);
 
 async function beginCourtProof(page, testInfo) {
   await installCourtProof(page);
@@ -226,4 +227,154 @@ test('authored track branches, shortened stages and changed routes survive the s
     branchPhase:'commission_audience', done:[true,true], phases:['commission_audience','private_house','domain_house'],
     labels:['A delegate receives orders','The private household continues'], restored:true,
     completedPhase:'complete', finished:true, noPressure:true, independent:true, rejected:true, detached:true });
+});
+
+test('court settlement blockers name the first unmet condition with the old allowed result and stamp', async function ({ page }, testInfo) {
+  await beginCourtProof(page, testInfo);
+  const result = await page.evaluate(function () {
+    const s = FB.state, story = FB.stories.get('proof_court'), w = s.stories.proof_court;
+    const p = story.declaration.parameters, patron = p.patronRealmId;
+    const province = FB.world.byId[p.targetProvinceId].name, realm = FB.realmNameParam(s, patron);
+    function alive(id) { return !!(id && s.chars[id] && !s.chars[id].dead); }
+    function read(id) {
+      const q = FB.stories.quote(s, 'proof_court', id);
+      return { allowed:q.allowed, reason:q.reason, text:story.blocker(s, w, q.reason), facts:q.facts,
+        reasonInFacts:Object.prototype.hasOwnProperty.call(q.facts, 'reason') };
+    }
+    // The previous allowed expressions, evaluated from the quote's own facts.
+    function oldService(f) {
+      return !!(f.funds >= p.immediatePay && f.agreement.allowed && f.civic && f.bishop && f.mediation.allowed &&
+        alive(w[p.fields.commander]) && f.majority >= p.majorityShare);
+    }
+    function oldCivic(f) {
+      return !!(alive(w[p.fields.delegate]) && f.representative === w[p.fields.delegate] && f.consent.allowed &&
+        f.councilAgreement && f.councilTerms.courts && f.councilTerms.protection && f.councilTerms.tolerance &&
+        f.bishop && f.mediation.allowed && f.majority >= p.majorityShare);
+    }
+    function oldContest(f) { return !!(f.host && f.host.men > 0 && !f.wars[0] && !f.wars[1]); }
+    function brief(row, old) { return { allowed:row.allowed, old:old, reason:row.reason, text:row.text, reasonInFacts:row.reasonInFacts }; }
+    // A household player is not offered the court choices: the declaration fallback stays.
+    const unoffered = read('proof_accept_service');
+    // Stage the player directly as the fictional service ruler so the opening choices are offered.
+    s.start.rulerRealmId = p.serviceRealmId;
+    w[p.fields.serviceRuler] = s.player.charId;
+    const offered = FB.stories.choices(s, 'proof_court').map(function (row) { return row.id; });
+    const keepBefore = FB.stories.quote(s, 'proof_court', 'proof_keep_host');
+    const account = s.realms[patron].treasury, gold = account.gold;
+    account.gold = (account.militaryAccrued || 0) + 5;
+    // Old results are read before each restore: quote facts hold the live host row.
+    const funds = read('proof_accept_service'), fundsOld = oldService(funds.facts);
+    account.gold = gold;
+    const host = s.armies.filter(function (row) { return row.id === p.serviceHostId; })[0], men = host.men;
+    host.men = 0;
+    const emptied = read('proof_contest_ravenna'), emptiedOld = oldContest(emptied.facts);
+    host.men = men;
+    const keepAfter = FB.stories.quote(s, 'proof_court', 'proof_keep_host');
+    const service = read('proof_accept_service'), contest = read('proof_contest_ravenna');
+    // Holding the county opens the civic government choice; the quote reads the owner table directly.
+    s.owner[p.targetProvinceId] = 'player';
+    s.chars[w[p.fields.delegate]].dead = true;
+    const delegate = read('proof_accept_civic_rule'), delegateOld = oldCivic(delegate.facts);
+    s.chars[w[p.fields.delegate]].dead = false;
+    s.localInstitutions[p.civicId].representativeId = w[p.fields.delegate];
+    const council = read('proof_accept_civic_rule');
+    return { unoffered:brief(unoffered, false), offered:offered,
+      funds:brief(funds, fundsOld), fundsSeen:funds.facts.funds,
+      emptied:brief(emptied, emptiedOld),
+      probes:[service.allowed === oldService(service.facts), contest.allowed === oldContest(contest.facts)],
+      delegate:brief(delegate, delegateOld),
+      council:brief(council, oldCivic(council.facts)), consent:council.facts.consent, agreement:council.facts.councilAgreement,
+      keep:{ allowed:keepAfter.allowed, reason:keepAfter.reason, same:keepBefore.stamp === keepAfter.stamp,
+        stamp:keepAfter.stamp === JSON.stringify(keepAfter.facts), keys:Object.keys(keepAfter.facts) },
+      expected:{
+        funds:FB.T('The {realm} treasury holds {money:funds}; the first payment needs {money:pay}.', { realm:realm, funds:5, pay:p.immediatePay }),
+        delegate:FB.T('{province}’s civic delegate has died or no longer speaks for the council.', { province:province }),
+        council:FB.T('{province}’s council has not ratified terms protecting its courts, order and worship.', { province:province }) },
+      named:{ commander:story.blocker(s, w, 'commander'), host:story.blocker(s, w, 'host'), unknown:story.blocker(s, w, 'arbitrary') } };
+  });
+  expect(result.unoffered).toEqual({ allowed:false, old:false, reason:'not_offered', text:'Fictional text22', reasonInFacts:false });
+  expect(result.offered).toEqual(['proof_accept_service','proof_contest_ravenna','proof_keep_host']);
+  expect(result.fundsSeen).toBe(5);
+  expect(result.funds).toEqual({ allowed:false, old:false, reason:'funds', text:result.expected.funds, reasonInFacts:false });
+  expect(result.funds.text).toContain('treasury holds');
+  expect(result.emptied).toEqual({ allowed:false, old:false, reason:'host', text:'Your host has no soldiers left.', reasonInFacts:false });
+  expect(result.probes).toEqual([true,true]);
+  expect(result.delegate).toEqual({ allowed:false, old:false, reason:'delegate', text:result.expected.delegate, reasonInFacts:false });
+  expect(result.council).toEqual({ allowed:false, old:false, reason:'council', text:result.expected.council, reasonInFacts:false });
+  expect(result.council.text).toContain('has not ratified terms protecting its courts, order and worship.');
+  expect(result.keep).toEqual({ allowed:true, reason:'ruler_settlement', same:true, stamp:true,
+    keys:['turn','player','resolution','interruption','governance','owner','host','dead','living','west',
+      'patronGeneration','funds','agreement','civic','bishop','representative','consent','councilAgreement',
+      'councilTerms','mediation','institutions','churchHolder','majority','wars','operation','terms'] });
+  expect(result.named).toEqual({ commander:'The host’s commander has died.', host:'Your host has no soldiers left.', unknown:'Fictional text22' });
+});
+
+test('claim restoration and service track blockers name the missing condition', async function ({ page }, testInfo) {
+  await beginCourtProof(page, testInfo);
+  const first = await page.evaluate(function () {
+    const s = FB.state, service = FB.stories.get('proof_service'), w = s.stories.proof_court;
+    const fields = FB.stories.get('proof_court').declaration.parameters.fields;
+    function quote(story, id) { return FB.stories.quote(s, story, id); }
+    const accepted = FB.stories.apply(s, 'proof_service', 'proof_accept_delegate', quote('proof_service', 'proof_accept_delegate'));
+    const phase = s.stories.proof_service.phase, ready = quote('proof_service', 'proof_keep_serving');
+    s.chars[w[fields.serviceRuler]].dead = true;
+    const dead = quote('proof_service', 'proof_keep_serving');
+    const serviceRow = { accepted:accepted, phase:phase, ready:ready.allowed, allowed:dead.allowed, reason:dead.reason,
+      text:service.blocker(s, s.stories.proof_service, dead.reason),
+      claimant:service.blocker(s, s.stories.proof_service, 'claimant_unavailable'),
+      unknown:service.blocker(s, s.stories.proof_service, 'arbitrary') };
+    // Author a confirmation stage into the fictional claim track and stage the record there.
+    const claim = FB.stories.get('proof_claim'), d = claim.declaration, t = s.stories.proof_claim;
+    const keepBefore = quote('proof_claim', 'proof_keep_dalmatia');
+    d.choices.confirm_restoration = { id:'proof_confirm_restoration', operation:'confirm_restoration',
+      label:'Fictional confirm_restoration', detail:'Review confirm_restoration through ordinary transactions.' };
+    d.stages.claim_hold = { name:'Fictional claim stage', mechanic:'claim', choices:['confirm_restoration'] };
+    t.phase = 'claim_hold';
+    const pid = d.parameters.targetProvinceId;
+    const held = quote('proof_claim', 'proof_confirm_restoration');
+    return { service:serviceRow, keepStamp:keepBefore.stamp,
+      notHeld:{ allowed:held.allowed, old:held.facts.owner === 'player', reason:held.reason,
+        text:claim.blocker(s, t, held.reason),
+        reasonInFacts:Object.prototype.hasOwnProperty.call(held.facts, 'reason') },
+      expected:FB.T('You must hold {province} yourself to confirm the restoration.', { province:FB.world.byId[pid].name }) };
+  });
+  expect(first.service).toEqual({ accepted:true, phase:'commission_audience', ready:true, allowed:false,
+    reason:'no_federate_command', text:'The host’s ruler has died or the host has disbanded.',
+    claimant:'This claimant can no longer be backed: he has died or lost his seat.', unknown:null });
+  expect(first.notHeld).toEqual({ allowed:false, old:false, reason:'not_held', text:first.expected, reasonInFacts:false });
+  expect(first.notHeld.text).toContain('yourself to confirm the restoration.');
+  // The shared sheet review shows the specific sentence for the blocked choice.
+  await page.evaluate(function () { FB.ui.showStorySheet('proof_claim'); });
+  // The blocked choice is aria-disabled but still opens its review.
+  await page.locator('[data-story-choice="proof_confirm_restoration"]').dispatchEvent('click');
+  await expect(page.locator('#gm-body')).toContainText(first.expected);
+  await expect(page.locator('#gm-body')).not.toContainText('Fictional text10');
+  const second = await page.evaluate(function (keepStamp) {
+    FB.ui.closeModal();
+    const s = FB.state, claim = FB.stories.get('proof_claim'), d = claim.declaration, t = s.stories.proof_claim;
+    const p = d.parameters, owner = s.owner[p.targetProvinceId], travel = s.player.travel;
+    s.owner[p.targetProvinceId] = 'player';
+    s.player.travel = { proof:true };
+    const away = FB.stories.quote(s, 'proof_claim', 'proof_confirm_restoration');
+    s.player.travel = travel;
+    const home = FB.stories.quote(s, 'proof_claim', 'proof_confirm_restoration');
+    const oldHome = home.facts.owner === 'player' && !home.facts.travel && home.facts.recognition.length > 0;
+    // Remove the authored stage and restore the record: the allowed quote keeps its stamp.
+    s.owner[p.targetProvinceId] = owner;
+    delete d.stages.claim_hold; delete d.choices.confirm_restoration; t.phase = 'claim_review';
+    const keepAfter = FB.stories.quote(s, 'proof_claim', 'proof_keep_dalmatia');
+    return { away:{ allowed:away.allowed, old:false, reason:away.reason, text:claim.blocker(s, t, away.reason) },
+      home:{ allowed:home.allowed, old:oldHome, recognitions:home.facts.recognition.length, reason:home.reason },
+      keep:{ allowed:keepAfter.allowed, reason:keepAfter.reason, same:keepAfter.stamp === keepStamp,
+        keys:Object.keys(keepAfter.facts) },
+      fallback:claim.blocker(s, t, 'claim_restoration'),
+      applied:FB.stories.apply(s, 'proof_claim', 'proof_keep_dalmatia', { id:'proof_keep_dalmatia', stamp:keepStamp }) };
+  }, first.keepStamp);
+  expect(second.away).toEqual({ allowed:false, old:false, reason:'travel', text:'Return from your journey first.' });
+  expect(second.home).toEqual({ allowed:false, old:false, recognitions:0, reason:'no_recognition' });
+  expect(second.keep).toEqual({ allowed:true, reason:'claim_restoration', same:true,
+    keys:['phase','claimant','player','dead','turn','owner','holder','senate','senateId','issuer','issuerGeneration',
+      'playerGeneration','at','travel','recognition','appointments','wars','graph','operation','terms'] });
+  expect(second.fallback).toBe('Fictional text10');
+  expect(second.applied).toBe(true);
 });
