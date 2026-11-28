@@ -5,13 +5,13 @@ FBDATA.rulerAgendas_mobile_leadership = {
     "id": "qipchaq_leadership_1204",
     "type": "ruler_agenda",
     "subjectRealmId": "qipchaq_following_1204",
-    "title": "Lead the living following",
-    "intro": "Follow actual member decisions, finite receipts and physical arrival. Every review may be cancelled. Deferral grants no completion or reward.",
+    "title": "Lead the Qipchaq following",
+    "intro": "You lead the eastern Qipchaq following. Win tribute, raid, divide the takings, move the camp to Kath and decide where your people settle. Members decide in Mobile coalition, and outside rulers answer for themselves.",
     "stages": [
       {
         "id": "demand",
-        "name": "Receive one accepted demand",
-        "text": "Propose these exact terms here. In Mobile coalition, assent as your own member and wait for the other members to answer. Return here to send the demand. The outside court may refuse; only its actual public payment completes this stage.",
+        "name": "Win a tribute payment",
+        "text": "Ask your members to approve a tribute demand on the ruler of the Lower Syr Darya settlements, add your own assent in Mobile coalition, then send it. This step is done when that ruler pays.",
         "year": 1204,
         "season": 0,
         "completion": {
@@ -20,8 +20,8 @@ FBDATA.rulerAgendas_mobile_leadership = {
         "choices": [
           {
             "id": "propose_demand",
-            "label": "Propose these terms to the members",
-            "detail": "No payment or outcome. Replaces the pending proposal. Supply only your own assent in Mobile coalition; other members decide separately.",
+            "label": "Put the tribute demand to the members",
+            "detail": "Replaces any pending proposal. Add your own assent in Mobile coalition; the other members decide for themselves.",
             "operation": "agenda_mobile_prepare",
             "action": "demand",
             "terms": {
@@ -36,8 +36,8 @@ FBDATA.rulerAgendas_mobile_leadership = {
           },
           {
             "id": "commit_demand",
-            "label": "Send the demand",
-            "detail": "Ask for one money unit under an explicit raid threat for thirty days. No payment occurs unless the outside court accepts.",
+            "label": "Send the tribute demand",
+            "detail": "Demand {money:1} in tribute for thirty days, under threat of a raid. The ruler may refuse.",
             "operation": "agenda_mobile",
             "action": "demand",
             "terms": {
@@ -52,22 +52,22 @@ FBDATA.rulerAgendas_mobile_leadership = {
           },
           {
             "id": "observed_demand",
-            "label": "Record the actual completed transaction",
-            "detail": "Available only after the actual action succeeds. Records its outcome and adds no money, food or authority.",
+            "label": "Record the paid demand",
+            "detail": "Marks this step done once the ruler has paid.",
             "operation": "agenda_mobile_result"
           },
           {
             "id": "defer_demand",
-            "label": "Defer this review",
-            "detail": "Spend nothing and leave this stage pending. Return later or set the program aside.",
+            "label": "Decide later",
+            "detail": "Nothing is spent, and this step stays open.",
             "operation": "agenda_defer"
           }
         ]
       },
       {
         "id": "raid",
-        "name": "Resolve one bounded raid",
-        "text": "An accepted demand reserves a finite tribute commitment. Wait for its thirty-day term to end before raiding. Propose the local sortie here, assent in Mobile coalition and wait for other members. Return to commit the reviewed sortie. It risks fighter losses and provides finite spoils, without occupation or land.",
+        "name": "Raid the lower Syr Darya",
+        "text": "A tribute agreement holds your host back until its term ends. Then put the raid to your members, add your assent in Mobile coalition and launch it for coin and food. Your host may lose fighters and takes no land.",
         "year": 1204,
         "season": 0,
         "completion": {
@@ -76,8 +76,8 @@ FBDATA.rulerAgendas_mobile_leadership = {
         "choices": [
           {
             "id": "propose_raid",
-            "label": "Propose these terms to the members",
-            "detail": "No payment or outcome. Replaces the pending proposal. Supply only your own assent in Mobile coalition; other members decide separately.",
+            "label": "Put the raid to the members",
+            "detail": "Replaces any pending proposal. Add your own assent in Mobile coalition; the other members decide for themselves.",
             "operation": "agenda_mobile_prepare",
             "action": "raid",
             "terms": {
@@ -87,8 +87,8 @@ FBDATA.rulerAgendas_mobile_leadership = {
           },
           {
             "id": "commit_raid",
-            "label": "Review and commit the sortie",
-            "detail": "Resolve ordinary resistance, casualties and finite public coin and county food. No land is granted.",
+            "label": "Launch the raid",
+            "detail": "Your host attacks for coin and county food. Expect resistance and lost fighters.",
             "operation": "agenda_mobile",
             "action": "raid",
             "terms": {
@@ -98,22 +98,22 @@ FBDATA.rulerAgendas_mobile_leadership = {
           },
           {
             "id": "observed_raid",
-            "label": "Record the actual completed transaction",
-            "detail": "Available only after the actual action succeeds. Records its outcome and adds no money, food or authority.",
+            "label": "Record the finished raid",
+            "detail": "Marks this step done once the raid on the lower Syr Darya is over.",
             "operation": "agenda_mobile_result"
           },
           {
             "id": "defer_raid",
-            "label": "Defer this review",
-            "detail": "Spend nothing and leave this stage pending. Return later or set the program aside.",
+            "label": "Decide later",
+            "detail": "Nothing is spent, and this step stays open.",
             "operation": "agenda_defer"
           }
         ]
       },
       {
         "id": "distribution",
-        "name": "Decide one actual receipt",
-        "text": "Share the oldest actual receipt by living member weight or retain it publicly. Food shares are consumed now. This resolves existing resources, without another story reward.",
+        "name": "Divide the takings",
+        "text": "Tribute and raid takings wait for your decision, oldest first. Share them among your members by weight or keep them for the following. This step is done when you do either.",
         "year": 1204,
         "season": 0,
         "completion": {
@@ -122,8 +122,8 @@ FBDATA.rulerAgendas_mobile_leadership = {
         "choices": [
           {
             "id": "commit_distribution",
-            "label": "Share by member weight",
-            "detail": "Distribute the oldest actual receipt once. Coin enters private purses; food allotments are consumed.",
+            "label": "Share the takings by member weight",
+            "detail": "The treasury pays coin into members’ private purses. They eat their food shares now.",
             "operation": "agenda_mobile",
             "action": "distribute",
             "terms": {
@@ -133,8 +133,8 @@ FBDATA.rulerAgendas_mobile_leadership = {
           },
           {
             "id": "keep_receipt",
-            "label": "Retain the receipt publicly",
-            "detail": "Resolve the oldest receipt without private payment or food allotments, with ordinary support consequences.",
+            "label": "Keep the takings for the following",
+            "detail": "Members receive nothing from these takings, and their support falls.",
             "operation": "agenda_mobile",
             "action": "distribute",
             "terms": {
@@ -144,22 +144,22 @@ FBDATA.rulerAgendas_mobile_leadership = {
           },
           {
             "id": "observed_distribution",
-            "label": "Record the actual completed transaction",
-            "detail": "Available only after the actual action succeeds. Records its outcome and adds no money, food or authority.",
+            "label": "Record the division of takings",
+            "detail": "Marks this step done once takings have been shared or kept.",
             "operation": "agenda_mobile_result"
           },
           {
             "id": "defer_distribution",
-            "label": "Defer this review",
-            "detail": "Spend nothing and leave this stage pending. Return later or set the program aside.",
+            "label": "Decide later",
+            "detail": "Nothing is spent, and this step stays open.",
             "operation": "agenda_defer"
           }
         ]
       },
       {
         "id": "move",
-        "name": "Arrive at a seasonal ground",
-        "text": "Propose access here, assent in Mobile coalition and wait for the other members. Send the offer here and wait for outside acceptance. Every intervening county needs ordinary access. If the host was lost, use Mobile coalition to recruit from actual member pledges and pay the current public cost. Review departure here and let days pass. Only actual camp and host arrival completes the stage.",
+        "name": "Move the camp to Kath",
+        "text": "Put passage to Kath to your members, add your assent in Mobile coalition, send the offer and march once Kath’s ruler accepts. Other rulers on the road must let you pass, and a lost host must be raised again in Mobile coalition. This step is done when camp and host reach Kath.",
         "year": 1204,
         "season": 0,
         "completion": {
@@ -168,8 +168,8 @@ FBDATA.rulerAgendas_mobile_leadership = {
         "choices": [
           {
             "id": "propose_access",
-            "label": "Propose access to the next ground",
-            "detail": "No permission is granted. Obtain member assent in Mobile coalition.",
+            "label": "Put passage to Kath to the members",
+            "detail": "Replaces any pending proposal. Add your own assent in Mobile coalition; the other members decide for themselves.",
             "operation": "agenda_mobile_prepare",
             "action": "access",
             "terms": {
@@ -178,8 +178,8 @@ FBDATA.rulerAgendas_mobile_leadership = {
           },
           {
             "id": "send_access",
-            "label": "Send the reviewed access offer",
-            "detail": "The outside holder must accept separately. The public treasury pays its finite price. Intervening counties need ordinary access.",
+            "label": "Send the passage offer to Kath",
+            "detail": "Kath’s ruler may refuse. If accepted, your following’s treasury pays the price.",
             "operation": "agenda_mobile",
             "action": "access",
             "terms": {
@@ -188,8 +188,8 @@ FBDATA.rulerAgendas_mobile_leadership = {
           },
           {
             "id": "stay_ground",
-            "label": "Review staying at the present ground",
-            "detail": "No travel charge or arrival evidence. The movement goal remains pending.",
+            "label": "Stay on the lower Syr Darya",
+            "detail": "The camp stays put and spends no travel food. This step stays open.",
             "operation": "agenda_mobile",
             "action": "round",
             "terms": {
@@ -198,8 +198,8 @@ FBDATA.rulerAgendas_mobile_leadership = {
           },
           {
             "id": "commit_move",
-            "label": "Review the seasonal departure",
-            "detail": "Spend the quoted camp food surcharge and use the actual route clock. Departure is not completion.",
+            "label": "March the camp to Kath",
+            "detail": "The camp sets out and spends the travel food shown. The step is done on arrival.",
             "operation": "agenda_mobile",
             "action": "round",
             "terms": {
@@ -208,22 +208,22 @@ FBDATA.rulerAgendas_mobile_leadership = {
           },
           {
             "id": "observed_move",
-            "label": "Record the actual completed transaction",
-            "detail": "Available only after the actual action succeeds. Records its outcome and adds no money, food or authority.",
+            "label": "Record the arrival at Kath",
+            "detail": "Marks this step done once camp and host have reached Kath.",
             "operation": "agenda_mobile_result"
           },
           {
             "id": "defer_move",
-            "label": "Defer this review",
-            "detail": "Spend nothing and leave this stage pending. Return later or set the program aside.",
+            "label": "Decide later",
+            "detail": "Nothing is spent, and this step stays open.",
             "operation": "agenda_defer"
           }
         ]
       },
       {
         "id": "settlement",
-        "name": "Choose the following’s future",
-        "text": "The Kath ground is this program’s settlement objective. Partial or final settlement needs actual presence, lawful owned land or a recognized land award, peace and exact member assent. An optional campaign can attempt to secure land but guarantees none. Stay mobile and defer leave this stage pending. Set the program aside closes the agenda without claiming settlement.",
+        "name": "Settle at Kath or keep moving",
+        "text": "To settle people at Kath, your camp must be there, you must hold the county or a land award for it, no war or service may bind you and the members must agree. A campaign for Kath can try to win the land. This step is done when a group settles.",
         "year": 1204,
         "season": 0,
         "completion": {
@@ -232,8 +232,8 @@ FBDATA.rulerAgendas_mobile_leadership = {
         "choices": [
           {
             "id": "propose_settlement",
-            "label": "Propose these terms to the members",
-            "detail": "No payment or outcome. Replaces the pending proposal. Supply only your own assent in Mobile coalition; other members decide separately.",
+            "label": "Put settling fifty civilians to the members",
+            "detail": "Replaces any pending proposal. Add your own assent in Mobile coalition; the other members decide for themselves.",
             "operation": "agenda_mobile_prepare",
             "action": "settle",
             "terms": {
@@ -244,8 +244,8 @@ FBDATA.rulerAgendas_mobile_leadership = {
           },
           {
             "id": "commit_settlement",
-            "label": "Settle a partial group",
-            "detail": "Transfer fifty civilians at the actual camp county through existing land rights and assent. The remaining following stays mobile.",
+            "label": "Settle fifty civilians at Kath",
+            "detail": "They stay at Kath with their share of the food. The rest of the following keeps moving.",
             "operation": "agenda_mobile",
             "action": "settle",
             "terms": {
@@ -256,8 +256,8 @@ FBDATA.rulerAgendas_mobile_leadership = {
           },
           {
             "id": "propose_final",
-            "label": "Propose final settlement",
-            "detail": "Quotes every remaining person, including field fighters. Obtain exact member assent in Mobile coalition.",
+            "label": "Put full settlement to the members",
+            "detail": "Proposes settling everyone at Kath, fighters included. Add your own assent in Mobile coalition.",
             "operation": "agenda_mobile_prepare",
             "action": "settle",
             "terms": {
@@ -268,8 +268,8 @@ FBDATA.rulerAgendas_mobile_leadership = {
           },
           {
             "id": "commit_final",
-            "label": "Review final settlement",
-            "detail": "Settle every remaining person under the following’s current rights and member decision. No outcome is recorded before it succeeds.",
+            "label": "Settle the whole following at Kath",
+            "detail": "Everyone settles at Kath, fighters included. The host disbands and the following stops moving.",
             "operation": "agenda_mobile",
             "action": "settle",
             "terms": {
@@ -280,20 +280,20 @@ FBDATA.rulerAgendas_mobile_leadership = {
           },
           {
             "id": "stay_mobile",
-            "label": "Stay mobile",
-            "detail": "Spend nothing and leave settlement pending. Ordinary camp decisions remain available.",
+            "label": "Keep the following moving",
+            "detail": "Nothing is spent, and settlement stays open.",
             "operation": "agenda_defer"
           },
           {
             "id": "observed_settlement",
-            "label": "Record the actual completed transaction",
-            "detail": "Available only after the actual action succeeds. Records its outcome and adds no money, food or authority.",
+            "label": "Record the settlement of your people",
+            "detail": "Marks this step done once some of your people have settled.",
             "operation": "agenda_mobile_result"
           },
           {
             "id": "defer_settlement",
-            "label": "Defer this review",
-            "detail": "Spend nothing and leave this stage pending. Return later or set the program aside.",
+            "label": "Decide later",
+            "detail": "Nothing is spent, and this step stays open.",
             "operation": "agenda_defer"
           }
         ]
@@ -305,8 +305,8 @@ FBDATA.householdTracks_mobile_leadership = {
   "qipchaq_camp_household_1204": {
     "id": "qipchaq_camp_household_1204",
     "type": "household_track",
-    "title": "Work in the living camp",
-    "intro": "Your household belongs to this following. Review one paid service at its actual civilian camp. You may close the sheet without accepting; no future wage or public power is promised.",
+    "title": "Work in the Qipchaq camp",
+    "intro": "Your household belongs to the eastern Qipchaq following. Its camp can pay you for a day’s work.",
     "homeProvinceId": "lower_syr_darya",
     "continuity": "protagonist",
     "interruptedStage": "interrupted",
@@ -321,13 +321,13 @@ FBDATA.householdTracks_mobile_leadership = {
     },
     "stages": {
       "work": {
-        "name": "One actual service",
-        "text": "The following must have public money and at least one food unit. Your payment enters the private purse; food leaves the camp. Service is available once per day and requires your actual presence. Closing this sheet leaves the goal pending.",
+        "name": "A day’s work for the camp",
+        "text": "You must be at the camp, and it needs coin in its treasury and food in store. You can take paid work once a day.",
         "choices": [
           {
             "id": "paid_service",
-            "label": "Review one paid camp service",
-            "detail": "Receive the ordinary service payment from the public treasury and consume one camp food unit. Confirm only after reviewing current eligibility and cost. This grants no troops, office or future payment.",
+            "label": "Work one day for the camp",
+            "detail": "You are paid from the camp’s treasury, and the camp spends one food.",
             "operation": {
               "kind": "mobile_work",
               "realmId": "qipchaq_following_1204"
@@ -338,15 +338,15 @@ FBDATA.householdTracks_mobile_leadership = {
         "transitions": []
       },
       "paid": {
-        "name": "The service was paid",
-        "text": "One canonical service payment reached your private purse. The following paid from its own account and consumed one food unit. No other household member moved and no future wage was reserved.",
+        "name": "Your work was paid",
+        "text": "The camp paid your day’s wage from its treasury into your private purse and spent one food.",
         "terminal": true,
         "choices": [],
         "transitions": []
       },
       "interrupted": {
-        "name": "The original worker is no longer available",
-        "text": "This personal work opportunity has ended. A successor inherits no promised payment or public mandate.",
+        "name": "The offer of work has ended",
+        "text": "The person offered this work can no longer take it. The offer does not pass to an heir.",
         "terminal": true,
         "choices": [],
         "transitions": []
@@ -358,8 +358,8 @@ FBDATA.openingProfiles_mobile_leadership = {
   "opening_qipchaq_member_1204": {
     "id": "opening_qipchaq_member_1204",
     "type": "opening_profile",
-    "title": "Earn one camp payment",
-    "intro": "This optional goal observes a paid service, never an acknowledgment or opening cash. It adds no reward.",
+    "title": "Earn your first camp wage",
+    "intro": "One optional goal: take a day’s paid work in the Qipchaq camp.",
     "scenarioIds": [
       "qipchaq_member_1204"
     ],
@@ -372,8 +372,8 @@ FBDATA.openingProfiles_mobile_leadership = {
     "goals": [
       {
         "id": "service",
-        "name": "Complete one paid camp service",
-        "text": "In Deeds, open Work in the living camp and review one paid camp service. The current camp, public treasury, food and daily work limit determine availability. Cancel leaves this goal pending.",
+        "name": "Work a paid day in camp",
+        "text": "In Deeds, open Work in the Qipchaq camp; this goal is done when the camp pays you for a day’s work.",
         "criterion": {
           "kind": "household_phase",
           "storyId": "qipchaq_camp_household_1204",
@@ -390,8 +390,8 @@ FBDATA.openingProfiles_mobile_leadership_loop = {
   "opening_qipchaq_leader_1204": {
     "id": "opening_qipchaq_leader_1204",
     "type": "opening_profile",
-    "title": "Learn the following’s real decisions",
-    "intro": "Optional goals observe completed actions and pay no rewards. Set any goal aside without changing the following.",
+    "title": "Learn to lead the Qipchaq",
+    "intro": "Four optional goals: win tribute, raid, divide the takings and move the camp to Kath.",
     "scenarioIds": [
       "qipchaq_leader_1204"
     ],
@@ -405,8 +405,8 @@ FBDATA.openingProfiles_mobile_leadership_loop = {
     "goals": [
       {
         "id": "demand",
-        "name": "Receive one accepted demand",
-        "text": "In Deeds, open Lead the living following. Propose these exact terms here. In Mobile coalition, assent as your own member and wait for the other members to answer. Return here to send the demand. The outside court may refuse; only its actual public payment completes this stage.",
+        "name": "Win a tribute payment",
+        "text": "In Deeds, open Lead the Qipchaq following; this goal is done when the ruler of the Lower Syr Darya settlements pays your tribute demand.",
         "office": true,
         "criterion": {
           "kind": "mobile_transaction",
@@ -416,8 +416,8 @@ FBDATA.openingProfiles_mobile_leadership_loop = {
       },
       {
         "id": "raid",
-        "name": "Resolve one bounded raid",
-        "text": "In Deeds, open Lead the living following. An accepted demand reserves a finite tribute commitment. Wait for its thirty-day term to end before raiding. Propose the local sortie here, assent in Mobile coalition and wait for other members. Return to commit the reviewed sortie. It risks fighter losses and provides finite spoils, without occupation or land.",
+        "name": "Raid the lower Syr Darya",
+        "text": "In Deeds, open Lead the Qipchaq following; this goal is done when your host raids the lower Syr Darya after the tribute term ends.",
         "office": true,
         "criterion": {
           "kind": "mobile_transaction",
@@ -427,8 +427,8 @@ FBDATA.openingProfiles_mobile_leadership_loop = {
       },
       {
         "id": "distribution",
-        "name": "Decide one actual receipt",
-        "text": "In Deeds, open Lead the living following. Share the oldest actual receipt by living member weight or retain it publicly. Food shares are consumed now. This resolves existing resources, without another story reward.",
+        "name": "Divide the takings",
+        "text": "In Deeds, open Lead the Qipchaq following; this goal is done when you share the oldest takings with your members or keep them.",
         "office": true,
         "criterion": {
           "kind": "mobile_transaction",
@@ -438,8 +438,8 @@ FBDATA.openingProfiles_mobile_leadership_loop = {
       },
       {
         "id": "move",
-        "name": "Arrive at a seasonal ground",
-        "text": "In Deeds, open Lead the living following. Propose access here, assent in Mobile coalition and wait for the other members. Send the offer here and wait for outside acceptance. Every intervening county needs ordinary access. If the host was lost, use Mobile coalition to recruit from actual member pledges and pay the current public cost. Review departure here and let days pass. Only actual camp and host arrival completes the stage.",
+        "name": "Move the camp to Kath",
+        "text": "In Deeds, open Lead the Qipchaq following; this goal is done when your camp and host reach Kath.",
         "office": true,
         "criterion": {
           "kind": "mobile_transaction",
@@ -456,8 +456,8 @@ FBDATA.householdTracks_mobile_leadership_pontic = {
   "pontic_camp_household_476": {
     "id": "pontic_camp_household_476",
     "type": "household_track",
-    "title": "Work in the living camp",
-    "intro": "Your household belongs to this following. Review one paid service at its actual civilian camp. You may close the sheet without accepting; no future wage or public power is promised.",
+    "title": "Work in the Pontic camp",
+    "intro": "Your household belongs to the Pontic Followings. Their camp can pay you for a day’s work.",
     "homeProvinceId": "cherson",
     "continuity": "protagonist",
     "interruptedStage": "interrupted",
@@ -472,13 +472,13 @@ FBDATA.householdTracks_mobile_leadership_pontic = {
     },
     "stages": {
       "work": {
-        "name": "One actual service",
-        "text": "The following must have public money and at least one food unit. Your payment enters the private purse; food leaves the camp. Service is available once per day and requires your actual presence. Closing this sheet leaves the goal pending.",
+        "name": "A day’s work for the camp",
+        "text": "You must be at the camp, and it needs coin in its treasury and food in store. You can take paid work once a day.",
         "choices": [
           {
             "id": "paid_service",
-            "label": "Review one paid camp service",
-            "detail": "Receive the ordinary service payment from the public treasury and consume one camp food unit. Confirm only after reviewing current eligibility and cost. This grants no troops, office or future payment.",
+            "label": "Work one day for the camp",
+            "detail": "You are paid from the camp’s treasury, and the camp spends one food.",
             "operation": {
               "kind": "mobile_work",
               "realmId": "pontic_following_476"
@@ -489,15 +489,15 @@ FBDATA.householdTracks_mobile_leadership_pontic = {
         "transitions": []
       },
       "paid": {
-        "name": "The service was paid",
-        "text": "One canonical service payment reached your private purse. The following paid from its own account and consumed one food unit. No other household member moved and no future wage was reserved.",
+        "name": "Your work was paid",
+        "text": "The camp paid your day’s wage from its treasury into your private purse and spent one food.",
         "terminal": true,
         "choices": [],
         "transitions": []
       },
       "interrupted": {
-        "name": "The original worker is no longer available",
-        "text": "This personal work opportunity has ended. A successor inherits no promised payment or public mandate.",
+        "name": "The offer of work has ended",
+        "text": "The person offered this work can no longer take it. The offer does not pass to an heir.",
         "terminal": true,
         "choices": [],
         "transitions": []
@@ -507,8 +507,8 @@ FBDATA.householdTracks_mobile_leadership_pontic = {
   "saragur_camp_household_476": {
     "id": "saragur_camp_household_476",
     "type": "household_track",
-    "title": "Work in the living camp",
-    "intro": "Your household belongs to this following. Review one paid service at its actual civilian camp. You may close the sheet without accepting; no future wage or public power is promised.",
+    "title": "Work in the Saragur camp",
+    "intro": "Your household belongs to the Saragur Following. Its camp can pay you for a day’s work.",
     "homeProvinceId": "sarkel",
     "continuity": "protagonist",
     "interruptedStage": "interrupted",
@@ -523,13 +523,13 @@ FBDATA.householdTracks_mobile_leadership_pontic = {
     },
     "stages": {
       "work": {
-        "name": "One actual service",
-        "text": "The following must have public money and at least one food unit. Your payment enters the private purse; food leaves the camp. Service is available once per day and requires your actual presence. Closing this sheet leaves the goal pending.",
+        "name": "A day’s work for the camp",
+        "text": "You must be at the camp, and it needs coin in its treasury and food in store. You can take paid work once a day.",
         "choices": [
           {
             "id": "paid_service",
-            "label": "Review one paid camp service",
-            "detail": "Receive the ordinary service payment from the public treasury and consume one camp food unit. Confirm only after reviewing current eligibility and cost. This grants no troops, office or future payment.",
+            "label": "Work one day for the camp",
+            "detail": "You are paid from the camp’s treasury, and the camp spends one food.",
             "operation": {
               "kind": "mobile_work",
               "realmId": "saragur_following_476"
@@ -540,15 +540,15 @@ FBDATA.householdTracks_mobile_leadership_pontic = {
         "transitions": []
       },
       "paid": {
-        "name": "The service was paid",
-        "text": "One canonical service payment reached your private purse. The following paid from its own account and consumed one food unit. No other household member moved and no future wage was reserved.",
+        "name": "Your work was paid",
+        "text": "The camp paid your day’s wage from its treasury into your private purse and spent one food.",
         "terminal": true,
         "choices": [],
         "transitions": []
       },
       "interrupted": {
-        "name": "The original worker is no longer available",
-        "text": "This personal work opportunity has ended. A successor inherits no promised payment or public mandate.",
+        "name": "The offer of work has ended",
+        "text": "The person offered this work can no longer take it. The offer does not pass to an heir.",
         "terminal": true,
         "choices": [],
         "transitions": []
@@ -558,8 +558,8 @@ FBDATA.householdTracks_mobile_leadership_pontic = {
   "oghur_camp_household_476": {
     "id": "oghur_camp_household_476",
     "type": "household_track",
-    "title": "Work in the living camp",
-    "intro": "Your household belongs to this following. Review one paid service at its actual civilian camp. You may close the sheet without accepting; no future wage or public power is promised.",
+    "title": "Work in the Oghur camp",
+    "intro": "Your household belongs to the Oghur Following. Its camp can pay you for a day’s work.",
     "homeProvinceId": "atil",
     "continuity": "protagonist",
     "interruptedStage": "interrupted",
@@ -574,13 +574,13 @@ FBDATA.householdTracks_mobile_leadership_pontic = {
     },
     "stages": {
       "work": {
-        "name": "One actual service",
-        "text": "The following must have public money and at least one food unit. Your payment enters the private purse; food leaves the camp. Service is available once per day and requires your actual presence. Closing this sheet leaves the goal pending.",
+        "name": "A day’s work for the camp",
+        "text": "You must be at the camp, and it needs coin in its treasury and food in store. You can take paid work once a day.",
         "choices": [
           {
             "id": "paid_service",
-            "label": "Review one paid camp service",
-            "detail": "Receive the ordinary service payment from the public treasury and consume one camp food unit. Confirm only after reviewing current eligibility and cost. This grants no troops, office or future payment.",
+            "label": "Work one day for the camp",
+            "detail": "You are paid from the camp’s treasury, and the camp spends one food.",
             "operation": {
               "kind": "mobile_work",
               "realmId": "oghur_following_476"
@@ -591,15 +591,15 @@ FBDATA.householdTracks_mobile_leadership_pontic = {
         "transitions": []
       },
       "paid": {
-        "name": "The service was paid",
-        "text": "One canonical service payment reached your private purse. The following paid from its own account and consumed one food unit. No other household member moved and no future wage was reserved.",
+        "name": "Your work was paid",
+        "text": "The camp paid your day’s wage from its treasury into your private purse and spent one food.",
         "terminal": true,
         "choices": [],
         "transitions": []
       },
       "interrupted": {
-        "name": "The original worker is no longer available",
-        "text": "This personal work opportunity has ended. A successor inherits no promised payment or public mandate.",
+        "name": "The offer of work has ended",
+        "text": "The person offered this work can no longer take it. The offer does not pass to an heir.",
         "terminal": true,
         "choices": [],
         "transitions": []
@@ -612,8 +612,8 @@ FBDATA.storyExpeditions_mobile_leadership = {
   "qipchaq_land_campaign_1204": {
     "id": "qipchaq_land_campaign_1204",
     "type": "campaign",
-    "name": "A permanent foothold",
-    "desc": "The following may seek a permanent foothold through an uncertain ordinary campaign. The actual leader decides with member assent. No historical conquest, land entitlement or settlement is promised; ordinary diplomacy remains available.",
+    "name": "The march on Kath",
+    "desc": "The eastern Qipchaq want a lasting home at Kath, which Khwarazm holds under the Qara Khitai. Their host would have to take it by force.",
     "actor": {
       "realmId": "qipchaq_following_1204"
     },

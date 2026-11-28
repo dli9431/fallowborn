@@ -68,7 +68,7 @@ FBDATA.startScenarios_mobile_leaders = [
       "qipchaq_leadership_1204",
       "opening_qipchaq_leader_1204"
     ],
-    "intro": "You are {name}, the current river principal. In Deeds, Learn the following’s real decisions and Lead the living following guide actual reviews. Member assent, outside consent, finite stocks and physical arrival remain necessary. Your private purse stays separate."
+    "intro": "You are {name}, the current river principal. In Deeds, open Lead the Qipchaq following to begin; Learn to lead the Qipchaq tracks your first goals. Member assent, outside consent, finite stocks and physical arrival remain necessary. Your private purse stays separate."
   },
   {
     "id": "pontic_leader_476",
@@ -101,7 +101,7 @@ FBDATA.startScenarios_mobile_leaders = [
     "tracks": [
       "pontic_camp_household_476"
     ],
-    "intro": "You are {name}, an existing principal. Open Work in the living camp for optional paid service and Mobile coalition for current member voices, supplies and outside consent. Membership grants no county or automatic public authority."
+    "intro": "You are {name}, an existing principal. Open Work in the Pontic camp for optional paid service and Mobile coalition for current member voices, supplies and outside consent. Membership grants no county or automatic public authority."
   },
   {
     "id": "pontic_member_476",
@@ -134,7 +134,7 @@ FBDATA.startScenarios_mobile_leaders = [
     "tracks": [
       "pontic_camp_household_476"
     ],
-    "intro": "You are {name}, an existing principal. Open Work in the living camp for optional paid service and Mobile coalition for current member voices, supplies and outside consent. Membership grants no county or automatic public authority."
+    "intro": "You are {name}, an existing principal. Open Work in the Pontic camp for optional paid service and Mobile coalition for current member voices, supplies and outside consent. Membership grants no county or automatic public authority."
   },
   {
     "id": "saragur_leader_476",
@@ -167,7 +167,7 @@ FBDATA.startScenarios_mobile_leaders = [
     "tracks": [
       "saragur_camp_household_476"
     ],
-    "intro": "You are {name}, an existing principal. Open Work in the living camp for optional paid service and Mobile coalition for current member voices, supplies and outside consent. Membership grants no county or automatic public authority."
+    "intro": "You are {name}, an existing principal. Open Work in the Saragur camp for optional paid service and Mobile coalition for current member voices, supplies and outside consent. Membership grants no county or automatic public authority."
   },
   {
     "id": "saragur_member_476",
@@ -200,7 +200,7 @@ FBDATA.startScenarios_mobile_leaders = [
     "tracks": [
       "saragur_camp_household_476"
     ],
-    "intro": "You are {name}, an existing principal. Open Work in the living camp for optional paid service and Mobile coalition for current member voices, supplies and outside consent. Membership grants no county or automatic public authority."
+    "intro": "You are {name}, an existing principal. Open Work in the Saragur camp for optional paid service and Mobile coalition for current member voices, supplies and outside consent. Membership grants no county or automatic public authority."
   },
   {
     "id": "oghur_leader_476",
@@ -233,7 +233,7 @@ FBDATA.startScenarios_mobile_leaders = [
     "tracks": [
       "oghur_camp_household_476"
     ],
-    "intro": "You are {name}, an existing principal. Open Work in the living camp for optional paid service and Mobile coalition for current member voices, supplies and outside consent. Membership grants no county or automatic public authority."
+    "intro": "You are {name}, an existing principal. Open Work in the Oghur camp for optional paid service and Mobile coalition for current member voices, supplies and outside consent. Membership grants no county or automatic public authority."
   },
   {
     "id": "oghur_member_476",
@@ -266,7 +266,7 @@ FBDATA.startScenarios_mobile_leaders = [
     "tracks": [
       "oghur_camp_household_476"
     ],
-    "intro": "You are {name}, an existing principal. Open Work in the living camp for optional paid service and Mobile coalition for current member voices, supplies and outside consent. Membership grants no county or automatic public authority."
+    "intro": "You are {name}, an existing principal. Open Work in the Oghur camp for optional paid service and Mobile coalition for current member voices, supplies and outside consent. Membership grants no county or automatic public authority."
   }
 ];
 Array.prototype.push.apply(FBDATA.startScenarios,FBDATA.startScenarios_mobile_leaders);
