@@ -6,6 +6,7 @@ const {dependsOnRuntime} = require('../support/runtime-dependencies');
 const example = require('../fixtures/authoring/mobile-leadership-glassroad.json');
 
 dependsOnRuntime(__filename,['data/starts_mobile_leaders.js','data/story_mobile_leadership.js',
+  'data/story_mobile_principal.js','data/starts_mobile_principal.js',
   'data/bookmark_1204_terrain.js','data/mobile_confederations.js','js/starts.js','js/main.js',
   'js/stories.js','js/story_household.js','js/story_opening_goals.js','js/mobile_confederations.js',
   'js/mobile_command.js','js/story_ruler_agenda.js','js/story_campaign.js','js/expedition_programs.js',
@@ -91,6 +92,89 @@ for (const role of [null,'leader','member']) test((role ? 'JSON '+role : 'native
     return {once:before===once,twice:once===campFacts(),identity:FB.state.player.charId===id,valid:FB.mobile.validate(FB.state)};
   });
   expect(restored).toEqual({once:true,twice:true,identity:true,valid:true});
+});
+
+test('following, camp and principal text stays short and plain and names current story titles',async function ({page},info) {
+  await openGame(page,info);await prepareGameContent(page);
+  const result=await page.evaluate(function () {
+    const ids=['qipchaq_leadership_1204','qipchaq_camp_household_1204','pontic_camp_household_476',
+      'saragur_camp_household_476','oghur_camp_household_476','opening_qipchaq_member_1204',
+      'opening_qipchaq_leader_1204','qipchaq_land_campaign_1204','qipchaq_principal_agenda_1204',
+      'opening_qipchaq_principal_1204'];
+    const labels=[],prose=[],shown=[];
+    function label(where,value) {labels.push([where,value]);shown.push([where,value]);}
+    function body(where,value) {prose.push([where,value]);shown.push([where,value]);}
+    function title(id) {const def=FBDATA.storyInstances[id];return def.title || def.name;}
+    const references=[];
+    ids.forEach(function (id) {
+      const def=FBDATA.storyInstances[id];
+      shown.push([id,title(id)]);
+      ['intro','desc'].forEach(function (key) {if (def[key]!==undefined) body(id+'.'+key,def[key]);});
+      const stages=Array.isArray(def.stages) ? def.stages : Object.keys(def.stages || {}).map(function (key) {
+        return Object.assign({id:key},def.stages[key]);
+      });
+      stages.forEach(function (stage) {
+        const at=id+'.'+stage.id;
+        shown.push([at,stage.name]);body(at+'.text',stage.text);
+        stage.choices.forEach(function (choice) {
+          label(at+'.'+choice.id,choice.label);body(at+'.'+choice.id+'.detail',choice.detail);
+        });
+      });
+      (def.goals || []).forEach(function (goal) {
+        const at=id+'.'+goal.id,expected='In Deeds, open '+title(goal.criterion.storyId);
+        shown.push([at,goal.name]);body(at+'.text',goal.text);
+        references.push([at,goal.text.indexOf(expected+';')===0 || goal.text.indexOf(expected+' and ')===0]);
+      });
+      (def.contacts || []).forEach(function (contact) {
+        const at=id+'.'+contact.id;
+        shown.push([at,contact.label]);body(at+'.text',contact.text);
+      });
+    });
+    const start=FBDATA.startScenarios.filter(function (row) {return row.id==='qipchaq_principal_1204';})[0];
+    const family=start.familyPresets.standard;
+    shown.push(['start.name',start.name],['start.family.name',family.name]);
+    body('start.desc',start.desc);body('start.intro',start.intro);body('start.family.diff',family.diff);
+    references.push(['start.intro',start.intro.indexOf('In Deeds, open '+title(start.tracks[0])+' to begin.')>=0]);
+    // The leader and regional following starts name their own stories by title.
+    const startTitles=[];
+    function names(startId,storyId,phrase) {
+      const row=FBDATA.startScenarios.filter(function (row) {return row.id===startId;})[0];
+      startTitles.push([startId,storyId,row.tracks.indexOf(storyId)>=0 && row.intro.indexOf(phrase(title(storyId)))>=0]);
+    }
+    names('qipchaq_leader_1204','qipchaq_leadership_1204',function (name) {return 'In Deeds, open '+name+' to begin; ';});
+    names('qipchaq_leader_1204','opening_qipchaq_leader_1204',function (name) {return '; '+name+' tracks your first goals.';});
+    ['pontic','saragur','oghur'].forEach(function (group) {
+      ['leader','member'].forEach(function (role) {
+        names(group+'_'+role+'_476',group+'_camp_household_476',function (name) {return 'Open '+name+' for ';});
+      });
+    });
+    const banned=/\b(ordinary|actual|actually|existing|current|original|authored|declared)\b/i;
+    const boilerplate=/grants? no |creates? no |Record (a |an )?(costless )?(priority|intention|preference)|Record attention|\bordinary\b|\bactual(ly)?\b|\bexisting\b|\boriginal\b|\bauthored\b|historical opportunity|political opportunity/i;
+    return {
+      labelCount:labels.length,
+      longLabels:labels.filter(function (row) {return row[1].trim().split(/\s+/).length>8 || banned.test(row[1]);}),
+      boilerplate:prose.filter(function (row) {return boilerplate.test(row[1]);}),
+      questionMarks:shown.filter(function (row) {return /[A-Za-z]\?[A-Za-z]/.test(row[1]);}),
+      referenceCount:references.length,
+      brokenReferences:references.filter(function (row) {return !row[1];}),
+      untracked:shown.filter(function (row) {return row[1].indexOf('In Deeds, open ')>=0;}).length,
+      startTitleCount:startTitles.length,
+      brokenStartTitles:startTitles.filter(function (row) {return !row[2];}),
+      demand:FB.T(FBDATA.storyInstances.qipchaq_leadership_1204.stages[0].choices[1].detail)
+    };
+  });
+  expect(result.labelCount).toBe(35);
+  expect(result.longLabels).toEqual([]);
+  expect(result.boilerplate).toEqual([]);
+  expect(result.questionMarks).toEqual([]);
+  // Eight opening goals and the principal start point at a story by its title.
+  expect(result.referenceCount).toBe(9);
+  expect(result.brokenReferences).toEqual([]);
+  expect(result.untracked).toBe(9);
+  expect(result.startTitleCount).toBe(8);
+  expect(result.brokenStartTitles).toEqual([]);
+  expect(result.demand).toContain('in tribute for thirty days');
+  expect(result.demand).not.toContain('{money');
 });
 
 test('camp declarations have no acknowledgment completion and reject unknown payment operations atomically',async function ({page},info) {
