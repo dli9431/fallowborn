@@ -5,11 +5,11 @@ FBDATA.bookmarkContent['634'] = FBDATA.bookmarkContent['634'] || {};
 FBDATA.bookmarkContent['634'].campaigns = {
   syrian_front_634:{
     name:'The Syrian frontier',
-    desc:'The Medinan court may contest the Damascus district through ordinary war. This county objective represents a broad frontier, not an exact urban surrender. The offer closes on the last day of 635; a committed attempt lasts at most 360 days. It may never start, and conquest is uncertain.'
+    desc:'Medina’s armies have been raiding Roman Syria, and Damascus is the prize. Heraclius holds the city and will fight to keep it.'
   },
   iraqi_front_634:{
     name:'The Iraqi frontier',
-    desc:'The Medinan court may contest the Hira district through ordinary war. Hira uses the existing district map: its opening control is a simulation, not a claim of precise urban possession. The offer closes on the last day of 635; a committed attempt lasts at most 180 days. It may never start, independently of Syria.'
+    desc:'Medina’s armies have been raiding the Persian frontier on the Euphrates, and the Hira district is the prize. The Sasanian court at Ctesiphon holds it, and this war is separate from Syria.'
   }
 };
 });
