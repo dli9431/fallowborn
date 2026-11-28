@@ -6,13 +6,13 @@ FBDATA.startScenarios_frederick_1241 = [
     rulerRealmId:'hre_1241', governmentForm:'territorial', fixedProvinceId:'ravenna',
     characterName:'Frederick II', sex:'m', startCulture:'german', startReligion:'catholic',
     name:'Frederick II outside Faenza',
-    desc:'Review an Italian campaign, the resources of your crowns and the dispute with Gregory IX. Choose which obligations your court can sustain.',
+    desc:'You are Frederick II, in camp before Faenza while the Italian cities hold out against you. Pope Gregory IX, who excommunicated you in 1239, has called a council to Rome.',
     tier:7, profession:'noble', gold:120, prestige:150, piety:10,
     tracks:['frederick_agenda_1241','opening_frederick_1241'],
     familyPresets:{ standard:{ name:'Existing imperial family', diff:'age 47 · married, family living apart',
-      desc:'Isabella and her young children live in the southern kingdom. Conrad remains in Germany. Their separate residences and your existing marriage are preserved.' } },
+      desc:'Your wife Isabella of England lives at Capua with your young children Henry and Margaret. Your son Conrad IV is in Germany, and your other sons are not in this start.' } },
     onboarding:'ruler',
-    intro:'You are Frederick II, at a camp near Faenza. Frankfurt remains the administrative anchor of your court. Isabella lives apart from you with Henry and Margaret, while Conrad remains in Germany. Review the funds and lands you actually hold, the Italian opposition and the existing papal dispute. The announced council and the campaign’s eventual outcome remain unsettled.' }
+    intro:'You are Frederick II, in camp near Faenza, while your court’s seat stays at Frankfurt. Isabella lives apart from you with Henry and Margaret, and Conrad is in Germany. Gregory IX has excommunicated you and called a council to meet in Rome. Open your court agenda in Deeds to begin.' }
 ];
 Array.prototype.push.apply(FBDATA.startScenarios,FBDATA.startScenarios_frederick_1241);
 /* The retained baseline has no camp/family reconstruction. The date-owned
