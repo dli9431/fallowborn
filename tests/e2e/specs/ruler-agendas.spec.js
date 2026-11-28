@@ -12,7 +12,8 @@ dependsOnRuntime(__filename, ['index.html','data/story_ruler_agendas.js','js/sto
   'js/government_aristocracy.js','js/government_administration.js','js/government_recognition.js',
   'js/government_support.js','js/government_collective.js','js/government_assembly.js','js/government_selection.js',
   'js/mobile_confederations.js','js/institutions.js','js/authority.js','js/treasury.js',
-  'js/world.js','js/wars.js','js/main.js','js/save.js','js/save_v4.js','js/ui_misc.js']);
+  'js/world.js','js/wars.js','js/main.js','js/save.js','js/save_v4.js','js/ui_misc.js',
+  'data/bookmark_1241.js','data/bookmark_1241_frederick.js','data/starts_frederick_1241.js']);
 
 const starts = [
   ['peroz_476','peroz_agenda_476'], ['peroz_sasanian_476','peroz_agenda_476'],
@@ -321,6 +322,70 @@ test('Siwa observes executed consent once and interruption follows occupation wi
       interrupted:s.stories[id].status, scope:s.player.provs.length === 0 };
   });
   expect(result).toEqual({ observed:true, once:true, privateSame:true, publicSame:true, interrupted:'agenda_interrupted', scope:true });
+});
+
+const wording = [
+  { bookmark:'476', scenario:'odoacer_476', ids:['peroz_agenda_476','odoacer_agenda_476','syagrius_agenda_476'] },
+  { bookmark:'1204', scenario:'muhammad_1204', ids:['muhammad_agenda_1204','siwa_agenda_1204'] },
+  { bookmark:'1241', scenario:'frederick_1241', ids:['frederick_agenda_1241'],
+    code:'FREDERICK-1241-frederick_1241-ravenna-m-Frederick_II-standard-0-german.catholic' }
+];
+for (const group of wording) {
+  test(group.bookmark + ' ruler agendas word their choices as plain decisions', async function ({ page }, info) {
+    await startParityGame(page, info, group.code ? { bookmark:group.bookmark, scenario:group.scenario, code:group.code } :
+      { bookmark:group.bookmark, scenario:group.scenario, declaredOpening:true });
+    const result = await page.evaluate(function (ids) {
+      const processWords = /\b(ordinary|actual|actually|existing|current|original|authored|declared)\b/i;
+      const disclaimers = /grants? no |creates? no |Record (a |an )?(costless )?(priority|intention|preference)|Record attention|\bordinary\b|\bactual(ly)?\b|\bexisting\b|\boriginal\b|\bauthored\b|historical opportunity|political opportunity/i;
+      const lostApostrophe = /[A-Za-z]\?[A-Za-z]/;
+      const limit = 'These priorities shape your court’s story; orders, payments and wars go through Rank & Realm, Land and the map.';
+      const faults = [], counts = {};
+      ids.forEach(function (id) {
+        const d = FBDATA.rulerAgendas[id];
+        function prose(where, value) {
+          if (!value || disclaimers.test(value) || lostApostrophe.test(value)) faults.push(where + ': ' + value);
+        }
+        counts[id] = 0;
+        prose(id + ' intro', d.intro);
+        if (d.intro.split(limit).length !== 2 || !d.intro.endsWith(limit)) faults.push(id + ' limit sentence');
+        d.stages.forEach(function (st) {
+          prose(st.id + ' text', st.text);
+          st.choices.forEach(function (c) {
+            counts[id]++;
+            prose(c.id + ' detail', c.detail);
+            if (c.label.trim().split(/\s+/).length > 8 || processWords.test(c.label) || lostApostrophe.test(c.label)) {
+              faults.push(c.id + ' label: ' + c.label);
+            }
+            // The sheet appends the linked story's detail, so a forwarding row never repeats it.
+            if (c.operation !== 'agenda_story_choice') return;
+            const source = FBDATA.storyInstances[c.storyId].choices[c.choiceId].detail;
+            const repeated = (source.match(/[^.]+\./g) || []).some(function (part) { return c.detail.indexOf(part.trim()) >= 0; });
+            if (repeated || source.indexOf(c.detail) >= 0) faults.push(c.id + ' repeats ' + c.choiceId);
+          });
+        });
+      });
+      return { faults:faults, counts:counts };
+    }, group.ids);
+    expect(result.faults).toEqual([]);
+    expect(Object.keys(result.counts)).toEqual(group.ids);
+    expect(Object.values(result.counts).every(function (n) { return n > 0; })).toBe(true);
+  });
+}
+
+test('Syagrius names Clovis and Soissons for 486 and Odoacer appends each linked detail once', async function ({ page }, info) {
+  await start(page, info, 'odoacer_476');
+  const result = await page.evaluate(function () {
+    const s = FB.state, id = 'odoacer_agenda_476';
+    const challenge = FBDATA.rulerAgendas.syagrius_agenda_476.stages.find(function (st) { return st.id === 'syagrius_frankish_challenge'; });
+    const rows = FB.stories.choices(s,id), linked = FB.stories.choices(s,'western_court_476');
+    const forwarded = FBDATA.rulerAgendas[id].stages[0].choices.filter(function (c) { return c.operation === 'agenda_story_choice'; });
+    return { clovis:challenge.text.indexOf('Clovis') >= 0, soissons:challenge.text.indexOf('Soissons') >= 0,
+      forwarded:forwarded.map(function (c) {
+        const row = rows.find(function (r) { return r.id === c.id; }), source = linked.find(function (r) { return r.id === c.choiceId; });
+        return !!row && !!source && row.detail === FB.T(c.detail) + ' ' + source.detail && row.detail.split(source.detail).length === 2;
+      }) };
+  });
+  expect(result).toEqual({ clovis:true, soissons:true, forwarded:[true,true,true] });
 });
 
 for (const scenario of ['nepos_476','farmer_476']) {
