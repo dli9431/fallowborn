@@ -190,8 +190,9 @@ test('shared story sheet Back returns to the choice list and Close to the Deeds 
     await expect(page.locator('#gm-title')).toHaveText('The Western Court, 476');
     await expect(page.locator('#gm-body')).toContainText('Soldiers seek a spokesman');
     await page.locator('[data-story-choice="accept_delegate"]').click();
+    // A story review is titled by the action label itself.
     await expect(page.locator('#gm-title')).toHaveText(
-      'Review Serve as the soldiers’ delegate');
+      'Serve as the soldiers’ delegate');
     await page.keyboard.press('Escape');
     await expect(page.locator('#gm-title')).toHaveText('The Western Court, 476');
     await expect(page.locator('[data-story-choice="accept_delegate"]')).toBeVisible();

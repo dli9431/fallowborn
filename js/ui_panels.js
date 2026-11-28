@@ -1640,9 +1640,10 @@ window.FB = window.FB || {};
       if (flow === 'no-day') return FB.T('Resolves now · no day spent');
       return FB.T('Resolves now · spends one day');
     }
-    /* Like a deed row, the face keeps only the action name; the current state
-       and the story's own description live in the shared details. */
-    function storyEntryRow(id, label, state, detail, open) {
+    /* A story's face shows its name and, when given, its one-line stage
+       under it; the state and the story's own description also live in the
+       shared details. */
+    function storyEntryRow(id, label, state, detail, open, face) {
       const row = document.createElement('div');
       const btn = document.createElement('button');
       const detailsId = 'story-details-' + id;
@@ -1653,6 +1654,12 @@ window.FB = window.FB || {};
       btn.setAttribute('data-deed-flow', 'choices');
       btn.setAttribute('aria-describedby', detailsId);
       btn.textContent = label;
+      if (face) {
+        const stage = document.createElement('span');
+        stage.className = 'adesc story-stage';
+        stage.textContent = face;
+        btn.appendChild(stage);
+      }
       btn.addEventListener('click', open);
       const actions = document.createElement('span');
       actions.className = 'settcard-actions';
@@ -1676,8 +1683,9 @@ window.FB = window.FB || {};
       row.appendChild(details);
       return { row:row, button:btn };
     }
-    /* A story entry opens the shared story sheet. Its details name the
-       current stage, or a checklist's progress, above the story's intro. */
+    /* A story entry opens the shared story sheet. Its face and details name
+       the current stage, or a checklist's progress; the details add the
+       story's intro. */
     function appendStoryEntries(body, groupId) {
       for (const entry of storyPlan.sections[groupId] || []) {
         const story = FB.stories.get(entry.id);
@@ -1686,7 +1694,7 @@ window.FB = window.FB || {};
         const built = storyEntryRow(entry.id, entry.icon + ' ' + FB.T('{story}…', { story:entry.title }),
           state, intro, function () {
             UI.showStorySheet(entry.id);
-          });
+          }, state);
         built.button.setAttribute('data-story-card', entry.id);
         body.appendChild(built.row);
       }
@@ -1704,7 +1712,7 @@ window.FB = window.FB || {};
       const body = document.createElement('div');
       body.className = 'actiongroup-body';
       body.setAttribute('data-action-group-body', group.id);
-      appendStoryEntries(body, group.id);
+      // The group's own subhead and status line head its story entries and deeds.
       const ih = document.createElement('div');
       ih.className = 'actionsubhead';
       ih.textContent = FB.deeds.text(s, group, 'subhead');
@@ -1715,6 +1723,7 @@ window.FB = window.FB || {};
         status.textContent = FB.deeds.text(s, group, 'statusLine');
         body.appendChild(status);
       }
+      appendStoryEntries(body, group.id);
       for (const listedItem of items) {
         let item = listedItem;
         if (listedItem.statusDeferred) {

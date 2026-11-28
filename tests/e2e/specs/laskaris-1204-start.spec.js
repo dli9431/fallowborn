@@ -5,8 +5,10 @@ const { openGame } = require('../support/game/navigation');
 const { beginBookmark, restoreBookmark } = require('../support/game/bookmark-acceptance');
 const { startHistoricalGame } = require('../support/game/historical-start');
 const { useReleasedStartRules } = require('../support/game/released-starts');
+const { revealStoryCard } = require('../support/game/story-placement');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, ['js/bookmark_composition.js','index.html', 'data/starts_laskaris_1204.js', 'data/starts.js',
+  'data/actions.js', 'js/actions.js', 'js/i18n.js', 'js/messages.js',
   'data/bookmark_1204.js', 'data/bookmark_1204_terrain.js', 'data/bookmark_1204_campaigns.js',
   'data/story_instances.js', 'data/communal_revisions.js', 'data/government_rollout.js',
   'data/story_households_1204.js', 'data/story_ruler_agendas.js', 'data/start_ambitions.js',
@@ -67,6 +69,24 @@ async function beginLaskaris(page, info, revision, throughCard) {
   await expect(page.locator('#cg-community')).toHaveClass(/hidden/);
   await expect(page.locator('input[name=cg-family]')).toHaveCount(1);
   await expect(page.locator('input[name=cg-family][value=standard]')).toBeChecked();
+  await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();
+  await page.getByRole('button', { name:'Begin', exact:true }).click();
+  await page.evaluate(function () { FB.game.setPaused(true); });
+}
+
+// Baldwin adopts the Latin court, the attacker of the Bithynian Partition Claim.
+async function beginBaldwin(page, info) {
+  await useReleasedStartRules(page);
+  await openGame(page, info);
+  const full = page.locator('#btn-choose-beginning');
+  if (await full.isVisible()) await full.click();
+  else await page.getByRole('button', { name:'New Game', exact:true }).click();
+  await page.locator('#bookmarklist [data-bookmark="1204"]').click();
+  await page.locator('#btn-ng-back').click();
+  await page.locator('#btn-bm-seed').click();
+  await page.locator('#ng-seed').fill('LEADER-1204-baldwin_1204-constantinople-m-Baldwin_of_Flanders');
+  await page.locator('#ng-seed').press('Enter');
+  await expect(page.locator('#cg-name')).toHaveValue('Baldwin of Flanders');
   await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();
   await page.getByRole('button', { name:'Begin', exact:true }).click();
   await page.evaluate(function () { FB.game.setPaused(true); });
@@ -192,6 +212,134 @@ test('latin_bithynia_1204 informs the Nicaean defender and keeps an earlier defe
       noWar:!FB.ordinaryWarBetween(FB.state,def.actor.realmId,'player') };
   })).toEqual({ mapping:true, choices:0, face:false, started:true, restored:true, kept:true, noWar:true });
 });
+
+test('the Bithynian claim tells the Nicaean defender who may attack and when', async function ({ page }, info) {
+  await beginLaskaris(page, info);
+  const result = await page.evaluate(function () {
+    const id = 'latin_bithynia_1204', s = FB.state, rec = s.stories[id];
+    const pending = FB.stories.status(s,id);
+    FB.stories.get(id).day(s,rec);
+    const started = FB.stories.status(s,id);
+    return { latin:s.realms.latin_1204.name, court:s.realms.player.name, choices:FB.stories.choices(s,id).length,
+      phase:rec.phase, pending:pending.facts, started:started.facts, stage:started.stage };
+  });
+  expect(result.choices).toBe(0);
+  expect(result.pending.slice(0,3)).toEqual([['Your role','Defender'],['Objective','Nicaea, held by ' + result.court],
+    ['Window','1204 to 1208, at most 4 years of war once it starts']]);
+  expect(result.pending[3]).toEqual(['Now', result.latin + ' may declare war on you over Nicaea until 1208; the attack is theirs to decide.']);
+  expect(result.phase).toBe('started');
+  expect(result.stage).toBe('War for Nicaea · Underway');
+  expect(result.started[0]).toEqual(['Your role','Defender']);
+  expect(result.started[3][1]).toMatch(new RegExp('^War underway since \\w+ 1204: ' + result.latin + ' against ' + result.court + '\\.$'));
+});
+
+test('Baldwin sees the Bithynian claim stage, facts, action labels and specific blockers', async function ({ page }, info) {
+  await beginBaldwin(page, info);
+  const result = await page.evaluate(function () {
+    const id = 'latin_bithynia_1204', s = FB.state, story = FB.stories.get(id);
+    function blocked(t) {
+      const q = FB.stories.quote(t,id,'face_campaign');
+      return q.allowed ? null : story.blocker(t,t.stories[id],q.reason);
+    }
+    const checkpoint = JSON.parse(FB.save.serialize());
+    const status = FB.stories.status(s,id), card = FB.stories.cards(s).filter(function (c) { return c.id === id; })[0];
+    const ready = FB.stories.quote(s,id,'face_campaign');
+    const facts = { realm:s.realms.player.name, enemy:s.realms.nicaea_1204.name, status:status.facts, name:status.name, lines:status.lines,
+      card:card.stage, allowed:ready.allowed, stable:ready.stamp === FB.stories.quote(s,id,'face_campaign').stamp,
+      choices:FB.stories.choices(s,id).map(function (c) { return [c.id,c.label,c.detail]; }) };
+    // Stage each window boundary directly on the date; nothing else changes.
+    s.date.year = 1209; facts.late = blocked(s);
+    s.date.year = 1203; facts.early = blocked(s);
+    s.date.year = 1204;
+    // A declaration rule: one ordinary war per opposing pair, staged directly.
+    FB.registerOrdinaryWar(s,'player',{ enemy:'nicaea_1204', target:'nicaea', legacy:false,
+      casus:{ type:'border', target:'nicaea' }, objectives:[{ target:'nicaea', type:'border' }] });
+    facts.pair = blocked(s); facts.pairNow = FB.stories.status(s,id).facts[3][1];
+    FB.save.restore(checkpoint);
+    // The required county is lost; conditions read possession only.
+    const t = FB.state;
+    t.owner.constantinople = 'epirus_1204';
+    facts.lost = blocked(t); facts.lostNow = FB.stories.status(t,id).facts[3][1];
+    FB.save.restore(checkpoint);
+    return facts;
+  });
+  expect(result.enemy).toBe('Laskarid Court of Nicaea');
+  expect(result.status).toEqual([['Your role','Attacker'],['Objective','Nicaea, held by Laskarid Court of Nicaea'],
+    ['Window','1204 to 1208, at most 4 years of war once it starts'],['Now','Ready once you approve.']]);
+  expect(result).toMatchObject({ name:'War for Nicaea · Ready', card:'War for Nicaea · Ready', lines:[], allowed:true, stable:true });
+  expect(result.choices).toEqual([
+    ['face_campaign','Approve the war for Nicaea','War is declared on Laskarid Court of Nicaea as soon as the conditions hold. Winning Nicaea depends on your armies.'],
+    ['leave_campaign','Drop the claim to Nicaea','No war. The opportunity closes for good.']]);
+  expect(result.late).toBe('The window closed at the end of 1208.');
+  expect(result.early).toBe('Opens in 1204.');
+  expect(result.pair).toBe(result.realm + ' is already at war with ' + result.enemy + '. This opens again once that war ends.');
+  expect(result.pairNow).toBe('Waiting: ' + result.pair);
+  expect(result.lost).toBe('The opportunity has closed: ' + result.realm + ' lost Constantinople, which this campaign required.');
+  expect(result.lostNow).toBe('Closed: ' + result.realm + ' lost Constantinople, which this campaign required.');
+});
+
+for (const view of [{ name:'phone', size:{ width:390, height:844 } }, { name:'desktop', size:null }]) {
+  test('Baldwin ' + view.name + ' card shows the claim stage under Ruler decisions and every return restores it', async function ({ page }, info) {
+    if (view.size) await page.setViewportSize(view.size);
+    await beginBaldwin(page, info);
+    const id = 'latin_bithynia_1204';
+    await page.evaluate(function () { FB.game.uiPrefs.groupDeedsByActionType = true; FB.ui.refresh(); });
+    const card = await revealStoryCard(page, id);
+    await expect(card.locator('.story-stage')).toHaveText('War for Nicaea · Ready');
+    await expect(card).toContainText('The Bithynian Partition Claim…');
+    expect(await card.evaluate(function (node) {
+      const body = node.closest('[data-action-group-body]'), subhead = body.querySelector('.actionsubhead');
+      return { group:body.getAttribute('data-action-group-body'), subhead:subhead && subhead.textContent,
+        above:!!subhead && !!(subhead.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING) };
+    })).toEqual({ group:'ruler', subhead:'Ruler decisions', above:true });
+    await card.scrollIntoViewIfNeeded();
+    const scroll = await page.evaluate(function () { return document.getElementById('sidebody').scrollTop; });
+    async function backAtCard() {
+      await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+      await expect(card).toBeFocused();
+      expect(await page.evaluate(function () { return document.getElementById('sidebody').scrollTop; })).toBe(scroll);
+    }
+    // Sheet: a labeled facts list, no pending-decision heading, declaration-based choices.
+    await card.click();
+    await expect(page.locator('#gm-title')).toHaveText('The Bithynian Partition Claim');
+    const facts = page.locator('#gm-body [data-story-facts="' + id + '"]');
+    await expect(facts.locator('.kv')).toHaveCount(4);
+    await expect(facts.locator('.kv').first()).toHaveText(/Your role\s*Attacker/);
+    await expect(facts).toContainText('Ready once you approve.');
+    await expect(page.locator('#gm-body h3')).toHaveCount(0);
+    await expect(page.locator('#gm-body')).not.toContainText('Awaiting your decision');
+    await expect(page.locator('[data-story-choice="face_campaign"] b')).toHaveText('Approve the war for Nicaea');
+    await expect(page.locator('[data-story-choice="leave_campaign"] b')).toHaveText('Drop the claim to Nicaea');
+    await page.keyboard.press('Escape');
+    await backAtCard();
+    // Review: titled by the action; the story's review() lines still print.
+    // A local review line stands in for declaration costs, which this
+    // border campaign does not have; the costs themselves are unchanged.
+    await page.evaluate(function (id) {
+      const story = FB.stories.get(id), review = story.review;
+      story.review = function () { return review.apply(this, arguments).concat(['Proof cost line.']); };
+    }, id);
+    await card.click();
+    await page.locator('[data-story-choice="face_campaign"]').click();
+    await expect(page.locator('#gm-title')).toHaveText('Approve the war for Nicaea');
+    await expect(page.locator('#gm-body')).toContainText('Proof cost line.');
+    await expect(page.locator('#gm-story-confirm')).toBeVisible();
+    await page.locator('[data-modal-nav="back"]').click();
+    await expect(page.locator('#gm-title')).toHaveText('The Bithynian Partition Claim');
+    await expect(page.locator('[data-story-choice="face_campaign"]')).toBeVisible();
+    await page.locator('[data-modal-nav="close"]').click();
+    await backAtCard();
+    // Escape from the review returns to the sheet, and Escape again to the card.
+    await card.click();
+    await page.locator('[data-story-choice="leave_campaign"]').click();
+    await expect(page.locator('#gm-title')).toHaveText('Drop the claim to Nicaea');
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#gm-title')).toHaveText('The Bithynian Partition Claim');
+    await page.keyboard.press('Escape');
+    await backAtCard();
+    expect(await page.evaluate(function (id) { return FB.state.stories[id].phase; }, id)).toBe('pending');
+  });
+}
 
 for (const id of ['nicaean_return_1204']) {
   test(id + ' follows the adopted court and waits for its reviewed decision', async function ({ page }, info) {
