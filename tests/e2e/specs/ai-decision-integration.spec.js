@@ -641,7 +641,12 @@ test('retained ruler channels restore without replay and real succession drops t
   expect(next.investmentAdjustments).not.toContain('aim:expand_realm');
 });
 
-test.describe('exact policy fingerprints',function () {
+/* Two groups of three, each on its own imported checkpoint page: every case
+   applies the full catalogue twice, and six cases on one page slowed Firefox
+   until the last case passed the timeout. */
+const FINGERPRINT_CHANGES = ['intrigue','diplomacy','religion','investment','expansion','government'];
+for (const group of [[0,1,2],[3,4,5]]) test.describe('exact policy fingerprints, '+
+    FINGERPRINT_CHANGES[group[0]]+' to '+FINGERPRINT_CHANGES[group[group.length-1]],function () {
   test.describe.configure({mode:'default'});
   const source = JSON.parse(fs.readFileSync(path.resolve(__dirname,'../../../docs/examples/ai-decisions-conservative.json'),'utf8'));
   let context,page,guard,checkpoint;
@@ -662,8 +667,8 @@ test.describe('exact policy fingerprints',function () {
   test.afterAll(async function () {
     if (context) try { expect(guard.faults).toEqual([]); } finally { await context.close(); }
   });
-  for (const [index,name] of ['intrigue','diplomacy','religion','investment','expansion','government'].entries()) {
-    test(name+' changes participate in exact save fingerprints',async function () {
+  for (const index of group) {
+    test(FINGERPRINT_CHANGES[index]+' changes participate in exact save fingerprints',async function () {
       const out = await page.evaluate(function (args) {
         const source = args.source,saved = args.checkpoint.saved,signature = args.checkpoint.signature;
         if (signature !== FB.mods.sig() || FB.save.otherWorld(saved)) throw new Error('Original import did not reload exactly');

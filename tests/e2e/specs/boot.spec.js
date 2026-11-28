@@ -10,6 +10,18 @@ dependsOnRuntime(__filename, [
 const { test, expect } = require('../support/fixture');
 const { openGame, openTitle, targetUrl } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
+const { mediaRangeCancellation } = require('../support/page-contract');
+
+test('only a cancelled byte-range read of a page blob is exempt from failed-request faults', function () {
+  const blob = 'blob:http://127.0.0.1:4173/2fd975a8-714d-44db-ba27-3c6b5feba7d7';
+  const cancelled = 'Load request cancelled';
+  expect(mediaRangeCancellation(blob, { range:'bytes=0-1445' }, cancelled)).toBe(true);
+  expect(mediaRangeCancellation(blob, { Range:'bytes=0-1445' }, cancelled)).toBe(true);
+  expect(mediaRangeCancellation(blob, {}, cancelled)).toBe(false);
+  expect(mediaRangeCancellation(blob, { range:'bytes=0-1445' }, 'Not allowed to load local resource')).toBe(false);
+  expect(mediaRangeCancellation('http://127.0.0.1:4173/music/intro/a.opus', { range:'bytes=0-' }, cancelled)).toBe(false);
+  expect(mediaRangeCancellation(blob, null, cancelled)).toBe(false);
+});
 
 test('boots the real game without browser, asset, or network errors',
   async function ({ page }, testInfo) {

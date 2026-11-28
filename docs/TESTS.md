@@ -341,7 +341,7 @@ support/game/navigation.js exposes openTitle for the actual lightweight title an
 
 AI decision integration coverage
 
-ai-decision-integration.spec.js exercises complete multi-family ordinary JSON imports with government overrides, spent-resource restore, a single seeded research boundary, current traits/aims and real ruler succession, state isolation, exact changed-content rejection, unsafe declarations, empty weighted retry lists, and neutral standard behavior. It uses the real entrypoint and staged boundary hooks without long simulations. File, served Chromium, Firefox and WebKit select this suite. ai-decision-policies.spec.js covers the pure protocol/import/layer lifecycle and ai-live-decisions.spec.js covers individual live consumers. Exact commands and runtime, device, package and performance evidence requirements are in docs/research/ai-decision-acceptance.md.
+ai-decision-integration.spec.js exercises complete multi-family ordinary JSON imports with government overrides, spent-resource restore, a single seeded research boundary, current traits/aims and real ruler succession, state isolation, exact changed-content rejection, unsafe declarations, empty weighted retry lists, and neutral standard behavior. It uses the real entrypoint and staged boundary hooks without long simulations. The six exact policy fingerprint cases run in two groups of three, each with its own imported checkpoint page, because repeated full-catalogue applications on one page slowed Firefox past the timeout. File, served Chromium, Firefox and WebKit select this suite. ai-decision-policies.spec.js covers the pure protocol/import/layer lifecycle and ai-live-decisions.spec.js covers individual live consumers. Exact commands and runtime, device, package and performance evidence requirements are in docs/research/ai-decision-acceptance.md.
 
 The integration spec also compares ambitious/brave and zealous/patient/craven combinations across built-in war, tactics, investment, real research scoring, intrigue consideration and conversion resistance. Both ordinary examples select all nine families with current traits, retained aims and government scope. Matching restore preserves the retained revision, RNG and uid without replay; canonical death removes predecessor preferences. Independent content edits across intrigue, diplomacy, religion, investment, expansion and government parameters change exact save fingerprints, while reapplying the exact original restores matching eligibility. Mixed malformed declarations preserve data, messages, storage, state and counters. Disabled papal/holy-war/conversion hooks remain inert and explicit government zero-war preference wins even with legacy bellicose personality. All added boundaries are staged, with no daily simulation or elapsed-time performance threshold.
 
@@ -999,7 +999,9 @@ restore assertions.
 
 Specifications should import `test` and `expect` from `support/fixture.js`, not directly from
 `@playwright/test`. The shared fixture fails the test on page exceptions, console errors, failed
-requests, bad HTTP responses, or network traffic outside the expected local target.
+requests, bad HTTP responses, or network traffic outside the expected local target. The one
+exempt failure is WebKit cancelling its own byte-range read of a same-page blob while it probes
+a soundtrack file, which it then reads again; any other failed blob or local request still fails.
 
 Historical start specifications select scenario cards by their stable `data-scenario`
 identity. Code journeys inspect the offered card, return to the date screen, and open

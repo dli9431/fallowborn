@@ -235,7 +235,7 @@ test('a controlled grantor reads the named partition, its facts and each specifi
       const choices = FB.stories.choices(s, id), status = FB.stories.status(s, id);
       const open = read(), review = story.review(s, rec, 'accept_grantor');
       const codes = ['closed','date','actor_changed','beneficiary_dead','capital_lost','parent_unsettled',
-        'liege_missing','liege_rank','already_landed','player_recipient','captivity','war','liege_changed',
+        'liege_missing','liege_rank','already_landed','player_recipient','captivity','war_ongoing','liege_changed',
         'not_held','protected','consent_power','not_party'].map(function (code) {
           return story.blocker(s, rec, code);
         });

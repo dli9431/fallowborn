@@ -117,7 +117,7 @@
     if (facts.captive || FB.intrigueRealmRulerCaptive &&
         (FB.intrigueRealmRulerCaptive(s, def.actor.realmId) || FB.intrigueRealmRulerCaptive(s, def.grant.liege)))
       return 'captivity';
-    if (facts.wars[0] || facts.wars[1]) return 'war';
+    if (facts.wars[0] || facts.wars[1]) return 'war_ongoing';
     var top = FB.topRealm(s, def.actor.realmId);
     if (FB.topRealm(s, def.grant.liege) !== top) return 'liege_changed';
     for (var county of facts.counties) {
@@ -264,7 +264,7 @@
     if (reason === 'already_landed') return FB.T('{name} already rules land.', p);
     if (reason === 'player_recipient') return FB.T('Not available while you play {name}.', p);
     if (reason === 'captivity') return FB.T('{name} or one of the rulers is held captive.', p);
-    if (reason === 'war') return FB.T('{grantor} or {liege} is at war.', p);
+    if (reason === 'war_ongoing') return FB.T('{grantor} or {liege} is at war.', p);
     if (reason === 'liege_changed') return FB.T('{liege} no longer shares {grantor}’s overlord.', p);
     if (reason === 'not_party') return FB.T('You are not a party to this partition.');
     if (['not_held','protected','consent_power'].indexOf(reason) < 0) return null;
@@ -280,7 +280,7 @@
   function partitionRole(s, rec, def) {
     if (partyIsPlayer(s, rec, def, 'grantor')) return FB.T('Grantor');
     if (partyIsPlayer(s, rec, def, 'beneficiary')) return FB.T('Recipient');
-    return partyIsPlayer(s, rec, def, 'liege') ? FB.T('Overlord') : FB.T('Observer');
+    return controlled(s, def.grant.liege) ? FB.T('Overlord') : FB.T('Observer');
   }
   // The player's own missing approval comes first; stale approvals do not count.
   function awaitedParty(s, rec, def, facts) {

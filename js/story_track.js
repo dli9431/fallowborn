@@ -830,10 +830,10 @@
         if (!claim.length) return 'no_recognition';
         if (facts.owner === 'player') return 'owner_player';
         if (!facts.owner) return 'no_owner';
-        if (facts.wars[0] || facts.wars[1]) return 'war';
+        if (facts.wars[0] || facts.wars[1]) return 'war_ongoing';
       } else if (op === 'confirm_restoration') {
         if (facts.owner !== 'player') return 'not_held';
-        if (facts.travel) return 'travel';
+        if (facts.travel) return 'on_journey';
         if (!claim.length) return 'no_recognition';
       }
       return 'claim_restoration';
@@ -850,9 +850,9 @@
         { realm:issuer, senate:senate });
       if (reason === 'owner_player') return FB.T('You already hold {province}.', { province:province });
       if (reason === 'no_owner') return FB.T('No court holds {province} to campaign against.', { province:province });
-      if (reason === 'war') return FB.T('You or {realm} are at war.', { realm:FB.realmNameParam(s, owner) });
+      if (reason === 'war_ongoing') return FB.T('You or {realm} are at war.', { realm:FB.realmNameParam(s, owner) });
       if (reason === 'not_held') return FB.T('You must hold {province} yourself to confirm the restoration.', { province:province });
-      if (reason === 'travel') return FB.T('Return from your journey first.');
+      if (reason === 'on_journey') return FB.T('Return from your journey first.');
       return FB.T(def.text.text10);
     }
     function apply(s, t, id, reviewed) {

@@ -281,8 +281,7 @@
     /* Campaigns run alongside other wars. One ordinary war per opposing pair:
        admission takes that rule from the declaration preview; others wait. */
     if (!def.admission && FB.ordinaryWarBetween(s, rid, s.owner[county])) return;
-    if (aiActor(s, def) && FB.realmAttackCommitments(s, rid) >=
-        FB.aiDecisions.parameters(s, rid, 'war').maximumCommitments) return;
+    if (atWarLimit(s, def)) return;
     if (playerParty(s, def) && (rec.playerDecision !== 'campaign' ||
         rec.playerDecisionGeneration !== FB.realmRulerGeneration(s, playerRealm(s,def)))) return;
     var admitted = admission(s, def);
@@ -320,6 +319,12 @@
   }
   function aiActor(s, def) {
     return def.actor.realmId !== 'player' && !playerLeadsActor(s, def);
+  }
+  // An AI actor already holds as many attacking wars as its war policy allows.
+  function atWarLimit(s, def) {
+    var rid = def.actor.realmId;
+    return aiActor(s, def) && FB.realmAttackCommitments(s, rid) >=
+      FB.aiDecisions.parameters(s, rid, 'war').maximumCommitments;
   }
   function playerQuote(s, rec, authored, id) {
     var def = FB.stories.definition(s, authored), check = conditions(s, def);
@@ -381,20 +386,27 @@
   function awaited(s, def) {
     var expected = characterId(s, def.actor.character);
     if (expected && ruler(s, def.actor.realmId) !== expected) return { characterId:expected, realmId:def.actor.realmId };
-    for (var row of def.conditions || []) {
-      if (row.kind !== 'ruler') continue;
+    for (var row of rulerRows(def)) {
       var id = characterId(s, row.character);
       if (ruler(s, row.realmId) !== id) return { characterId:id, realmId:row.realmId };
     }
     return null;
   }
+  function rulerRows(def) {
+    return (def.conditions || []).filter(function (row) { return row.kind === 'ruler'; });
+  }
   // The condition row behind a permanent reason; the first of its kind if it holds again.
   function conditionRow(s, def, kind) {
     var rows = (def.conditions || []).filter(function (row) { return row.kind === kind; });
     return rows.filter(function (row) {
-      if (kind === 'owner') return s.owner[row.provinceId] !== row.realmId;
-      if (kind === 'ruler') return !courtLive(s, row.realmId, def) || !alive(s, characterId(s, row.character));
-      return true;
+      return kind === 'owner' ? s.owner[row.provinceId] !== row.realmId : true;
+    })[0] || rows[0] || null;
+  }
+  // The ruler condition whose court or ruler is gone; the first one if all hold again.
+  function lostPatronRow(s, def) {
+    var rows = rulerRows(def);
+    return rows.filter(function (row) {
+      return !courtLive(s, row.realmId, def) || !alive(s, characterId(s, row.character));
     })[0] || rows[0] || null;
   }
   /* Why a campaign closed or failed, as a clause for "Closed: ..." and the
@@ -415,7 +427,7 @@
     if (reason === 'capital_lost' && (row = conditionRow(s, def, 'owner')))
       return FB.T('{court} lost {county}, which this campaign required',
         { court:realmName(s, row.realmId), county:FB.world.byId[row.provinceId].name });
-    if (reason === 'patron_lost' && (row = conditionRow(s, def, 'ruler')))
+    if (reason === 'patron_lost' && (row = lostPatronRow(s, def)))
       return FB.T('{person} of {court} is gone', { person:personName(s, characterId(s, row.character)), court:realmName(s, row.realmId) });
     if (reason === 'already_settled' && (row = conditionRow(s, def, 'landless')))
       return FB.T('{court} already holds land', { court:realmName(s, row.realmId) });
@@ -450,7 +462,7 @@
     if (reason === 'awaiting_ruler' && (wait = awaited(s, def)))
       return FB.T('{person} must rule {court} first.', { person:personName(s, wait.characterId), court:realmName(s, wait.realmId) });
     if (reason === 'pair_war') return FB.T('{realm} is already at war with {enemy}. This opens again once that war ends.', p);
-    if (reason === 'commitments') return FB.T('{realm} is at its limit of wars.', p);
+    if (reason === 'war_limit') return FB.T('{realm} is at its limit of wars.', p);
     if (reason === 'living_courts') return FB.T('{realm} and {enemy} must both have a living ruler.', p);
     var clause = outcomeClause(s, def, reason, role(s, def));
     return clause ? FB.T('The opportunity has closed: {reason}.', { reason:clause }) : null;
@@ -489,8 +501,7 @@
     if (check.result) return closing(check.reason);
     if (check.wait) return waiting('awaiting_ruler');
     if (!def.admission && FB.ordinaryWarBetween(s, rid, s.owner[county])) return waiting('pair_war');
-    if (aiActor(s, def) && FB.realmAttackCommitments(s, rid) >=
-        FB.aiDecisions.parameters(s, rid, 'war').maximumCommitments) return waiting('commitments');
+    if (atWarLimit(s, def)) return waiting('war_limit');
     var admitted = admission(s, def);
     if (!admitted.allowed) return waiting(admitted.reason);
     if (playerParty(s, def)) {

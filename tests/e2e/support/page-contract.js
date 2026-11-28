@@ -51,6 +51,15 @@ function requestAllowed(rawUrl) {
   return false;
 }
 
+/* WebKit's media player cancels some of its own byte-range reads of a
+   same-page blob while probing the file, then reads that blob again. The
+   cancellation is engine behavior, not a game fault. Every other failed
+   request, including a blob load without a Range header, still counts. */
+function mediaRangeCancellation(url, headers, errorText) {
+  return /^blob:/.test(String(url || '')) && errorText === 'Load request cancelled' &&
+    !!headers && Object.keys(headers).some(function (name) { return name.toLowerCase() === 'range'; });
+}
+
 function installPageGuards(page) {
   const faults = [];
   const seen = new Set();
@@ -76,6 +85,7 @@ function installPageGuards(page) {
   });
   page.on('requestfailed', function (request) {
     const failure = request.failure();
+    if (mediaRangeCancellation(request.url(), request.headers(), failure && failure.errorText)) return;
     record('failed request', request.url() + ' - ' +
       (failure && failure.errorText ? failure.errorText : 'unknown failure'));
   });
@@ -92,6 +102,7 @@ function installPageGuards(page) {
 
 module.exports = {
   installPageGuards:installPageGuards,
+  mediaRangeCancellation:mediaRangeCancellation,
   requestAllowed:requestAllowed,
   runtimePathAllowed:runtimePathAllowed
 };

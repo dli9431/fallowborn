@@ -300,7 +300,7 @@ test('court settlement blockers name the first unmet condition with the old allo
   expect(result.emptied).toEqual({ allowed:false, old:false, reason:'host', text:'Your host has no soldiers left.', reasonInFacts:false });
   expect(result.probes).toEqual([true,true]);
   expect(result.delegate).toEqual({ allowed:false, old:false, reason:'delegate', text:result.expected.delegate, reasonInFacts:false });
-  expect(result.council).toEqual({ allowed:false, old:false, reason:'council', text:result.expected.council, reasonInFacts:false });
+  expect(result.council).toEqual({ allowed:false, old:false, reason:'council_terms', text:result.expected.council, reasonInFacts:false });
   expect(result.council.text).toContain('has not ratified terms protecting its courts, order and worship.');
   expect(result.keep).toEqual({ allowed:true, reason:'ruler_settlement', same:true, stamp:true,
     keys:['turn','player','resolution','interruption','governance','owner','host','dead','living','west',
@@ -370,7 +370,7 @@ test('claim restoration and service track blockers name the missing condition', 
       fallback:claim.blocker(s, t, 'claim_restoration'),
       applied:FB.stories.apply(s, 'proof_claim', 'proof_keep_dalmatia', { id:'proof_keep_dalmatia', stamp:keepStamp }) };
   }, first.keepStamp);
-  expect(second.away).toEqual({ allowed:false, old:false, reason:'travel', text:'Return from your journey first.' });
+  expect(second.away).toEqual({ allowed:false, old:false, reason:'on_journey', text:'Return from your journey first.' });
   expect(second.home).toEqual({ allowed:false, old:false, recognitions:0, reason:'no_recognition' });
   expect(second.keep).toEqual({ allowed:true, reason:'claim_restoration', same:true,
     keys:['phase','claimant','player','dead','turn','owner','holder','senate','senateId','issuer','issuerGeneration',

@@ -429,7 +429,7 @@
     function rulerReason(s, w, op, facts, available) {
       var terms = facts.councilTerms;
       function shared() {
-        if (!facts.bishop) return 'bishop';
+        if (!facts.bishop) return 'no_bishop';
         if (!facts.mediation.allowed) return 'mediation';
         if (!(facts.majority >= p.majorityShare)) return 'majority';
         return 'ruler_settlement';
@@ -439,7 +439,7 @@
         if (!(facts.funds >= p.immediatePay)) return 'funds';
         if (!facts.agreement.allowed) return 'service_terms';
         if (!facts.civic) return 'civic_consent';
-        if (!facts.bishop) return 'bishop';
+        if (!facts.bishop) return 'no_bishop';
         if (!facts.mediation.allowed) return 'mediation';
         if (!alive(s, w[p.fields.commander])) return 'commander';
         return shared();
@@ -447,12 +447,12 @@
       if (op === 'accept_civic_rule') {
         if (!alive(s, w[p.fields.delegate]) || facts.representative !== w[p.fields.delegate]) return 'delegate';
         if (!facts.consent.allowed) return 'consent';
-        if (!facts.councilAgreement || !terms || !terms.courts || !terms.protection || !terms.tolerance) return 'council';
+        if (!facts.councilAgreement || !terms || !terms.courts || !terms.protection || !terms.tolerance) return 'council_terms';
         return shared();
       }
       if (op === 'contest_capital') {
         if (!(facts.host && facts.host.men > 0)) return 'host';
-        if (facts.wars[0] || facts.wars[1]) return 'war';
+        if (facts.wars[0] || facts.wars[1]) return 'war_ongoing';
       }
       return 'ruler_settlement';
     }
@@ -464,7 +464,7 @@
         { realm:realm, funds:FB.treasuryAvailable(s, patron), pay:p.immediatePay });
       if (reason === 'service_terms') return FB.T('{realm} will not agree to these service terms now.', { realm:realm });
       if (reason === 'civic_consent') return FB.T('{province} has not given its civic consent.', { province:province });
-      if (reason === 'bishop') return FB.T('{province} has no living bishop to mediate.', { province:province });
+      if (reason === 'no_bishop') return FB.T('{province} has no living bishop to mediate.', { province:province });
       if (reason === 'mediation') return FB.T('The bishop of {province} will not mediate yet.', { province:province });
       if (reason === 'commander') return FB.T('The host’s commander has died.');
       if (reason === 'majority') return FB.T('Only {current}% of {province} shares the majority faith; {needed}% is needed.',
@@ -472,9 +472,9 @@
           needed:Math.round(p.majorityShare * 100) });
       if (reason === 'delegate') return FB.T('{province}’s civic delegate has died or no longer speaks for the council.', { province:province });
       if (reason === 'consent') return FB.T('{province} does not consent to your rule yet.', { province:province });
-      if (reason === 'council') return FB.T('{province}’s council has not ratified terms protecting its courts, order and worship.', { province:province });
+      if (reason === 'council_terms') return FB.T('{province}’s council has not ratified terms protecting its courts, order and worship.', { province:province });
       if (reason === 'host') return FB.T('Your host has no soldiers left.');
-      if (reason === 'war') return FB.T('You or {realm} are at war.', { realm:realm });
+      if (reason === 'war_ongoing') return FB.T('You or {realm} are at war.', { realm:realm });
       return FB.T(def.text.text22);
     }
     function rulerApply(s, w, id, reviewed) {

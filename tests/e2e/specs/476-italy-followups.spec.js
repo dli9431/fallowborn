@@ -297,7 +297,7 @@ test('the Sicilian agreement names its land, payment, status and specific blocke
       ' once both courts agree. You keep '+e.kept+'.'}});
   expect(result.territory).toEqual(['territory',e.source+' must hold '+e.palermo+' directly.']);
   expect(result.condition).toEqual(['condition',e.recipient+' must hold '+e.ravenna+'.']);
-  expect(result.war).toEqual(['war',e.source+' is at war.']);
+  expect(result.war).toEqual(['war_ongoing',e.source+' is at war.']);
   expect(result.late).toEqual(['date','Closed after 477.']);
   expect(result.changed).toEqual(['party_changed',e.source+' has a new ruler; the agreement lapsed.']);
   const funds=e.recipient+' holds '+e.poor+'; the first payment is '+e.tribute+'.';
@@ -387,8 +387,8 @@ test('the Norican evacuation names its route, prerequisite, review lines and ref
   expect(result.refused).toEqual([moves,share,'No cost.',prerequisite]);
   expect(result.early).toEqual(['date','Opens in 487.']);
   expect(result.late).toEqual(['date','Closed after 493.']);
-  expect(result.ruler).toEqual(['ruler','Your court has no living ruler.']);
-  expect(result.war).toEqual(['war','You are at war.']);
+  expect(result.ruler).toEqual(['no_ruler','Your court has no living ruler.']);
+  expect(result.war).toEqual(['war_ongoing','You are at war.']);
   expect(result.route).toEqual(['route','You must hold '+e.from+'.']);
   expect(result.ready).toBe('Ready: civilians wait to leave '+e.from);
   expect(result.allowed).toEqual([moves,share,'No cost.']);

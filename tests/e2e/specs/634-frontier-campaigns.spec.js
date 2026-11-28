@@ -286,7 +286,7 @@ test('Heraclius as defender sees no choices, is attacked without a decision and 
     FT.tick(s,id); const r=s.stories[id],w=FB.ordinaryWarById(s,r.warId);
     return {choices:choices,face:face.allowed,leave:leave.allowed,refused:refused,status:status,phase:r.phase,decision:r.playerDecision,
       attacker:w && w.attacker,defender:w && w.defender,announced:!!w && w.defenseAnnounced===true,other:s.stories.iraqi_front_634.phase};
-  })).toEqual({choices:0,face:false,leave:false,refused:true,status:'Awaiting the courts',phase:'started',decision:null,
+  })).toEqual({choices:0,face:false,leave:false,refused:true,status:'War for Damascus · Imminent',phase:'started',decision:null,
     attacker:'rashidun_634',defender:'player',announced:true,other:'pending'});
   await roundTrip(page);
   // A save written before defenders became informational may hold their decision.

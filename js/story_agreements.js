@@ -110,7 +110,7 @@
     if (choice !== 'approve') return null;
     if (!treatyTerritory(s, r, d)) return 'territory';
     if (!conditions(s, d)) return 'condition';
-    if (FB.isRealmAtWar(s, d.actor.realmId) || FB.isRealmAtWar(s, d.source.realmId)) return 'war';
+    if (FB.isRealmAtWar(s, d.actor.realmId) || FB.isRealmAtWar(s, d.source.realmId)) return 'war_ongoing';
     return FB.treasuryAvailable(s, d.actor.realmId) >= d.tribute ? null : 'funds';
   }
   function treatyQuote(s, r, d, rid, choice) {
@@ -175,7 +175,7 @@
       if (gap) found = FB.T('{realm} must hold {county} directly.',
         { realm:realmName(s, gap.realmId), county:countyName(gap.provinceId) });
     } else if (reason === 'condition') found = conditionBlocker(s, d);
-    else if (reason === 'war') {
+    else if (reason === 'war_ongoing') {
       rid = FB.isRealmAtWar(s, actor) ? actor : source;
       found = FB.T('{realm} is at war.', { realm:realmName(s, rid) });
     } else if (reason === 'funds') found = FB.T('{realm} holds {money:funds}; the first payment is {money:amount}.',
@@ -347,8 +347,8 @@
     if (s.date.year < d.firstYear || s.date.year > d.lastYear) return 'date';
     if (!conditions(s, d)) return 'condition';
     var person = ruler(s, d.actor.realmId);
-    if (!s.realms[d.actor.realmId] || !s.realms[d.actor.realmId].alive || !person || person.dead) return 'ruler';
-    if (FB.isRealmAtWar(s, d.actor.realmId)) return 'war';
+    if (!s.realms[d.actor.realmId] || !s.realms[d.actor.realmId].alive || !person || person.dead) return 'no_ruler';
+    if (FB.isRealmAtWar(s, d.actor.realmId)) return 'war_ongoing';
     return routeGap(s, d) ? 'route' : null;
   }
   function routeGap(s, d) {
@@ -367,8 +367,8 @@
     var found = null;
     if (reason === 'date') return dateBlocker(s, d, d.firstYear);
     if (reason === 'condition') found = conditionBlocker(s, d);
-    else if (reason === 'ruler') found = FB.T('Your court has no living ruler.');
-    else if (reason === 'war') found = FB.T('You are at war.');
+    else if (reason === 'no_ruler') found = FB.T('Your court has no living ruler.');
+    else if (reason === 'war_ongoing') found = FB.T('You are at war.');
     else if (reason === 'route' && routeGap(s, d))
       found = FB.T('You must hold {county}.', { county:countyName(routeGap(s, d)) });
     return found || migrationClosedText();
