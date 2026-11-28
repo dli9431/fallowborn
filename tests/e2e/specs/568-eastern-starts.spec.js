@@ -192,6 +192,59 @@ for (const court of courts) {
   });
 }
 
+test('the Justin and Khosrow agendas and starts name their people and places without disclaimers',async function ({page},info) {
+  await beginCourt(page,info,courts[0],true);
+  expect(await page.evaluate(function (courts) {
+    const banned = /grants? no |creates? no |Record (a |an )?(costless )?(priority|intention|preference)|Record attention|\bordinary\b|\bactual(ly)?\b|\bexisting\b|\boriginal\b|\bauthored\b|historical opportunity|political opportunity/i;
+    const labelWords = /\b(ordinary|actual|actually|existing|current|original|authored|declared)\b/i;
+    const lostApostrophe = /[A-Za-z]\?[A-Za-z]/;
+    const faults = [];
+    function check(owner,field,value,prose) {
+      if (typeof value !== 'string' || !value) { faults.push(owner+' '+field+' is missing'); return; }
+      if (lostApostrophe.test(value)) faults.push(owner+' '+field+' has a lost apostrophe');
+      if (value.indexOf('—') >= 0) faults.push(owner+' '+field+' has an em dash');
+      if (prose && banned.test(value)) faults.push(owner+' '+field+' uses banned wording');
+    }
+    courts.forEach(function (court) {
+      const d = FBDATA.rulerAgendas_568_east[court.agenda];
+      check(court.agenda,'title',d.title,false);
+      check(court.agenda,'intro',d.intro,true);
+      d.stages.forEach(function (stage) {
+        check(stage.id,'name',stage.name,false);
+        check(stage.id,'text',stage.text,true);
+        stage.choices.forEach(function (c) {
+          check(c.id,'label',c.label,false);
+          if (c.label.split(/\s+/).length > 8) faults.push(c.id+' label is longer than eight words');
+          if (labelWords.test(c.label)) faults.push(c.id+' label uses a process word');
+          check(c.id,'detail',c.detail,true);
+          if (/^Record\b|\b(no|not|without)\b/i.test(c.detail)) faults.push(c.id+' detail lists what it does not do');
+          if (c.operation !== 'agenda_priority') faults.push(c.id+' operation changed');
+        });
+      });
+      const sc = FBDATA.startScenarios.find(function (s) { return s.id === court.id; });
+      check(sc.id,'name',sc.name,false);
+      check(sc.id,'desc',sc.desc,true);
+      check(sc.id,'intro',sc.intro,true);
+      check(sc.id,'family desc',sc.familyPresets.standard.desc,true);
+      if (sc.intro.split(/[.!?](?:\s+|$)/).filter(Boolean).length > 4) faults.push(sc.id+' intro is longer than four sentences');
+      if (!/Open your court agenda in Deeds to begin\.$/.test(sc.intro)) faults.push(sc.id+' intro does not say where to begin');
+    });
+    const s = FB.state, id = 'justin_agenda_568', d = FBDATA.rulerAgendas_568_east[id];
+    const first = d.stages[0].choices[0].id, quote = FB.stories.quote(s,id,first);
+    const moved = FB.stories.apply(s,id,first,quote);
+    const status = FB.stories.status(s,id);
+    const justin = FBDATA.startScenarios.find(function (sc) { return sc.id === 'justin_568'; });
+    return {faults:faults,
+      titles:courts.map(function (court) { return FBDATA.rulerAgendas_568_east[court.agenda].title; }),
+      moved:moved,stage:s.stories[id].step,italy:status.lines[0],
+      sophia:justin.familyPresets.standard.desc.split('Sophia').length - 1,
+      offered:FB.stories.choices(s,id).filter(function (c) { return c.id !== 'agenda_stop_program'; }).map(function (c) { return c.id; })};
+  },courts)).toEqual({faults:[],
+    titles:['Justin: the eastern court','Khosrow: the Sasanian court'],
+    moved:true,stage:1,italy:'Narses still commands in Italy while voices at court press for his recall.',
+    sophia:1,offered:['ji_review_italy','ji_keep_italy']});
+});
+
 test('a retained 568 campaign never acquires the eastern starts on restore',async function ({page},info) {
   await useReleasedStartRules(page);
   await openGame(page,info);
