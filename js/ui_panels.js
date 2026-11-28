@@ -1684,17 +1684,16 @@ window.FB = window.FB || {};
       return { row:row, button:btn };
     }
     /* A story entry opens the shared story sheet. Its face and details name
-       the current stage, or a checklist's progress; the details add the
-       story's intro. */
+       the current stage, which for a checklist counts the goals done; the
+       details add the story's intro. */
     function appendStoryEntries(body, groupId) {
       for (const entry of storyPlan.sections[groupId] || []) {
         const story = FB.stories.get(entry.id);
         const intro = story && story.intro ? story.intro(s, FB.stories.record(s, entry.id)) : '';
-        const state = entry.progress ? FB.T('{done} of {total} goals met', entry.progress) : entry.stage;
         const built = storyEntryRow(entry.id, entry.icon + ' ' + FB.T('{story}…', { story:entry.title }),
-          state, intro, function () {
+          entry.stage, intro, function () {
             UI.showStorySheet(entry.id);
-          }, state);
+          }, entry.stage);
         built.button.setAttribute('data-story-card', entry.id);
         body.appendChild(built.row);
       }
