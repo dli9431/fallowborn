@@ -5,9 +5,26 @@ const nativeSourceFiles = require('../../fixtures/bookmark-composition/native-be
 const {routeEagerDocument} = require('../../fixtures/bookmark-manifest/eager-document');
 const {expect} = require('../fixture');
 const corrections = require('../../fixtures/634-scenery-revisions/merged-corrections.json');
-const laterContributions = require('../../fixtures/bookmark-composition/native-later-contributions.json');
 const fixtureRoot = path.resolve(__dirname,'../../fixtures/bookmark-composition/native-before-shared');
 const gameRoot = path.resolve(__dirname,'../../../..');
+const contributionRoot = path.resolve(__dirname,'../../fixtures/bookmark-composition/native-later-contributions');
+// The shared list comes first, then every directory file in filename order.
+const laterContributions = fs.readdirSync(contributionRoot)
+  .filter(function (name) { return name.endsWith('.json'); }).sort()
+  .reduce(function (changes,name) {
+    return changes.concat(JSON.parse(fs.readFileSync(path.join(contributionRoot,name),'utf8')).changes);
+  },require('../../fixtures/bookmark-composition/native-later-contributions.json').changes);
+
+// Keep the immutable predecessor source while explicitly retaining later
+// implemented contributions. Both sides are pinned; unrelated drift fails.
+function applyLaterContributions(file,body) {
+  laterContributions.filter(function (change) { return change.file === file; }).forEach(function (change) {
+    expect(body.split(change.before)).toHaveLength(2);
+    expect(fs.readFileSync(path.join(gameRoot,file),'utf8').split(change.after)).toHaveLength(2);
+    body = body.replace(change.before,change.after);
+  });
+  return body;
+}
 
 // Keep the immutable predecessor assembler as an independent retained-world
 // proof. Its later revision and personal-story sources must run with today's
@@ -133,13 +150,7 @@ async function installNativeLegacy(page) {
   for (const file of nativeSourceFiles) {
     if (file.indexOf('_634') >= 0) continue;
     let body = fs.readFileSync(path.resolve(__dirname,'../../fixtures/bookmark-composition/native-before-shared',path.basename(file)),'utf8');
-    // Keep the predecessor source immutable while explicitly retaining later
-    // implemented contributions. Both sides are pinned; unrelated drift fails.
-    laterContributions.changes.filter(function (change) { return change.file === file; }).forEach(function (change) {
-      expect(body.split(change.before)).toHaveLength(2);
-      expect(fs.readFileSync(path.join(gameRoot,file),'utf8').split(change.after)).toHaveLength(2);
-      body = body.replace(change.before,change.after);
-    });
+    body = applyLaterContributions(file,body);
     if (file === 'data/story_pilgrim_1096.js') {
       // Preserve both frozen household declarations. Add the later independent
       // following group that the current 1096 world explicitly references.
@@ -186,4 +197,5 @@ async function installNativeLegacy(page) {
     return route.fulfill({contentType:'application/javascript',body:source + '\n(' + reconcile.toString() + ')(' + JSON.stringify(corrections.publicDefinitions) + ');'});
   });
 }
-module.exports = {installNativeLegacy,nativeSourceFiles,installLegacy634,assertLegacy634};
+module.exports = {installNativeLegacy,nativeSourceFiles,installLegacy634,assertLegacy634,
+  laterContributions,applyLaterContributions};
