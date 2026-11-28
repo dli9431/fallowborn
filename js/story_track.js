@@ -89,7 +89,7 @@
       const choice = FB.stories.choices(s,args.storyId).filter(function (c) {return c.id === args.choiceId;})[0];
       let lines = choice ? [choice.label,choice.detail] : [];
       if (story && story.review) lines = lines.concat(story.review(s,rec,args.choiceId,q) || []);
-      if (!q.allowed) lines.push(story && story.blocker ? story.blocker(s,rec,q.reason) :
+      if (!q.allowed) lines.push(story && story.blocker && story.blocker(s,rec,q.reason) ||
         FB.T('The current people, territory, route, or mandate no longer allows this choice.'));
       return lines;
     }
@@ -615,6 +615,10 @@
         return FB.T(def.text.text47);
       if (reason === 'civic_terms_unmet')
         return FB.T(def.text.text48);
+      if (reason === 'no_federate_command')
+        return FB.T('The host’s ruler has died or the host has disbanded.');
+      if (reason === 'claimant_unavailable')
+        return FB.T('This claimant can no longer be backed: he has died or lost his seat.');
       return null;
     }
     function review(s, t, id, reviewed) {
@@ -806,12 +810,50 @@
           owner && owner !== 'player' && !facts.wars[0] && !facts.wars[1] ||
         op === 'confirm_restoration' && ['claim','campaign'].indexOf(phase(def, t)) >= 0 &&
           owner === 'player' && !facts.travel && claim.length > 0);
-      allowed = allowed && stageChoices(s, t, def, X).some(function (row) { return row.id === id; });
+      var offered = stageChoices(s, t, def, X).some(function (row) { return row.id === id; });
+      allowed = allowed && offered;
       facts.graph = graph(def);
       allowed = allowed && routeValid(def, t.phase, stageChoice(def, t, id));
+      var reason = allowed ? 'claim_restoration' : claimReason(t, op, facts, offered, claim, issuer, senate);
       facts.operation = op;
       facts.terms = JSON.parse(JSON.stringify(p));
-      return { id:id, allowed:!!allowed, reason:'claim_restoration', facts:facts, stamp:JSON.stringify(facts) };
+      return { id:id, allowed:!!allowed, reason:reason, facts:facts, stamp:JSON.stringify(facts) };
+    }
+    /* The first unmet condition of quote, kept outside the stamped facts. */
+    function claimReason(t, op, facts, offered, claim, issuer, senate) {
+      if (facts.dead || facts.player !== t.claimantId) return 'claimant';
+      if (!offered) return 'claim_restoration';
+      if (op === 'seek_recognition') {
+        if (!issuer) return 'issuer';
+        if (!senate) return 'senate';
+      } else if (op === 'restore_by_campaign') {
+        if (!claim.length) return 'no_recognition';
+        if (facts.owner === 'player') return 'owner_player';
+        if (!facts.owner) return 'no_owner';
+        if (facts.wars[0] || facts.wars[1]) return 'war';
+      } else if (op === 'confirm_restoration') {
+        if (facts.owner !== 'player') return 'not_held';
+        if (facts.travel) return 'travel';
+        if (!claim.length) return 'no_recognition';
+      }
+      return 'claim_restoration';
+    }
+    function claimBlocker(s, t, reason) {
+      var county = FB.world.byId[p.targetProvinceId], seat = FB.world.byId[p.senateProvinceId];
+      var province = county ? county.name : p.targetProvinceId, senate = seat ? seat.name : p.senateProvinceId;
+      var issuer = FB.realmNameParam(s, R(s, p.issuerRealmId));
+      var owner = s.owner[p.targetProvinceId];
+      if (reason === 'claimant') return FB.T('The claimant has died or no longer leads your house.');
+      if (reason === 'issuer') return FB.T('{realm} has no ruler to recognize the claim.', { realm:issuer });
+      if (reason === 'senate') return FB.T('The senate of {senate} will not recognize the claim now.', { senate:senate });
+      if (reason === 'no_recognition') return FB.T('{realm} and the senate of {senate} must first recognize the claim.',
+        { realm:issuer, senate:senate });
+      if (reason === 'owner_player') return FB.T('You already hold {province}.', { province:province });
+      if (reason === 'no_owner') return FB.T('No court holds {province} to campaign against.', { province:province });
+      if (reason === 'war') return FB.T('You or {realm} are at war.', { realm:FB.realmNameParam(s, owner) });
+      if (reason === 'not_held') return FB.T('You must hold {province} yourself to confirm the restoration.', { province:province });
+      if (reason === 'travel') return FB.T('Return from your journey first.');
+      return FB.T(def.text.text10);
     }
     function apply(s, t, id, reviewed) {
       var from = t.phase, selected = stageChoice(def, t, id);
@@ -860,7 +902,7 @@
       },
       choices:function (s, t) { return stageChoices(s, t, def, X); },
       quote:quote, apply:apply,
-      blocker:function () { return FB.T(def.text.text10); },
+      blocker:claimBlocker,
       day:function (s, t) {
         if (['complete','interrupted'].indexOf(phase(def, t)) >= 0) return;
         if (!X.alive(s, t.claimantId) || s.player.charId !== t.claimantId) {

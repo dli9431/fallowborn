@@ -419,9 +419,63 @@
           facts.councilAgreement && facts.councilTerms.courts &&
           facts.councilTerms.protection && facts.councilTerms.tolerance &&
           facts.bishop && facts.mediation.allowed && facts.majority >= p.majorityShare);
+      var reason = allowed ? 'ruler_settlement' : rulerReason(s, w, op, facts, available);
       facts.operation = op;
       facts.terms = JSON.parse(JSON.stringify(p));
-      return { id:id, allowed:!!allowed, reason:'ruler_settlement', facts:facts, stamp:JSON.stringify(facts) };
+      return { id:id, allowed:!!allowed, reason:reason, facts:facts, stamp:JSON.stringify(facts) };
+    }
+    /* The first unmet condition of rulerQuote, in its own order. The code stays
+       outside the quote facts, so the reviewed stamp is unchanged. */
+    function rulerReason(s, w, op, facts, available) {
+      var terms = facts.councilTerms;
+      function shared() {
+        if (!facts.bishop) return 'bishop';
+        if (!facts.mediation.allowed) return 'mediation';
+        if (!(facts.majority >= p.majorityShare)) return 'majority';
+        return 'ruler_settlement';
+      }
+      if (!available) return 'not_offered';
+      if (op === 'accept_service') {
+        if (!(facts.funds >= p.immediatePay)) return 'funds';
+        if (!facts.agreement.allowed) return 'service_terms';
+        if (!facts.civic) return 'civic_consent';
+        if (!facts.bishop) return 'bishop';
+        if (!facts.mediation.allowed) return 'mediation';
+        if (!alive(s, w[p.fields.commander])) return 'commander';
+        return shared();
+      }
+      if (op === 'accept_civic_rule') {
+        if (!alive(s, w[p.fields.delegate]) || facts.representative !== w[p.fields.delegate]) return 'delegate';
+        if (!facts.consent.allowed) return 'consent';
+        if (!facts.councilAgreement || !terms || !terms.courts || !terms.protection || !terms.tolerance) return 'council';
+        return shared();
+      }
+      if (op === 'contest_capital') {
+        if (!(facts.host && facts.host.men > 0)) return 'host';
+        if (facts.wars[0] || facts.wars[1]) return 'war';
+      }
+      return 'ruler_settlement';
+    }
+    function rulerBlocker(s, w, reason) {
+      var county = FB.world.byId[p.targetProvinceId], patron = R(s, p.patronRealmId);
+      var province = county ? county.name : p.targetProvinceId;
+      var realm = FB.realmNameParam(s, patron);
+      if (reason === 'funds') return FB.T('The {realm} treasury holds {money:funds}; the first payment needs {money:pay}.',
+        { realm:realm, funds:FB.treasuryAvailable(s, patron), pay:p.immediatePay });
+      if (reason === 'service_terms') return FB.T('{realm} will not agree to these service terms now.', { realm:realm });
+      if (reason === 'civic_consent') return FB.T('{province} has not given its civic consent.', { province:province });
+      if (reason === 'bishop') return FB.T('{province} has no living bishop to mediate.', { province:province });
+      if (reason === 'mediation') return FB.T('The bishop of {province} will not mediate yet.', { province:province });
+      if (reason === 'commander') return FB.T('The host’s commander has died.');
+      if (reason === 'majority') return FB.T('Only {current}% of {province} shares the majority faith; {needed}% is needed.',
+        { province:province, current:Math.floor(FB.countyReligionShare(s, p.targetProvinceId, p.majorityFaithId) * 100),
+          needed:Math.round(p.majorityShare * 100) });
+      if (reason === 'delegate') return FB.T('{province}’s civic delegate has died or no longer speaks for the council.', { province:province });
+      if (reason === 'consent') return FB.T('{province} does not consent to your rule yet.', { province:province });
+      if (reason === 'council') return FB.T('{province}’s council has not ratified terms protecting its courts, order and worship.', { province:province });
+      if (reason === 'host') return FB.T('Your host has no soldiers left.');
+      if (reason === 'war') return FB.T('You or {realm} are at war.', { realm:realm });
+      return FB.T(def.text.text22);
     }
     function rulerApply(s, w, id, reviewed) {
       var op = choiceOperation(def, id);
@@ -565,7 +619,7 @@
           w.aiResolution ? FB.T(def.text.text20) : FB.T(def.text.text21), lines:[] };
       },
       choices:rulerChoices, quote:rulerQuote, apply:rulerApply,
-      blocker:function () { return FB.T(def.text.text22); },
+      blocker:rulerBlocker,
       validate:validate, migrate:migrate, restore:restoreInstitutions };
   }
 
