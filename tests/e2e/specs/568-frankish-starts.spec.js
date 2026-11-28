@@ -146,6 +146,57 @@ for (const row of rulers) {
   });
 }
 
+test('the three Frankish agendas and starts name their people and places without disclaimers',async function ({page},info) {
+  await beginRuler(page,info,rulers[0],true);
+  expect(await page.evaluate(function (rows) {
+    const banned = /grants? no |creates? no |Record (a |an )?(costless )?(priority|intention|preference)|Record attention|\bordinary\b|\bactual(ly)?\b|\bexisting\b|\boriginal\b|\bauthored\b|historical opportunity|political opportunity/i;
+    const labelWords = /\b(ordinary|actual|actually|existing|current|original|authored|declared)\b/i;
+    const lostApostrophe = /[A-Za-z]\?[A-Za-z]/;
+    const faults = [];
+    function check(owner,field,value,prose) {
+      if (typeof value !== 'string' || !value) { faults.push(owner+' '+field+' is missing'); return; }
+      if (lostApostrophe.test(value)) faults.push(owner+' '+field+' has a lost apostrophe');
+      if (value.indexOf('—') >= 0) faults.push(owner+' '+field+' has an em dash');
+      if (prose && banned.test(value)) faults.push(owner+' '+field+' uses banned wording');
+    }
+    rows.forEach(function (row) {
+      const d = FBDATA.rulerAgendas_568[row.agenda];
+      check(row.agenda,'title',d.title,false);
+      check(row.agenda,'intro',d.intro,true);
+      d.stages.forEach(function (stage) {
+        check(stage.id,'name',stage.name,false);
+        check(stage.id,'text',stage.text,true);
+        stage.choices.forEach(function (c) {
+          check(c.id,'label',c.label,false);
+          if (c.label.split(/\s+/).length > 8) faults.push(c.id+' label is longer than eight words');
+          if (labelWords.test(c.label)) faults.push(c.id+' label uses a process word');
+          check(c.id,'detail',c.detail,true);
+          if (/^Record\b|\b(no|not|without)\b/i.test(c.detail)) faults.push(c.id+' detail lists what it does not do');
+          if (c.operation !== 'agenda_priority') faults.push(c.id+' operation changed');
+        });
+      });
+      const sc = FBDATA.startScenarios.find(function (s) { return s.id === row.id; });
+      check(sc.id,'name',sc.name,false);
+      check(sc.id,'desc',sc.desc,true);
+      check(sc.id,'intro',sc.intro,true);
+      check(sc.id,'family desc',sc.familyPresets.standard.desc,true);
+      if (sc.intro.split(/[.!?](?:\s+|$)/).filter(Boolean).length > 4) faults.push(sc.id+' intro is longer than four sentences');
+      if (!/Open your court agenda in Deeds to begin\.$/.test(sc.intro)) faults.push(sc.id+' intro does not say where to begin');
+    });
+    const s = FB.state, id = 'sigebert_agenda_568', status = FB.stories.status(s,id);
+    const offered = FB.stories.choices(s,id).filter(function (c) { return c.id !== 'agenda_stop_program'; });
+    return {faults:faults,
+      titles:rows.map(function (row) { return FBDATA.rulerAgendas_568[row.agenda].title; }),
+      firstLine:status.lines[0],
+      sheetNames:/Brunhild/.test(status.lines[0]) && /Metz/.test(status.lines[0]),
+      offered:offered.map(function (c) { return c.id; }),
+      recordDetails:offered.filter(function (c) { return /^Record\b/.test(c.detail); }).length};
+  },rulers)).toEqual({faults:[],
+    titles:['Sigebert: the living Austrasian court','Chilperic: the Soissons court','Guntram: Orleans and Burgundy'],
+    firstLine:'Brunhild, the Visigothic princess you married last year, now keeps court with you at Metz.',
+    sheetNames:true,offered:['si_attend_court','si_keep_court'],recordDetails:0});
+});
+
 test('a migration_v1 save retains its empty Frankish courts after the fresh revision is selected',async function ({page},info) {
   await useReleasedStartRules(page);
   await openGame(page,info);
