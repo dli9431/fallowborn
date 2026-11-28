@@ -3,68 +3,68 @@ FB.bookmarkSources.stage({"source":"data/story_ruler_agendas_634.js","bookmarks"
 FBDATA.rulerAgendas_634 = {
   umar_agenda_634:{id:'umar_agenda_634',type:'ruler_agenda',subjectRealmId:'rashidun_634',
     title:'Umar: the Medinan mandate',
-    intro:'Review your present authority, borders and resources from Medina. Each review is costless; ordinary public actions retain their own consent, costs and eligibility.',
+    intro:'Abu Bakr named you his successor this summer, and you now lead the Medinan court while Heraclius holds Damascus to the north and the Persians hold the Hira district to the northeast. These priorities shape your court’s story; orders, payments and wars go through Rank & Realm, Land and the map.',
     stages:[
-      {id:'accession_review_634',name:'The existing mandate',year:634,season:2,
-        text:'Accession is opening context. Examine the current political mandate and its recognition through the ordinary government records. This review neither repeats accession nor appoints a religious head or a living nominee.',choices:[
-          {id:'umar_review_mandate_634',label:'Prioritize the present mandate',detail:'Record attention to the current political arrangements without a new designation, recognition or payment.',operation:'agenda_priority'},
-          {id:'umar_retain_mandate_634',label:'Retain present arrangements',detail:'Continue with the existing mandate at no cost.',operation:'agenda_priority'}]},
-      {id:'syrian_review_634',name:'The Syrian border and resources',year:634,season:2,
-        text:'Consult the current map, neighboring courts, available funds and forces before choosing a course toward Syria. Present ownership determines the border. A campaign elsewhere supplies no Syrian outcome; any diplomacy or war uses its ordinary public review.',choices:[
-          {id:'umar_review_syria_634',label:'Prioritize the current Syrian situation',detail:'Record a priority only. Spend no funds, raise no force and begin no campaign.',operation:'agenda_priority'},
-          {id:'umar_retain_syria_634',label:'Retain present arrangements',detail:'Make no new Syrian commitment.',operation:'agenda_priority'}]},
-      {id:'iraqi_review_634',name:'The Iraqi border and resources',year:634,season:2,
-        text:'Review the actual Iraqi border, current neighboring authority and the resources still available. Assess this situation independently of Syria. Neither a victory nor a war declaration establishes harm to a community or a change in its faith.',choices:[
-          {id:'umar_review_iraq_634',label:'Prioritize the current Iraqi situation',detail:'Record attention without a payment, military order, claim or promised conquest.',operation:'agenda_priority'},
-          {id:'umar_retain_iraq_634',label:'Retain present arrangements',detail:'Make no new Iraqi commitment.',operation:'agenda_priority'}]},
+      {id:'accession_review_634',name:'Successor to Abu Bakr',year:634,season:2,
+        text:'Abu Bakr named you his successor before he died this summer, and Medina’s leading men have sworn allegiance to you.',choices:[
+          {id:'umar_review_mandate_634',label:'Secure the allegiance of Medina',detail:'The men who swore to you take your attention this season.',operation:'agenda_priority'},
+          {id:'umar_retain_mandate_634',label:'Trust the oath already sworn',detail:'You turn from Medina’s politics to the frontiers.',operation:'agenda_priority'}]},
+      {id:'syrian_review_634',name:'Damascus and Roman Syria',year:634,season:2,
+        text:'North of Medina, Heraclius holds Damascus and the towns of Roman Syria. Whether to fight for them is your decision, and Iraq is a separate one.',choices:[
+          {id:'umar_review_syria_634',label:'Look north to Damascus',detail:'Syria and the Roman frontier take your attention this season.',operation:'agenda_priority'},
+          {id:'umar_retain_syria_634',label:'Leave Damascus for later',detail:'Syria waits while Medina sees to other matters.',operation:'agenda_priority'}]},
+      {id:'iraqi_review_634',name:'Hira and the Persian border',year:634,season:2,
+        text:'To the northeast, the Persian court at Ctesiphon holds the Hira district on the Euphrates. Iraq is a separate front from Syria.',choices:[
+          {id:'umar_review_iraq_634',label:'Look east to Hira',detail:'The Persian frontier on the Euphrates takes your attention this season.',operation:'agenda_priority'},
+          {id:'umar_retain_iraq_634',label:'Leave Hira for later',detail:'Iraq waits while Medina sees to other matters.',operation:'agenda_priority'}]},
       {id:'mandate_conclusion_634',name:'Continue from Medina',year:634,season:2,
-        text:'Conclude these reviews with the arrangements and resources that now exist. Remaining at Medina is a complete course. Ordinary government and diplomacy continue; no city must fall and no battle or death is scheduled.',choices:[
-          {id:'umar_conclude_634',label:'Conclude the reviews',detail:'Close the personal program at no cost or reward. Ordinary public actions remain available.',operation:'agenda_finish'},
-          {id:'umar_retain_conclusion_634',label:'Retain present arrangements',detail:'Complete the reviews without a new public commitment or reward.',operation:'agenda_priority'}]}
+        text:'With your first reviews done, you govern on from Medina. Neither Damascus nor Hira has to fall for your reign to go on.',choices:[
+          {id:'umar_conclude_634',label:'Conclude the reviews',detail:'You close these reviews and govern on from Medina.',operation:'agenda_finish'},
+          {id:'umar_retain_conclusion_634',label:'Keep Medina’s course steady',detail:'You finish these reviews and keep the court on its present course.',operation:'agenda_priority'}]}
     ]},
   heraclius_agenda_634:{id:'heraclius_agenda_634',type:'ruler_agenda',subjectRealmId:'byzantium_634',
     title:'Heraclius: the imperial court',
-    intro:'Review your existing court, eastern holdings and available resources from Constantinople. Each review is costless; ordinary public actions retain their own authority, costs and eligibility.',
+    intro:'You have ruled the Romans from Constantinople since 610 and won Syria, Palestine and Egypt back from Persia only a few years ago. Now Medina’s armies threaten Syria. These priorities shape your court’s story; orders, payments and wars go through Rank & Realm, Land and the map.',
     stages:[
-      {id:'imperial_court_review_634',name:'The present imperial court',year:634,season:2,
-        text:'Examine the current court and ordinary government records. This opening uses a reduced model of direct administration and office succession. It supplies no reconstructed seventh-century office roster or thematic mobilization.',choices:[
-          {id:'heraclius_review_court_634',label:'Prioritize the present court',detail:'Record attention to the existing court without appointing an official, changing succession or spending funds.',operation:'agenda_priority'},
-          {id:'heraclius_retain_court_634',label:'Retain present arrangements',detail:'Continue with the existing court at no cost.',operation:'agenda_priority'}]},
-      {id:'eastern_holdings_review_634',name:'Eastern holdings and resources',year:634,season:2,
-        text:'Consult the current map, actual holders, public funds and available forces. Recovered provinces are opening context, not a new grant or payment. Present ownership determines what the court governs; no Syrian loss or recovery is required.',choices:[
-          {id:'heraclius_review_east_634',label:'Prioritize current eastern holdings',detail:'Record attention to actual holdings and resources without changing a border, raising forces or granting funds.',operation:'agenda_priority'},
-          {id:'heraclius_retain_east_634',label:'Retain present arrangements',detail:'Make no new territorial or financial commitment.',operation:'agenda_priority'}]},
-      {id:'defense_diplomacy_review_634',name:'Lawful defense and diplomacy',year:634,season:2,
-        text:'Assess defense and diplomacy against the authority, neighbors and resources that now exist. Any treaty, military order or war must pass its ordinary public review. A war or victory proves no sack, expulsion, universal welcome or change of communal faith.',choices:[
-          {id:'heraclius_review_defense_634',label:'Prioritize lawful defense and diplomacy',detail:'Record a priority only. Begin no campaign, negotiate no treaty and spend no funds.',operation:'agenda_priority'},
-          {id:'heraclius_retain_defense_634',label:'Retain present arrangements',detail:'Make no new diplomatic or military commitment.',operation:'agenda_priority'}]},
+      {id:'imperial_court_review_634',name:'The court at Constantinople',year:634,season:2,
+        text:'Your officials at Constantinople keep the government running while your attention is drawn east.',choices:[
+          {id:'heraclius_review_court_634',label:'Put the court at Constantinople first',detail:'Your officials and the capital take your attention this season.',operation:'agenda_priority'},
+          {id:'heraclius_retain_court_634',label:'Leave the court to your officials',detail:'You trust the capital to run itself and look to the provinces.',operation:'agenda_priority'}]},
+      {id:'eastern_holdings_review_634',name:'The eastern provinces',year:634,season:2,
+        text:'Syria, Palestine and Egypt are yours again after the long war with Persia, and Damascus is the city Medina’s armies would strike first.',choices:[
+          {id:'heraclius_review_east_634',label:'Look to Syria and Damascus',detail:'The eastern provinces take your attention this season.',operation:'agenda_priority'},
+          {id:'heraclius_retain_east_634',label:'Keep your eyes on the capital',detail:'The eastern provinces must manage with what they have.',operation:'agenda_priority'}]},
+      {id:'defense_diplomacy_review_634',name:'Defense and diplomacy',year:634,season:2,
+        text:'Medina’s armies threaten Syria, and Persia, your old enemy, faces them in Iraq. You can meet the danger with soldiers or with envoys.',choices:[
+          {id:'heraclius_review_defense_634',label:'Prepare to defend Syria',detail:'Garrisons and envoys for the east take your attention this season.',operation:'agenda_priority'},
+          {id:'heraclius_retain_defense_634',label:'Trust envoys before soldiers',detail:'You look for peace on the eastern frontier before any fighting.',operation:'agenda_priority'}]},
       {id:'imperial_conclusion_634',name:'Continue from Constantinople',year:634,season:2,
-        text:'Conclude these reviews with the court, holdings and resources that now exist. Remaining at Constantinople is a complete course. Ordinary public decisions continue; no journey, named battle, territorial loss or death is scheduled.',choices:[
-          {id:'heraclius_conclude_634',label:'Conclude the reviews',detail:'Close the personal program at no cost or reward. Ordinary public actions remain available.',operation:'agenda_finish'},
-          {id:'heraclius_retain_conclusion_634',label:'Retain present arrangements',detail:'Complete the reviews without a new public commitment or reward.',operation:'agenda_priority'}]}
+        text:'With your reviews done, you govern on from Constantinople, whatever becomes of Syria.',choices:[
+          {id:'heraclius_conclude_634',label:'Conclude the reviews',detail:'You close these reviews and govern on from Constantinople.',operation:'agenda_finish'},
+          {id:'heraclius_retain_conclusion_634',label:'Keep the court’s course steady',detail:'You finish these reviews and keep the court on its present course.',operation:'agenda_priority'}]}
     ]},
   yazdegerd_agenda_634:{id:'yazdegerd_agenda_634',type:'ruler_agenda',subjectRealmId:'sasanian_634',requires:['iraqi_front_634'],
     title:'Yazdegerd: the child ruler and the court',
-    intro:'Review the existing court, provincial interests and Iraqi frontier from Ctesiphon. Every personal choice is costless. Public decisions depend on the adult steward during minority, actual provincial assent and ordinary authority and resources.',
+    intro:'You are ten years old and king of kings at Ctesiphon, crowned two years ago after a long civil war. An adult steward governs in your name, the great provincial houses must agree to public decisions, and Medina may march on the Hira district. These priorities shape your court’s story; orders, payments and wars go through Rank & Realm, Land and the map.',
     stages:[
-      {id:'minority_court',name:'The ruler and minority stewardship',year:634,season:2,
-        text:'Review Rank & Realm for the living ruler, adult steward and current recognition. The provincial households represent court interests; their generated principals are not named historical regents. The steward supplies public continuity without becoming sovereign. Personal priorities neither appoint a steward nor repeat accession.',choices:[
-          {id:'yazdegerd_review_court',label:'Prioritize the court and stewardship',detail:'Record attention at no cost. Use the ordinary stewardship review if the current steward becomes incapable.',operation:'agenda_priority'},
-          {id:'yazdegerd_observe_recognition',label:'Acknowledge existing recognition',detail:'Record only actual positive recognition for this ruler generation. Create no vote, appointment or payment.',operation:'agenda_public_record',recordKind:'agenda_recognition'},
-          {id:'yazdegerd_keep_court',label:'Retain present arrangements',detail:'Continue without a new public commitment or reward.',operation:'agenda_priority'}]},
-      {id:'provincial_obligations',name:'Provincial interests and obligations',year:634,season:2,
-        text:'Inspect the actual hereditary interests, their jurisdictions, assent and current revenue and military obligations in Rank & Realm. Where interests remain, changes use the ordinary provincial negotiation review with its public cost and consent checks. Missing interests create no substitute principal or free bargain.',choices:[
-          {id:'yazdegerd_review_provinces',label:'Prioritize current provincial obligations',detail:'Record attention without changing terms or buying assent. Actual negotiations keep their displayed public costs.',operation:'agenda_priority'},
-          {id:'yazdegerd_keep_provinces',label:'Retain current obligations',detail:'Keep the actual terms without payment, enforcement or additional recognition.',operation:'agenda_priority'}]},
-      {id:'iraqi_frontier',name:'The actual Iraqi frontier',year:634,season:2,
-        text:'Consult the current Hira district controller and Iraqi opportunity below, and Land for actual holdings and forces. District control is a simulation scale, not precise urban possession. Defense and diplomacy require the existing court and capable stewardship during minority. No named battle, army, conquest or collapse follows from this review.',choices:[
-          {id:'yazdegerd_review_iraq',label:'Prioritize the current Iraqi situation',detail:'Record attention only. Spend nothing and make no military or diplomatic order.',operation:'agenda_priority'},
-          {id:'yazdegerd_observe_iraq',label:'Acknowledge the actual Iraqi conclusion',detail:'Record only an existing source conclusion. Its result belongs to the initiating court and supplies no Sasanian victory, loss or reward by itself.',operation:'agenda_story_fact',storyId:'iraqi_front_634',stateField:'result',values:['won','failed','diverted','interrupted']},
-          {id:'yazdegerd_keep_iraq',label:'Retain present arrangements',detail:'Make no new frontier commitment. Ordinary public decisions retain their own authority and costs.',operation:'agenda_priority'}]},
-      {id:'sasanian_continuation',name:'Continue with the living court',year:634,season:2,
-        text:'Conclude with the ruler, court and resources that actually remain. Staying at Ctesiphon is a complete course. Stewardship ends at the court’s adulthood boundary while the same ruler continues. Private household inheritance and public royal succession remain distinct; no later monarch, evacuation or historical death is scheduled.',choices:[
-          {id:'yazdegerd_finish',label:'Conclude the reviews',detail:'End this personal program at no cost or reward. Ordinary ongoing government keeps its own rules.',operation:'agenda_finish'},
-          {id:'yazdegerd_keep',label:'Retain present arrangements',detail:'Complete the reviews without a new public commitment or reward.',operation:'agenda_priority'}]}
+      {id:'minority_court',name:'The boy king and his steward',year:634,season:2,
+        text:'You are ten, so an adult steward from the great provincial houses governs in your name until you come of age. Rank & Realm shows who the steward is and who recognizes you as king.',choices:[
+          {id:'yazdegerd_review_court',label:'Put the court and steward first',detail:'The steward and your household take your attention this season.',operation:'agenda_priority'},
+          {id:'yazdegerd_observe_recognition',label:'Record the recognition you hold',detail:'Records the recognition you hold as king this reign.',operation:'agenda_public_record',recordKind:'agenda_recognition'},
+          {id:'yazdegerd_keep_court',label:'Leave the court to the steward',detail:'You let the steward run the court while you look further afield.',operation:'agenda_priority'}]},
+      {id:'provincial_obligations',name:'The great houses and their dues',year:634,season:2,
+        text:'The great provincial houses hold their lands by hereditary right and owe the crown revenue and soldiers. Rank & Realm shows each house that remains and what it owes, and new terms are negotiated there at a public cost.',choices:[
+          {id:'yazdegerd_review_provinces',label:'Look to what the great houses owe',detail:'The provincial houses and their dues take your attention this season.',operation:'agenda_priority'},
+          {id:'yazdegerd_keep_provinces',label:'Leave the houses’ terms as they are',detail:'You keep the great houses content by asking nothing new of them.',operation:'agenda_priority'}]},
+      {id:'iraqi_frontier',name:'Hira and the Euphrates',year:634,season:2,
+        text:'Medina may go to war for the Hira district, south of Ctesiphon on the Euphrates. Defending it needs a steward able to act and the assent of the great houses.',choices:[
+          {id:'yazdegerd_review_iraq',label:'Look to the defense of Hira',detail:'The Euphrates frontier takes your attention this season.',operation:'agenda_priority'},
+          {id:'yazdegerd_observe_iraq',label:'Note how the war for Hira district ended',detail:'Records the outcome once the Iraqi frontier campaign is over.',operation:'agenda_story_fact',storyId:'iraqi_front_634',stateField:'result',values:['won','failed','diverted','interrupted']},
+          {id:'yazdegerd_keep_iraq',label:'Leave the frontier as it stands',detail:'You turn to other matters and make no new plans for the Euphrates.',operation:'agenda_priority'}]},
+      {id:'sasanian_continuation',name:'Ruling from Ctesiphon',year:634,season:2,
+        text:'With your reviews done, you rule on from Ctesiphon. The steward’s role ends when you come of age, and you remain king of kings.',choices:[
+          {id:'yazdegerd_finish',label:'Conclude the reviews',detail:'You close these reviews and rule on from Ctesiphon.',operation:'agenda_finish'},
+          {id:'yazdegerd_keep',label:'Keep the court’s course steady',detail:'You finish these reviews and keep the court on its present course.',operation:'agenda_priority'}]}
     ]
   }
 };
@@ -74,51 +74,51 @@ FBDATA.rulerAgendas_634_full = {
   umar_court_agenda_634:{id:'umar_court_agenda_634',type:'ruler_agenda',subjectRealmId:'rashidun_634',
     requires:['syrian_front_634','iraqi_front_634'],
     title:'Umar: mandate and frontiers',
-    intro:'Govern the existing Medinan court from Medina. Priorities cost nothing. Campaign decisions use current public authority, consent and ordinary war costs; either frontier may remain quiet.',
+    intro:'Abu Bakr named you his successor this summer, and you now lead the Medinan court as its armies look north to Damascus and east to the Hira district. These priorities shape your court’s story; orders and payments go through Rank & Realm and Land, and the wars for Damascus and Hira district start only when you approve them.',
     stages:[
-      {id:'mandate_accounts',name:'The mandate and available accounts',year:634,season:2,
-        text:'Review Rank & Realm for the present selection mandate and recognition, and the treasury for available public funds and existing commitments. The political incumbent and the resident communities have distinct identities. A personal priority neither repeats accession nor nominates a successor, buys assent or converts residents.',choices:[
-          {id:'umar_prioritize_accounts',label:'Prioritize the mandate and accounts',detail:'Record attention at no cost. Use ordinary government and treasury controls for actual decisions.',operation:'agenda_priority'},
-          {id:'umar_keep_accounts',label:'Retain present arrangements',detail:'Continue with the actual incumbent and existing accounts without a payment or new public commitment.',operation:'agenda_priority'}]},
-      {id:'syrian_frontier',name:'The Syrian frontier',year:634,season:2,
-        text:'The Syrian opportunity concerns the Damascus district, not an assured urban surrender. Consult its current controller and source status below, and Land for actual forces and holdings. Frontier access, recognition and ordinary permission may prevent a declaration. Iraq is a separate decision.',choices:[
-          {id:'umar_face_syria',label:'Consider the Syrian campaign',detail:'Commit only if the current ordinary aggression review permits it. Political costs apply immediately; the attempt lasts at most 360 days, with no guaranteed conquest.',operation:'agenda_story_choice',storyId:'syrian_front_634',choiceId:'face_campaign'},
-          {id:'umar_decline_syria',label:'Use ordinary diplomacy in Syria',detail:'Close only this authored opportunity without payment or declaration. Ordinary diplomacy and independent wars remain available.',operation:'agenda_story_choice',storyId:'syrian_front_634',choiceId:'leave_campaign'},
-          {id:'umar_record_syria',label:'Acknowledge the actual Syrian conclusion',detail:'Record only the source outcome already reached. This supplies no victory, territorial award or reward.',operation:'agenda_story_fact',storyId:'syrian_front_634',stateField:'result',values:['won','failed','diverted','interrupted']},
-          {id:'umar_keep_syria',label:'Retain present arrangements',detail:'Record no campaign commitment. The separate frontier card keeps its own current choices.',operation:'agenda_priority'}]},
-      {id:'iraqi_frontier',name:'The Iraqi frontier',year:634,season:2,
-        text:'The Iraqi opportunity concerns the Hira district on the existing coarse map. Its opening Sasanian controller is a simulation choice, not proof of precise urban possession. Review the actual controller, source status and remaining resources independently of Syria. No Ctesiphon conquest or named battle is promised.',choices:[
-          {id:'umar_face_iraq',label:'Consider the Iraqi campaign',detail:'Commit only through current ordinary aggression permission and political costs. The attempt lasts at most 180 days; funds and territory are not granted.',operation:'agenda_story_choice',storyId:'iraqi_front_634',choiceId:'face_campaign'},
-          {id:'umar_decline_iraq',label:'Use ordinary diplomacy in Iraq',detail:'Close only this authored opportunity without payment or declaration. This does not decide the Syrian opportunity.',operation:'agenda_story_choice',storyId:'iraqi_front_634',choiceId:'leave_campaign'},
-          {id:'umar_record_iraq',label:'Acknowledge the actual Iraqi conclusion',detail:'Record only an existing source conclusion without a new campaign, payment or reward.',operation:'agenda_story_fact',storyId:'iraqi_front_634',stateField:'result',values:['won','failed','diverted','interrupted']},
-          {id:'umar_keep_iraq',label:'Retain present arrangements',detail:'Continue without deciding this opportunity here. Ordinary public actions remain available.',operation:'agenda_priority'}]},
+      {id:'mandate_accounts',name:'Allegiance and the treasury',year:634,season:2,
+        text:'Abu Bakr named you his successor before he died this summer, and Medina’s leading men have sworn allegiance to you. Rank & Realm shows who recognizes you, and the treasury shows what you can spend.',choices:[
+          {id:'umar_prioritize_accounts',label:'Put allegiance and the treasury first',detail:'Medina’s leading men and its accounts take your attention this season.',operation:'agenda_priority'},
+          {id:'umar_keep_accounts',label:'Leave Medina’s accounts as they are',detail:'You turn from Medina to the frontiers.',operation:'agenda_priority'}]},
+      {id:'syrian_frontier',name:'Damascus and Roman Syria',year:634,season:2,
+        text:'Heraclius holds Damascus and the towns of Roman Syria north of Medina. You can approve a war for Damascus or drop the claim; Iraq is a separate decision.',choices:[
+          {id:'umar_face_syria',label:'Approve the war for Damascus',detail:'Your armies march once Medina may declare war.',operation:'agenda_story_choice',storyId:'syrian_front_634',choiceId:'face_campaign'},
+          {id:'umar_decline_syria',label:'Drop the claim to Damascus',detail:'Iraq stays a separate decision.',operation:'agenda_story_choice',storyId:'syrian_front_634',choiceId:'leave_campaign'},
+          {id:'umar_record_syria',label:'Note how the war for Damascus ended',detail:'Records the outcome once the Syrian frontier campaign is over.',operation:'agenda_story_fact',storyId:'syrian_front_634',stateField:'result',values:['won','failed','diverted','interrupted']},
+          {id:'umar_keep_syria',label:'Leave Damascus for later',detail:'You turn to other matters and leave the war for Damascus undecided.',operation:'agenda_priority'}]},
+      {id:'iraqi_frontier',name:'Hira and the Persian border',year:634,season:2,
+        text:'The Persian court at Ctesiphon holds the Hira district on the Euphrates. You can approve a war for it or drop the claim, whatever you decide about Syria.',choices:[
+          {id:'umar_face_iraq',label:'Approve the war for Hira district',detail:'Your armies march once Medina may declare war.',operation:'agenda_story_choice',storyId:'iraqi_front_634',choiceId:'face_campaign'},
+          {id:'umar_decline_iraq',label:'Drop the claim to Hira district',detail:'Syria stays a separate decision.',operation:'agenda_story_choice',storyId:'iraqi_front_634',choiceId:'leave_campaign'},
+          {id:'umar_record_iraq',label:'Note how the war for Hira district ended',detail:'Records the outcome once the Iraqi frontier campaign is over.',operation:'agenda_story_fact',storyId:'iraqi_front_634',stateField:'result',values:['won','failed','diverted','interrupted']},
+          {id:'umar_keep_iraq',label:'Leave Hira district for later',detail:'You turn to other matters and leave the war for Hira district undecided.',operation:'agenda_priority'}]},
       {id:'medinan_continuation',name:'Continue governing from Medina',year:634,season:2,
-        text:'Conclude from the mandate, holdings and resources that actually remain. Staying at Medina and leaving both fronts quiet is a complete course. Ordinary public actions continue after this personal program; no conquest, death or religious change is scheduled.',choices:[
-          {id:'umar_finish_court',label:'Conclude the reviews',detail:'End this personal program at no cost or reward. Existing wars, agreements and ordinary government keep their own rules.',operation:'agenda_finish'},
-          {id:'umar_keep_court',label:'Retain present arrangements',detail:'Complete the reviews without another public commitment or reward.',operation:'agenda_priority'}]}
+        text:'With your reviews done, you govern on from Medina. Your reign goes on whether both fronts stay quiet or Medina wins new lands.',choices:[
+          {id:'umar_finish_court',label:'Conclude the reviews',detail:'You close these reviews and govern on from Medina. Wars already under way continue.',operation:'agenda_finish'},
+          {id:'umar_keep_court',label:'Keep Medina’s course steady',detail:'You finish these reviews and keep the court on its present course.',operation:'agenda_priority'}]}
     ]},
   heraclius_court_agenda_634:{id:'heraclius_court_agenda_634',type:'ruler_agenda',subjectRealmId:'byzantium_634',
     requires:['syrian_front_634'],
     title:'Heraclius: administration and the east',
-    intro:'Govern the existing imperial court from Constantinople. Priorities are costless; actual commissions, diplomacy and defense retain their current authority, consent and resource requirements.',
+    intro:'You have ruled the Romans from Constantinople since 610 and won the east back from Persia, and now Medina’s armies look to Damascus. These priorities shape your court’s story; orders, payments and wars go through Rank & Realm, Land and the map.',
     stages:[
-      {id:'imperial_administration',name:'The court and public administration',year:634,season:2,
-        text:'Review Rank & Realm for the current administrative government, effective public commissions and recognition. Use its ordinary appointment and reaffirmation controls for actual changes, with their displayed terms and funding. This opening supplies no mature thematic system or invented historical officeholder.',choices:[
-          {id:'heraclius_prioritize_administration',label:'Prioritize current administration',detail:'Record attention without appointing an officer, changing succession or spending public funds.',operation:'agenda_priority'},
-          {id:'heraclius_observe_appointments',label:'Acknowledge effective public service',detail:'Record existing effective public appointments only if the ordinary office records support them. Create no office, salary or additional reward.',operation:'agenda_public_record',recordKind:'agenda_appointments'},
-          {id:'heraclius_keep_administration',label:'Retain present arrangements',detail:'Continue with the present court and officers at no cost.',operation:'agenda_priority'}]},
-      {id:'eastern_accounts',name:'Eastern holdings and available resources',year:634,season:2,
-        text:'Consult Land for current owners and forces, and the treasury for public funds and commitments. Earlier recoveries are opening context, not a fresh grant. Public accounts and the private purse remain distinct. Neither the calendar nor this priority removes an eastern holding or creates an army.',choices:[
-          {id:'heraclius_prioritize_accounts',label:'Prioritize actual holdings and accounts',detail:'Record attention at no cost. Any public spending, appointment or military order uses its ordinary controls.',operation:'agenda_priority'},
-          {id:'heraclius_keep_accounts',label:'Retain present arrangements',detail:'Make no new territorial, financial or military commitment.',operation:'agenda_priority'}]},
-      {id:'syrian_defense',name:'Syrian defense and diplomacy',year:634,season:2,
-        text:'Review the current Damascus district controller and source status below. The Medinan court decides whether the Syrian campaign begins; this court learns of it and defends through ordinary war. A declaration proves no local sack, expulsion, universal welcome or conversion.',retiredChoiceIds:['heraclius_face_syria','heraclius_decline_syria'],choices:[
-          {id:'heraclius_record_syria',label:'Acknowledge the actual Syrian conclusion',detail:'Record the source conclusion already reached. An attacker securing its objective is not an imperial victory or proof of harm to residents.',operation:'agenda_story_fact',storyId:'syrian_front_634',stateField:'result',values:['won','failed','diverted','interrupted']},
-          {id:'heraclius_keep_syria',label:'Retain present arrangements',detail:'Make no campaign decision here. The ordinary frontier card and public controls remain available.',operation:'agenda_priority'}]},
+      {id:'imperial_administration',name:'The court and its officials',year:634,season:2,
+        text:'Your officials govern the provinces in your name from Constantinople. Rank & Realm shows who holds each office, and appointments and reaffirmations are made there at their listed cost.',choices:[
+          {id:'heraclius_prioritize_administration',label:'Put the imperial offices first',detail:'Your officials and their work take your attention this season.',operation:'agenda_priority'},
+          {id:'heraclius_observe_appointments',label:'Record the officials now serving',detail:'Records the officials who hold public office now.',operation:'agenda_public_record',recordKind:'agenda_appointments'},
+          {id:'heraclius_keep_administration',label:'Leave the offices as they stand',detail:'You trust your officials and turn to the provinces.',operation:'agenda_priority'}]},
+      {id:'eastern_accounts',name:'The east and the treasury',year:634,season:2,
+        text:'Syria, Palestine and Egypt are yours again after the long war with Persia. Land shows who holds each province and where your forces stand, and the treasury shows what the state can spend apart from your private purse.',choices:[
+          {id:'heraclius_prioritize_accounts',label:'Look to the eastern provinces and treasury',detail:'The eastern provinces and their revenues take your attention this season.',operation:'agenda_priority'},
+          {id:'heraclius_keep_accounts',label:'Leave the east to its officials',detail:'You turn from the eastern accounts to the defense of Damascus.',operation:'agenda_priority'}]},
+      {id:'syrian_defense',name:'The defense of Damascus',year:634,season:2,
+        text:'Medina may go to war for Damascus. That decision is Medina’s; if its armies attack, you defend the city with your own forces.',retiredChoiceIds:['heraclius_face_syria','heraclius_decline_syria'],choices:[
+          {id:'heraclius_record_syria',label:'Note how the war for Damascus ended',detail:'Records the outcome once the Syrian frontier campaign is over.',operation:'agenda_story_fact',storyId:'syrian_front_634',stateField:'result',values:['won','failed','diverted','interrupted']},
+          {id:'heraclius_keep_syria',label:'Hold Damascus with what you have',detail:'You trust Damascus to hold and turn to other matters.',operation:'agenda_priority'}]},
       {id:'imperial_continuation',name:'Continue from Constantinople',year:634,season:2,
-        text:'Conclude with the living court, holdings and accounts that now exist. This capital-based opening is a reconstruction, not an exact itinerary. Remaining here is a complete course, whether the Syrian opportunity starts, ends or never proceeds.',choices:[
-          {id:'heraclius_finish_court',label:'Conclude the reviews',detail:'End the personal program without payment or reward. Ordinary administration, diplomacy and existing wars continue.',operation:'agenda_finish'},
-          {id:'heraclius_keep_court',label:'Retain present arrangements',detail:'Complete the reviews without a journey or new public commitment.',operation:'agenda_priority'}]}
+        text:'With your reviews done, you govern on from Constantinople, whether or not Medina attacks Damascus.',choices:[
+          {id:'heraclius_finish_court',label:'Conclude the reviews',detail:'You close these reviews and govern on from Constantinople. Wars already under way continue.',operation:'agenda_finish'},
+          {id:'heraclius_keep_court',label:'Keep the court’s course steady',detail:'You finish these reviews and keep the court on its present course.',operation:'agenda_priority'}]}
     ]}
 };
 (function () {

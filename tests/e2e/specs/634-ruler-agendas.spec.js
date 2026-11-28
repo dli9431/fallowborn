@@ -9,11 +9,11 @@ const {restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {dependsOnRuntime} = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename,['data/bookmark_manifest.js',
-  'index.html','data/starts_634_rulers.js','data/story_ruler_agendas_634.js',
+  'index.html','data/starts_634_rulers.js','data/story_ruler_agendas_634.js','data/story_opening_goals_634.js',
   'data/bookmark_634.js','data/bookmark_634_courts.js','data/bookmark_634_scaffold_d.js',
   'data/bookmark_634_identities.js','data/bookmark_634_campaigns.js','data/story_campaigns_634.js',
   'data/bookmark_sources.js','data/story_instances.js','js/bookmark_composition.js','js/bookmark_sources.js',
-  'js/starts.js','js/story_ruler_agenda.js','js/story_campaign.js','js/stories.js',
+  'js/starts.js','js/story_ruler_agenda.js','js/story_opening_goals.js','js/story_campaign.js','js/stories.js',
   'js/government_selection.js','js/government_administration.js','js/authority.js','js/treasury.js',
   'js/actions.js','js/wars.js','js/world.js','js/save.js','js/save_v4.js','js/mods.js','js/ui_modals.js'
 ]);
@@ -129,6 +129,80 @@ test('assembled courts select three four-review agendas while preserving retaine
   ],faults:[],isolated:true,pure:true});
 });
 
+test('the 634 court agendas, ruler goals, starts and frontiers name people and places without process boilerplate',async function ({page},info) {
+  await load(page,info);
+  expect(await page.evaluate(function () {
+    const banned = /grants? no |creates? no |Record (a |an )?(costless )?(priority|intention|preference)|Record attention|\bordinary\b|\bactual(ly)?\b|\bexisting\b|\boriginal\b|\bauthored\b|historical opportunity|political opportunity/i;
+    const labelWords = /\b(ordinary|actual|actually|existing|current|original|authored|declared)\b/i;
+    const prose = ['intro','desc','text','detail'], faults = [], seen = {};
+    function field(where,kind,value) {
+      seen[kind] = (seen[kind] || 0)+1;
+      if (typeof value !== 'string' || !value) { faults.push(where+' '+kind+' is missing'); return; }
+      if (/[A-Za-z]\?[A-Za-z]/.test(value)) faults.push(where+' '+kind+' has a question mark for an apostrophe: '+value);
+      if (kind === 'label' && value.trim().split(/\s+/).length > 8) faults.push(where+' label is longer than eight words: '+value);
+      if (kind === 'label' && labelWords.test(value)) faults.push(where+' label uses a process word: '+value);
+      if (prose.indexOf(kind) >= 0 && banned.test(value)) faults.push(where+' '+kind+' uses boilerplate: '+value);
+    }
+    ['umar_agenda_634','heraclius_agenda_634','yazdegerd_agenda_634','umar_court_agenda_634','heraclius_court_agenda_634'].forEach(function (id) {
+      const d = FB.stories.get(id).declaration;
+      field(id,'title',d.title); field(id,'intro',d.intro);
+      d.stages.forEach(function (st) {
+        field(id+'.'+st.id,'name',st.name); field(id+'.'+st.id,'text',st.text);
+        st.choices.forEach(function (c) { field(id+'.'+c.id,'label',c.label); field(id+'.'+c.id,'detail',c.detail); });
+      });
+    });
+    ['opening_umar_634','opening_umar_court_634','opening_heraclius_634','opening_heraclius_court_634'].forEach(function (id) {
+      const d = FB.stories.get(id).declaration;
+      field(id,'title',d.title); field(id,'intro',d.intro);
+      d.goals.forEach(function (g) { field(id+'.'+g.id,'name',g.name); field(id+'.'+g.id,'text',g.text); });
+      d.contacts.forEach(function (c) { field(id+'.'+c.id,'name',c.label); field(id+'.'+c.id,'text',c.text); });
+    });
+    ['umar_634','heraclius_634','yazdegerd_634'].forEach(function (id) {
+      const row = FBDATA.startScenarios.find(function (r) { return r.id === id; });
+      field(id,'name',row.name); field(id,'desc',row.desc); field(id,'intro',row.intro);
+      Object.keys(row.familyPresets).forEach(function (key) {
+        field(id+'.'+key,'name',row.familyPresets[key].name); field(id+'.'+key,'desc',row.familyPresets[key].desc);
+      });
+    });
+    ['syrian_front_634','iraqi_front_634'].forEach(function (id) {
+      const d = FB.stories.get(id).declaration; field(id,'name',d.name); field(id,'desc',d.desc);
+    });
+    function stage(id,stageId) { return FB.stories.get(id).declaration.stages.find(function (st) { return st.id === stageId; }); }
+    function rows(st,operation) { return st.choices.filter(function (c) { return c.operation === operation; }); }
+    const umarSyria = stage('umar_court_agenda_634','syrian_frontier'), heracliusSyria = stage('heraclius_court_agenda_634','syrian_defense');
+    const minority = stage('yazdegerd_agenda_634','minority_court');
+    return {faults:faults,seen:seen,
+      umarSyria:rows(umarSyria,'agenda_story_choice').map(function (c) { return [c.id,c.label]; }),
+      heracliusOutcome:rows(heracliusSyria,'agenda_story_fact').map(function (c) { return [c.id,c.label]; }),
+      heracliusPriorities:rows(heracliusSyria,'agenda_priority').every(function (c) { return c.label.indexOf('Damascus') >= 0; }),
+      heracliusForwarded:rows(heracliusSyria,'agenda_story_choice').length,retired:heracliusSyria.retiredChoiceIds,
+      minority:/\bsteward\b/.test(minority.text) && /\bten\b/.test(minority.text) && !/accession/i.test(minority.text)};
+  })).toEqual({faults:[],seen:{title:9,intro:12,name:44,text:36,label:47,detail:47,desc:8},
+    umarSyria:[['umar_face_syria','Approve the war for Damascus'],['umar_decline_syria','Drop the claim to Damascus']],
+    heracliusOutcome:[['heraclius_record_syria','Note how the war for Damascus ended']],
+    heracliusPriorities:true,heracliusForwarded:0,retired:['heraclius_face_syria','heraclius_decline_syria'],minority:true});
+});
+
+test('Umar forwards Syrian rows that repeat the campaign action labels and add one short detail',async function ({page},info) {
+  await start(page,info,'umar_634');
+  expect(await page.evaluate(function () {
+    const s = FB.state, id = 'umar_court_agenda_634';
+    RA.choose(id,'umar_keep_accounts');
+    const offered = FB.stories.choices(s,id), source = FB.stories.choices(s,'syrian_front_634');
+    function row(list,choiceId) { return list.find(function (c) { return c.id === choiceId; }); }
+    return [['umar_face_syria','face_campaign'],['umar_decline_syria','leave_campaign']].map(function (pair) {
+      const agenda = row(offered,pair[0]), campaign = row(source,pair[1]);
+      const own = agenda.detail.slice(0,agenda.detail.length-campaign.detail.length-1);
+      return {label:agenda.label,same:agenda.label === campaign.label,
+        appended:agenda.detail === own+' '+campaign.detail,own:own,
+        clean:!/\bordinary\b|\bactual\b|\bcurrent\b|\bauthored\b|no guaranteed|opportunity/i.test(own)};
+    });
+  })).toEqual([
+    {label:'Approve the war for Damascus',same:true,appended:true,own:'Your armies march once Medina may declare war.',clean:true},
+    {label:'Drop the claim to Damascus',same:true,appended:true,own:'Iraq stays a separate decision.',clean:true}
+  ]);
+});
+
 for (const who of ['umar','heraclius']) {
   test(who+' adopts the actual assembled incumbent and can finish all four reviews peacefully',async function ({page},info) {
     await start(page,info,who+'_634',false,who === 'heraclius');
@@ -139,8 +213,10 @@ for (const who of ['umar','heraclius']) {
       FB.stories.cards(s); story.status(s,t); FB.stories.choices(s,id);
       const pure = initial === RA.resources(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
       const applied = [], repeated = [];
+      const retaining = who === 'umar' ? ['umar_keep_accounts','umar_keep_syria','umar_keep_iraq'] :
+        ['heraclius_keep_administration','heraclius_keep_accounts','heraclius_keep_syria'];
       story.declaration.stages.forEach(function (st,index) {
-        const choice = st.choices.find(function (c) { return index === 3 ? c.operation === 'agenda_finish' : c.label === 'Retain present arrangements'; });
+        const choice = st.choices.find(function (c) { return index === 3 ? c.operation === 'agenda_finish' : c.id === retaining[index]; });
         const q = FB.stories.quote(s,id,choice.id);
         applied.push(FB.stories.apply(s,id,choice.id,q)); repeated.push(FB.stories.apply(s,id,choice.id,q));
       });
