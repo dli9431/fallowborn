@@ -5,11 +5,11 @@ FBDATA.startScenarios_york_wessex_867 = [
   { id:'aethelred_wessex_867', bookmarkIds:['867'], alwaysUnlocked:true,
     rulerRealmId:'wessex', governmentForm:'territorial', fixedProvinceId:'winchester',
     characterName:'Æthelred I', sex:'m', startCulture:'english', startReligion:'catholic',
-    name:'Æthelred I of Wessex', desc:'Govern Wessex from its existing court. Balance the kingdom’s needs against the uncertain situation to the north.',
+    name:'Æthelred I of Wessex', desc:'The great army that took York last winter may turn south. Decide what Wessex can spare for its neighbors.',
     tier:6, profession:'noble', gold:120, prestige:150, piety:10,
-    familyPresets:{ standard:{ name:'Existing court household', diff:'age 20 · existing court family', desc:'Keep the court’s generated relatives and supporting households.' } },
+    familyPresets:{ standard:{ name:'Existing court household', diff:'age 20 · existing court family', desc:'Your court’s relatives and households, generated for this start. Your brother Alfred is not among them.' } },
     onboarding:'ruler',
-    intro:'You are Æthelred I, king of Wessex. Your existing court governs from Winchester. Review Rank & Realm, manage the kingdom’s resources and decide which diplomatic or military commitments it can sustain.' },
+    intro:'You are Æthelred I, king of Wessex, ruling from Winchester in 867. Halfdan Ragnarsson’s Norse court holds York, and King Burgred’s Mercia lies between that city and your lands. Review Rank & Realm, then decide whether to guard Wessex or help your neighbors.' },
   { id:'york_household_867', bookmarkIds:['867'], alwaysUnlocked:true,
     fixedProvinceId:'york', startCulture:'english', startReligion:'catholic', startAge:24,
     name:'York Artisan Household', desc:'An invented household in occupied York. Keep your craft alive, consider a short repair order and decide whether to stay.',
@@ -27,11 +27,11 @@ FBDATA.startScenarios_york_wessex_867 = [
     rulerRealmId:'york', governmentForm:'territorial', fixedProvinceId:'york',
     characterName:'Halfdan Ragnarsson', sex:'m', startCulture:'norse', startReligion:'catholic',
     revisionIdentities:{ '867':{ governments_v2_islamic_v1_norse_york_v1:{ startReligion:'norse_pagan' } } },
-    name:'Halfdan Ragnarsson at York', desc:'Lead the Norse court that holds York after the great army’s capture of the city. The English kingdoms around you are not yet conquered.',
+    name:'Halfdan Ragnarsson at York', desc:'You lead the Norse court at York, which the great army took last winter. Northumbria, Mercia, East Anglia and Wessex still have their own kings.',
     tier:6, profession:'noble', gold:120, prestige:150, piety:10,
-    familyPresets:{ standard:{ name:'Existing court household', diff:'age 47 · existing court family', desc:'Keep Halfdan and the generated supporting household. His brothers and the army’s other leaders are not individually reconstructed.' } },
+    familyPresets:{ standard:{ name:'Existing court household', diff:'age 47 · existing court family', desc:'Your court’s relatives and households, generated for this start. Your brothers are not among them.' } },
     onboarding:'ruler',
-    intro:'You are Halfdan Ragnarsson. Your court holds York and its county, while Northumbria, Mercia, East Anglia and Wessex keep their own kings. Review Rank & Realm, then decide whether to hold York, raise forces through ordinary war controls or seek terms with your neighbors.' }
+    intro:'You are Halfdan Ragnarsson, and your Norse court holds York and the land around it in 867. Northumbria, Mercia, East Anglia and Wessex keep their own kings. Review Rank & Realm, then decide whether to hold York, march against your neighbors or seek terms with them.' }
 ];
 
 Array.prototype.push.apply(FBDATA.startScenarios, FBDATA.startScenarios_york_wessex_867);

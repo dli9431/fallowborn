@@ -14,6 +14,7 @@ dependsOnRuntime(__filename, ['js/bookmark_composition.js','index.html','data/st
   'js/save.js','js/save_v4.js','js/ui_misc.js','js/ui_panels.js','js/ui_modals.js']);
 
 const ID = 'york_household_track_867';
+const BOILERPLATE = /grants? no |creates? no |Record (a |an )?(costless )?(priority|intention|preference)|Record attention|\bordinary\b|\bactual(ly)?\b|\bexisting\b|\boriginal\b|\bauthored\b|historical opportunity|political opportunity/i;
 
 // Keep activation outside the synchronous restore guard, then resume the proof.
 async function evaluateAcrossBookmark(page, compute, argument) {
@@ -69,6 +70,23 @@ test('the starts validate on every offering revision without changing the releas
     tracks:[[],[ID],[]], away:[], world:[], pure:true });
 });
 
+test('the Wessex and York ruler start texts name their stakes without boilerplate', async function ({ page }, info) {
+  await openGame(page, info);
+  const rows = await page.evaluate(function () {
+    return FBDATA.startScenarios_york_wessex_867.filter(function (sc) { return sc.rulerRealmId; })
+      .map(function (sc) { return { id:sc.id, desc:sc.desc, intro:sc.intro }; });
+  });
+  expect(rows.map(function (row) { return row.id; })).toEqual(['aethelred_wessex_867','halfdan_york_867']);
+  for (const row of rows) {
+    for (const field of ['desc','intro']) {
+      expect(row[field], row.id + ' ' + field).not.toMatch(BOILERPLATE);
+      expect(row[field], row.id + ' ' + field).not.toMatch(/[A-Za-z]\?[A-Za-z]/);
+      expect(row[field], row.id + ' ' + field).toContain('York');
+    }
+    expect(row.intro, row.id).toContain('Review Rank & Realm');
+  }
+});
+
 test('the fresh world changes only the York court faith and keeps retained worlds', async function ({ page }, info) {
   await openGame(page, info);
   expect(await page.evaluate(function () {
@@ -94,9 +112,11 @@ test('Halfdan adopts the Norse court at York through the picker and keeps it acr
   await page.locator('#bookmarklist [data-bookmark="867"]').click();
   const court = page.locator('[data-scenario="halfdan_york_867"]');
   await expect(court.locator('.scenario-story')).toHaveCount(0);
+  await expect(court).toContainText('You lead the Norse court at York, which the great army took last winter.');
   await court.click();
   await expect(page.locator('#cg-name')).toHaveValue('Halfdan Ragnarsson');
   await expect(page.locator('#cg-name')).toHaveAttribute('readonly','');
+  await expect(page.locator('#cg-family')).toContainText('Your brothers are not among them.');
   await finishCreation(page);
   expect(await evaluateAcrossBookmark(page, function () {
     const s = FB.state, me = s.chars[s.player.charId];
@@ -128,9 +148,11 @@ test('the picker groups York as Story and Æthelred as Historical and adopts his
   await expect(page.locator('[data-scenario="york_household_867"] .scenario-story')).toHaveText('Story start: begins in York.');
   const court = page.locator('[data-scenario="aethelred_wessex_867"]');
   await expect(court.locator('.scenario-story')).toHaveCount(0);
+  await expect(court).toContainText('The great army that took York last winter may turn south.');
   await court.click();
   await expect(page.locator('#cg-name')).toHaveValue('Æthelred I');
   await expect(page.locator('#cg-name')).toHaveAttribute('readonly','');
+  await expect(page.locator('#cg-family')).toContainText('Your brother Alfred is not among them.');
   await finishCreation(page);
   expect(await evaluateAcrossBookmark(page, function () {
     const s = FB.state, me = s.chars[s.player.charId];

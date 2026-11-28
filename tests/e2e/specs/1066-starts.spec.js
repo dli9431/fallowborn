@@ -12,6 +12,7 @@ dependsOnRuntime(__filename, ['js/bookmark_composition.js','index.html', 'data/s
   'js/model.js', 'js/actions.js', 'js/travel.js', 'js/treasury.js', 'js/wars.js', 'js/armies.js',
   'js/save.js', 'js/save_v4.js', 'js/ui_misc.js', 'js/ui_panels.js', 'js/ui_modals.js']);
 const ID = 'thegn_track_1066';
+const BOILERPLATE = /grants? no |creates? no |Record (a |an )?(costless )?(priority|intention|preference)|Record attention|\bordinary\b|\bactual(ly)?\b|\bexisting\b|\boriginal\b|\bauthored\b|historical opportunity|political opportunity/i;
 const COURTS = [
   { id:'harold_1066', name:'Harold Godwinson', label:'Harold Godwinson of England', realm:'england_1066', county:'london', age:44, culture:'english', tier:6, liege:null },
   { id:'william_1066', name:'William the Bastard', label:'William of Normandy', realm:'normandy', county:'rouen', age:38, culture:'norman', tier:5, liege:'france' },
@@ -93,6 +94,35 @@ for (const court of COURTS) {
       territory:true, mapped:'player', form:'territorial', noHousehold:true, retained:true });
   });
 }
+
+test('the 1066 picker names the rival claimants and the ruler texts carry no boilerplate', async function ({ page }, info) {
+  await useReleasedStartRules(page);
+  await openGame(page, info);
+  const full = page.locator('#btn-choose-beginning');
+  if (await full.isVisible()) await full.click();
+  else await page.getByRole('button', { name:'New Game', exact:true }).click();
+  await page.locator('#bookmarklist [data-bookmark="1066"]').click();
+  for (const row of [
+    { id:'harold_1066', rivals:['William of Normandy', 'Harald of Norway'] },
+    { id:'william_1066', rivals:['Harald of Norway', 'Harold Godwinson'] },
+    { id:'harald_1066', rivals:['William of Normandy', 'Harold Godwinson'] }
+  ]) {
+    const card = page.locator('[data-scenario="' + row.id + '"]');
+    for (const rival of row.rivals) await expect(card.locator('p').first()).toContainText(rival);
+  }
+  const texts = await page.evaluate(function () {
+    return FBDATA.startScenarios_claimants_1066.filter(function (sc) { return sc.rulerRealmId; })
+      .map(function (sc) { return { id:sc.id, desc:sc.desc, intro:sc.intro }; });
+  });
+  expect(texts.map(function (row) { return row.id; })).toEqual(['harold_1066','william_1066','harald_1066']);
+  for (const row of texts) {
+    for (const field of ['desc','intro']) {
+      expect(row[field], row.id + ' ' + field).not.toMatch(BOILERPLATE);
+      expect(row[field], row.id + ' ' + field).not.toMatch(/[A-Za-z]\?[A-Za-z]/);
+    }
+    expect(row.intro, row.id).toContain('Review Rank & Realm');
+  }
+});
 
 test('the four starts validate on all offering revisions and only the York household carries its track', async function ({ page }, info) {
   await openGame(page, info);
