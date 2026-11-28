@@ -225,6 +225,37 @@ test('conquered uplands need actual revolt occupation and retain that commitment
       owner:'asturias_711', founder:'Pelayo', ended:true, noRebelHosts:true, once:true, valid:true });
   });
 
+test('foundation stage lines name the county, the new court and the revolt deadline',
+  async function ({ page }, testInfo) {
+    await observe(page, testInfo);
+    await opening(page, true);
+    const result = await page.evaluate(function (id) {
+      const s = FB.state, story = FB.stories.get(id), rec = s.stories[id];
+      const pending = FB.stories.status(s, id);
+      FB.setCountySupport(s, 'oviedo', -80);
+      const group = FB.startOpenRevolt(s, 'oviedo'); story.day(s, rec);
+      const rebelling = FB.stories.status(s, id), due = FB.dateAtTurn(s, rec.deadline);
+      const closed = ['failed', 'diverted'].map(function (outcome) {
+        const status = story.status(s, { phase:'resolved', result:outcome });
+        return [status.stage, status.lines];
+      });
+      group.counties.oviedo.occupied = true; FB.rebellionsAfterArmies(s);
+      const founded = FB.stories.status(s, id);
+      return { county:FB.world.byId.oviedo.name, lost:FB.world.byId.toledo.name,
+        season:FB.seasonName(due.season), year:due.year, day:due.day,
+        pending:[pending.stage, pending.lines], rebelling:[rebelling.stage, rebelling.lines],
+        closed:closed, founded:[founded.stage, founded.lines] };
+    }, STORY);
+    const county = result.county;
+    const formation = 'Asturias can form at ' + county + ' once ' + result.lost +
+      ' has fallen: by a peaceful break from a surviving court, or by a revolt that wins.';
+    expect(result.pending).toEqual(['Waiting for a chance at ' + county, [formation]]);
+    expect(result.rebelling).toEqual([county + ' is in revolt', [formation,
+      'The revolt must hold out and win before ' + result.season + ' ' + result.year + ', day ' + result.day + '.']]);
+    expect(result.closed).toEqual([['The revolt in ' + county + ' failed', []], [county + ' took another course', []]]);
+    expect(result.founded).toEqual(['Asturias founded at ' + county, []]);
+  });
+
 for (const ending of ['defeat', 'timeout', 'restored_toledo']) {
   test('an Asturian attempt closes after ' + ending + ' without erasing ordinary revolt outcomes',
     async function ({ page }, testInfo) {

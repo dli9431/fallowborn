@@ -30,15 +30,41 @@
     });
   }
   function text(s, d, field) { return FB.dataText(s, null, 'storyCampaign', d.id, d, field, {}); }
+  function conditionHolds(s, c) {
+    if (c.kind === 'owner') return s.owner[c.provinceId] === c.realmId;
+    if (c.kind === 'story_result') {
+      var rec = FB.stories.record(s, c.storyId);
+      return !!rec && rec.phase === 'resolved' && rec.result === c.result;
+    }
+    return false;
+  }
   function conditions(s, d) {
-    return (d.conditions || []).every(function (c) {
-      if (c.kind === 'owner') return s.owner[c.provinceId] === c.realmId;
-      if (c.kind === 'story_result') {
-        var rec = FB.stories.record(s, c.storyId);
-        return rec && rec.phase === 'resolved' && rec.result === c.result;
-      }
-      return false;
-    });
+    return (d.conditions || []).every(function (c) { return conditionHolds(s, c); });
+  }
+  /* Presentation shared by both types. Names are live display text. */
+  function realmName(s, rid) { return s.realms[rid] ? s.realms[rid].name : FB.T('No current court'); }
+  function countyName(pid) { return FB.world.byId[pid].name; }
+  function countyList(ids) {
+    return ids.filter(function (pid, i) { return ids.indexOf(pid) === i; }).map(countyName).join(', ');
+  }
+  function rendered(s, message) {
+    return FB.renderMessage(message, { state:s, viewer:s.player && s.player.charId });
+  }
+  function dateBlocker(s, d, opens) {
+    return s.date.year > d.lastYear ? FB.T('Closed after {year}.', { year:d.lastYear }) :
+      FB.T('Opens in {year}.', { year:opens });
+  }
+  // The first unmet condition: the holding or the earlier story it still needs.
+  function conditionBlocker(s, d) {
+    var c = (d.conditions || []).filter(function (row) { return !conditionHolds(s, row); })[0];
+    if (!c) return null;
+    if (c.kind === 'owner') return FB.T('{realm} must hold {county}.',
+      { realm:realmName(s, c.realmId), county:countyName(c.provinceId) });
+    var story = FB.stories.get(c.storyId);
+    if (!story) return null;
+    var p = { story:story.title ? story.title(s, FB.stories.record(s, c.storyId)) : c.storyId };
+    if (c.result === 'won') return FB.T('Opens after {story} succeeds.', p);
+    return c.result === 'failed' ? FB.T('Opens after {story} fails.', p) : FB.T('Opens after {story} ends.', p);
   }
   function definitionConditions(def) {
     if (def.conditions !== undefined && (!Array.isArray(def.conditions) || def.conditions.some(function (c) {
@@ -55,21 +81,37 @@
       actorGeneration:generation(s, d.actor.realmId), sourceGeneration:generation(s, d.source.realmId),
       ceded:false, acceptedTurn:null, paidThroughTurn:null, totalPaid:0 };
   }
-  function treatyChanged(s, r, d) {
-    var a = ruler(s, d.actor.realmId), b = ruler(s, d.source.realmId);
-    return !a || !b || a.dead || b.dead || !s.realms[d.actor.realmId] || !s.realms[d.actor.realmId].alive ||
-      !s.realms[d.source.realmId] || !s.realms[d.source.realmId].alive ||
-      a.id !== r.actorId || b.id !== r.sourceId || generation(s, d.actor.realmId) !== r.actorGeneration ||
-      generation(s, d.source.realmId) !== r.sourceGeneration ||
-      d.actor.character && cast(s, d.actor.character) !== a.id;
+  function partyChanged(s, r, d, rid) {
+    var actor = rid === d.actor.realmId, person = ruler(s, rid);
+    return !person || person.dead || !s.realms[rid] || !s.realms[rid].alive ||
+      person.id !== (actor ? r.actorId : r.sourceId) ||
+      generation(s, rid) !== (actor ? r.actorGeneration : r.sourceGeneration) ||
+      actor && !!d.actor.character && cast(s, d.actor.character) !== person.id;
   }
-  function treatyTerritory(s, r, d) {
-    return d.countyIds.every(function (pid) {
-      var expected = r.ceded ? d.actor.realmId : d.source.realmId;
-      return s.owner[pid] === expected && FB.settlementCountyHolder(s, pid) === expected;
-    }) && d.retainedCountyIds.every(function (pid) {
-      return s.owner[pid] === d.source.realmId && FB.settlementCountyHolder(s, pid) === d.source.realmId;
-    });
+  function treatyChanged(s, r, d) {
+    return partyChanged(s, r, d, d.actor.realmId) || partyChanged(s, r, d, d.source.realmId);
+  }
+  // The first county not held directly by the court the agreement expects.
+  function treatyGap(s, r, d) {
+    function gap(ids, rid) {
+      var pid = ids.filter(function (id) { return s.owner[id] !== rid || FB.settlementCountyHolder(s, id) !== rid; })[0];
+      return pid ? { provinceId:pid, realmId:rid } : null;
+    }
+    return gap(d.countyIds, r.ceded ? d.actor.realmId : d.source.realmId) ||
+      gap(d.retainedCountyIds, d.source.realmId);
+  }
+  function treatyTerritory(s, r, d) { return !treatyGap(s, r, d); }
+  /* The first failing check of a refused quote, in the order the quote tests
+     them. A closed offer or an outside court has no code. */
+  function treatyReason(s, r, d, rid, choice) {
+    if (r.phase !== 'pending' || [d.actor.realmId,d.source.realmId].indexOf(rid) < 0) return null;
+    if (s.date.year < d.firstYear || s.date.year > d.lastYear || s.turn < (d.firstTurn || 0)) return 'date';
+    if (treatyChanged(s, r, d)) return 'party_changed';
+    if (choice !== 'approve') return null;
+    if (!treatyTerritory(s, r, d)) return 'territory';
+    if (!conditions(s, d)) return 'condition';
+    if (FB.isRealmAtWar(s, d.actor.realmId) || FB.isRealmAtWar(s, d.source.realmId)) return 'war';
+    return FB.treasuryAvailable(s, d.actor.realmId) >= d.tribute ? null : 'funds';
   }
   function treatyQuote(s, r, d, rid, choice) {
     choice = choice || 'approve';
@@ -79,14 +121,111 @@
       !FB.isRealmAtWar(s, d.actor.realmId) && !FB.isRealmAtWar(s, d.source.realmId) &&
       FB.treasuryAvailable(s, d.actor.realmId) >= d.tribute) && ['approve','decline'].indexOf(choice) >= 0;
     return { allowed:!!allowed, id:choice, realmId:rid,
+      reason:allowed ? null : treatyReason(s, r, d, rid, choice),
       stamp:JSON.stringify([choice, s.turn, r, d, ruler(s, d.actor.realmId), ruler(s, d.source.realmId),
         d.countyIds.concat(d.retainedCountyIds).map(function (pid) { return [s.owner[pid],FB.settlementCountyHolder(s,pid)]; }),
         FB.treasuryAvailable(s, d.actor.realmId), allowed]) };
   }
   function treatyTerms(s, d) {
     return [FB.T('Annual tribute: {money:amount}.', { amount:d.tribute }),
-      FB.T('Ceded counties: {counties}.', { counties:d.countyIds.map(function (pid) { return FB.world.byId[pid].name; }).join(', ') }),
-      FB.T('Retained counties: {counties}.', { counties:d.retainedCountyIds.map(function (pid) { return FB.world.byId[pid].name; }).join(', ') })];
+      FB.T('Ceded counties: {counties}.', { counties:countyList(d.countyIds) }),
+      FB.T('Retained counties: {counties}.', { counties:countyList(d.retainedCountyIds) })];
+  }
+  // The actor receives the counties and pays; the source grants them.
+  function treatyParams(s, d) {
+    return { counties:countyList(d.countyIds), retained:countyList(d.retainedCountyIds), amount:d.tribute,
+      days:d.intervalDays, recipient:realmName(s, d.actor.realmId), source:realmName(s, d.source.realmId) };
+  }
+  function treatyChoices(s, d) {
+    var p = treatyParams(s, d), yearly = d.intervalDays === 360, label, detail;
+    if (d.actor.realmId === 'player') {
+      label = yearly ? FB.T('Take {counties} for {money:amount} a year', p) :
+        FB.T('Take {counties} for {money:amount} every {days} days', p);
+      detail = FB.T('{first} {second}', {
+        first:rendered(s, FB.msg('fx.ui.story_agreement_take', { forms:{ select:'plural', param:'count', cases:{
+          one:'You pay {source} {money:amount} now and every {days} days; {counties} becomes yours once both courts agree.',
+          other:'You pay {source} {money:amount} now and every {days} days; {counties} become yours once both courts agree.' } } },
+          Object.assign({ count:d.countyIds.length }, p))),
+        second:rendered(s, FB.msg('fx.ui.story_agreement_retained', { forms:{ select:'plural', param:'count', cases:{
+          one:'{retained} stays with {source}.', other:'{retained} stay with {source}.' } } },
+          Object.assign({ count:d.retainedCountyIds.length }, p))) });
+    } else {
+      label = yearly ? FB.T('Cede {counties} for {money:amount} a year', p) :
+        FB.T('Cede {counties} for {money:amount} every {days} days', p);
+      detail = FB.T('{first} {second}', {
+        first:FB.T('{recipient} pays you {money:amount} now and every {days} days and takes {counties} once both courts agree.', p),
+        second:FB.T('You keep {retained}.', p) });
+    }
+    return [{ id:'approve', label:label, detail:detail },
+      { id:'decline', label:FB.T('Refuse the agreement'), detail:FB.T('No payment and no transfer; the offer closes.') }];
+  }
+  /* One specific sentence for each refusal code; without a code, one general
+     sentence. */
+  function treatyBlocker(s, r, d, reason) {
+    var actor = d.actor.realmId, source = d.source.realmId, rid, found = null;
+    if (reason === 'date') return dateBlocker(s, d,
+      d.firstTurn ? Math.max(d.firstYear, FB.dateAtTurn(s, d.firstTurn).year) : d.firstYear);
+    if (reason === 'party_changed') {
+      rid = partyChanged(s, r, d, actor) ? actor : source;
+      found = s.realms[rid] && s.realms[rid].alive ?
+        FB.T('{realm} has a new ruler; the agreement lapsed.', { realm:realmName(s, rid) }) :
+        FB.T('{realm} has fallen; the agreement lapsed.', { realm:realmName(s, rid) });
+    } else if (reason === 'territory') {
+      var gap = treatyGap(s, r, d);
+      if (gap) found = FB.T('{realm} must hold {county} directly.',
+        { realm:realmName(s, gap.realmId), county:countyName(gap.provinceId) });
+    } else if (reason === 'condition') found = conditionBlocker(s, d);
+    else if (reason === 'war') {
+      rid = FB.isRealmAtWar(s, actor) ? actor : source;
+      found = FB.T('{realm} is at war.', { realm:realmName(s, rid) });
+    } else if (reason === 'funds') found = FB.T('{realm} holds {money:funds}; the first payment is {money:amount}.',
+      { realm:realmName(s, actor), funds:FB.treasuryAvailable(s, actor), amount:d.tribute });
+    return found || treatyClosedText();
+  }
+  function treatyClosedText() { return FB.T('This agreement is no longer open to your court.'); }
+  function treatyEnding(s, r, d) {
+    var p = treatyParams(s, d);
+    if (r.reason === 'declined') return FB.T('the offer was refused');
+    if (r.reason === 'window_closed') return FB.T('the offer closed after {year}', { year:d.lastYear });
+    if (r.reason === 'incompatible_territory') return FB.T('{source} no longer holds the offered land directly', p);
+    if (r.reason === 'changed_party') return FB.T('a court changed rulers or fell');
+    if (r.reason === 'agreement_scope_lost') return FB.T('the agreed holdings, conditions or peace were lost');
+    if (r.reason === 'unpaid') return FB.T('{recipient} missed a payment', p);
+    return FB.T('history took another course');
+  }
+  /* The shared story status shape (docs/designs/stories.md): a one-line stage
+     for the Deeds card and labeled facts for the sheet. */
+  function treatyStatus(s, r, d) {
+    var p = treatyParams(s, d), actor = d.actor.realmId, source = d.source.realmId, stage, now;
+    if (r.phase === 'resolved') {
+      stage = FB.T('Ended: {result}', { result:treatyEnding(s, r, d) });
+      now = r.ceded ? FB.T('No further tribute is due; transferred land stays with its current holder.') :
+        FB.T('No payment was made and no land moved.');
+    } else if (r.phase === 'active') {
+      stage = d.intervalDays === 360 ? FB.T('{recipient} pays {money:amount} a year for {counties}', p) :
+        FB.T('{recipient} pays {money:amount} every {days} days for {counties}', p);
+      var due = FB.dateAtTurn(s, r.paidThroughTurn + d.intervalDays);
+      now = FB.T('The next payment of {money:amount} is due {date}.', { amount:d.tribute,
+        date:FB.T('{season} {year}, day {day}', { season:FB.seasonName(due.season), year:due.year, day:due.day }) });
+    } else {
+      // The player's own unanswered consent comes first, then the actor's.
+      var own = actor === 'player' ? actor : source === 'player' ? source : null;
+      var waiting = own && r.approvals[own] === undefined ? own :
+        r.approvals[actor] === undefined ? actor : source;
+      var other = { other:realmName(s, waiting) };
+      stage = waiting === 'player' ? FB.T('Waiting for your answer') : FB.T('Waiting for {other} to agree', other);
+      var reason = treatyReason(s, r, d, waiting, 'approve');
+      now = reason ? FB.T('Waiting: {reason}', { reason:treatyBlocker(s, r, d, reason) }) :
+        waiting === 'player' ? FB.T('Ready for your answer.') : FB.T('{other} has not yet agreed.', other);
+    }
+    return { phase:r.phase, name:stage, stage:stage, lines:[], facts:[
+      [FB.T('Your role'), actor === 'player' ? FB.T('Recipient') : source === 'player' ? FB.T('Grantor') : FB.T('Observer')],
+      [FB.T('Counties'), p.counties],
+      [FB.T('Kept by {source}', p), p.retained],
+      [FB.T('Tribute'), FB.T('{money:amount} every {days} days', p)],
+      [FB.T('Window'), FB.T('{first} to {last}', { first:d.firstYear, last:d.lastYear })],
+      [FB.T('Now'), now]
+    ] };
   }
   function approve(s, r, d, rid, reviewed) {
     var q = treatyQuote(s, r, d, rid);
@@ -149,22 +288,20 @@
       title:function (s) { return text(s, d, 'name'); }, intro:function (s) { return text(s, d, 'desc'); },
       status:function (s, r) {
         if (r.phase === 'pending' && (s.date.year < d.firstYear || s.turn < (d.firstTurn || 0))) return null;
-        return { phase:r.phase, name:r.phase === 'active' ? FB.T('Cession and annual tribute') : r.phase === 'pending'
-          ? FB.T('Awaiting both courts’ consent') : FB.T('Agreement ended'),
-          lines:treatyTerms(s, d) };
+        return treatyStatus(s, r, FB.stories.definition(s, d));
       },
       choices:function (s, r) {
         var e = FB.stories.definition(s, d);
         if (r.phase !== 'pending' || [e.actor.realmId,e.source.realmId].indexOf('player') < 0 || r.approvals.player !== undefined) return [];
-        return [{ id:'approve', label:FB.T('Consent to the cession'),
-          detail:FB.T('Both current courts must consent. The recipient pays the first annual tribute before territory changes; the named foothold remains with the source.') },
-        { id:'decline', label:FB.T('Decline this agreement'), detail:FB.T('Close this agreement without payment or territory transfer.') }];
+        return treatyChoices(s, e);
       },
       quote:function (s, r, id) {
         return treatyQuote(s, r, FB.stories.definition(s, d), 'player', id);
       },
-      review:function (s) { return treatyTerms(s, d); },
-      blocker:function () { return FB.T('Consent needs the original living courts, peaceful direct holdings and enough treasury for the first installment. Review the current agreement again.'); },
+      review:function (s) { return treatyTerms(s, FB.stories.definition(s, d)); },
+      blocker:function (s, r, reason) {
+        return s && r && reason ? treatyBlocker(s, r, FB.stories.definition(s, d), reason) : treatyClosedText();
+      },
       apply:function (s, r, id, reviewed) {
         var e = FB.stories.definition(s, d), q = treatyQuote(s, r, e, 'player', id);
         if (!reviewed || reviewed.id !== id || !q.allowed || q.stamp !== reviewed.stamp) return false;
@@ -204,10 +341,67 @@
       ruler(s, d.actor.realmId) && !ruler(s, d.actor.realmId).dead && !FB.isRealmAtWar(s, d.actor.realmId) &&
       d.routes.every(function (r) { return s.owner[r.from] === d.actor.realmId && s.owner[r.to] === d.actor.realmId; });
   }
+  /* The first unmet readiness check, in the order migrationReady tests them. */
+  function migrationReason(s, r, d) {
+    if (r.phase !== 'pending' || d.actor.realmId !== 'player') return null;
+    if (s.date.year < d.firstYear || s.date.year > d.lastYear) return 'date';
+    if (!conditions(s, d)) return 'condition';
+    var person = ruler(s, d.actor.realmId);
+    if (!s.realms[d.actor.realmId] || !s.realms[d.actor.realmId].alive || !person || person.dead) return 'ruler';
+    if (FB.isRealmAtWar(s, d.actor.realmId)) return 'war';
+    return routeGap(s, d) ? 'route' : null;
+  }
+  function routeGap(s, d) {
+    var ends = [];
+    d.routes.forEach(function (route) { ends.push(route.from, route.to); });
+    return ends.filter(function (pid) { return s.owner[pid] !== d.actor.realmId; })[0] || null;
+  }
   function migrationQuote(s, r, d, id) {
     var allowed = r.phase === 'pending' && d.actor.realmId === 'player' && migrationReady(s, d) && ['authorize','decline'].indexOf(id) >= 0;
-    return { id:id, allowed:!!allowed, stamp:JSON.stringify([s.turn,r,d,generation(s,d.actor.realmId),
-      d.routes.map(function (route) { return [s.owner[route.from],s.owner[route.to], FB.countyCommunities(s,route.from)]; }),allowed]) };
+    return { id:id, allowed:!!allowed, reason:allowed ? null : migrationReason(s, r, d),
+      stamp:JSON.stringify([s.turn,r,d,generation(s,d.actor.realmId),
+        d.routes.map(function (route) { return [s.owner[route.from],s.owner[route.to], FB.countyCommunities(s,route.from)]; }),allowed]) };
+  }
+  function migrationClosedText() { return FB.T('This evacuation is no longer open to your court.'); }
+  function migrationBlocker(s, d, reason) {
+    var found = null;
+    if (reason === 'date') return dateBlocker(s, d, d.firstYear);
+    if (reason === 'condition') found = conditionBlocker(s, d);
+    else if (reason === 'ruler') found = FB.T('Your court has no living ruler.');
+    else if (reason === 'war') found = FB.T('You are at war.');
+    else if (reason === 'route' && routeGap(s, d))
+      found = FB.T('You must hold {county}.', { county:countyName(routeGap(s, d)) });
+    return found || migrationClosedText();
+  }
+  function routeNames(routes, end) { return countyList(routes.map(function (route) { return route[end]; })); }
+  // A share is authored as a fraction; one decimal keeps the percentage exact enough.
+  function sharePercent(d) { return Math.round(d.share * 1000) / 10; }
+  function migrationChoices(s, d) {
+    var first = d.routes[0], more = d.routes.length - 1;
+    var route = { from:countyName(first.from), to:countyName(first.to) };
+    var batch = { count:d.batchSize, share:sharePercent(d) };
+    return [{ id:'authorize',
+      label:more ? rendered(s, FB.msg('fx.ui.story_migration_routes', { forms:{ select:'plural', param:'count', cases:{
+        one:'Evacuate civilians from {from} to {to} and {count} more route',
+        other:'Evacuate civilians from {from} to {to} and {count} more routes' } } },
+        Object.assign({ count:more }, route))) :
+        FB.T('Evacuate civilians from {from} to {to}', route),
+      detail:rendered(s, more ? FB.msg('fx.ui.story_migration_batches', { forms:{ select:'plural', param:'count', cases:{
+        one:'Each season up to {count} person moves on each route, at most {share}% of the community, at no cost. It stops if you lose a route {term:county} or go to war.',
+        other:'Each season up to {count} people move on each route, at most {share}% of the community, at no cost. It stops if you lose a route {term:county} or go to war.' } } }, batch) :
+        FB.msg('fx.ui.story_migration_batch', { forms:{ select:'plural', param:'count', cases:{
+          one:'Each season up to {count} person moves, at most {share}% of the community, at no cost. It stops if you lose either {term:county} or go to war.',
+          other:'Each season up to {count} people move, at most {share}% of the community, at no cost. It stops if you lose either {term:county} or go to war.' } } }, batch)) },
+    { id:'decline', label:FB.T('Keep the civilians in {from}', { from:routeNames(d.routes, 'from') }),
+      detail:FB.T('Nobody moves; the offer closes.') }];
+  }
+  function migrationStatus(s, r, d) {
+    function total(field) { return r.routes.reduce(function (n,route) { return n + route[field]; }, 0); }
+    var progress = r.routes.length ? FB.T('{moved} of {planned} moved to {to}',
+      { moved:total('moved'), planned:total('planned'), to:routeNames(d.routes, 'to') }) : null;
+    var stage = r.phase === 'pending' ? FB.T('Ready: civilians wait to leave {from}', { from:routeNames(d.routes, 'from') }) :
+      r.phase === 'active' ? progress : FB.T('Ended');
+    return { phase:r.phase, name:stage, stage:stage, lines:r.phase === 'resolved' && progress ? [progress] : [] };
   }
   function migrationDay(s, r, d) {
     if (r.phase === 'resolved') return;
@@ -284,13 +478,19 @@
     apply:function (s,a,q) { return FB.stories.apply(s,q.source.storyId,q.source.choiceId,q.review); },
     details:function (s,a,q) {
       var m=FB.stories.get(q.source.storyId),d=FB.stories.definition(s,m.declaration);
-      return [a.action === 'decline' ? FB.T('Decline this civilian route without moving residents.') :
-        FB.T('Authorize only the declared civilian routes. No field host moves.'),
-        FB.T('Maximum share of the eligible community: {share}%. Seasonal batch ceiling: {count}.',{share:d.share*100,count:d.batchSize}),
-        FB.T('No payment is due. Current control, peace and the original community are rechecked.'),
-        q.allowed ? FB.T('Population, culture and faith are conserved by the ordinary relocation transaction.') : m.blocker()].concat(d.routes.map(function(route) {
-          return FB.T('Civilian route: {from} to {to}.',{from:FB.world.byId[route.from].name,to:FB.world.byId[route.to].name});
-        }));
+      var lines=[a.action === 'decline' ? FB.T('Nobody leaves {from}.',{from:routeNames(d.routes,'from')}) :
+        FB.T('Civilians move from {from} to {to}; no army moves.',
+          {from:countyName(d.routes[0].from),to:countyName(d.routes[0].to)}),
+        rendered(s,FB.msg('fx.ui.story_migration_share',{forms:{select:'plural',param:'count',cases:{
+          one:'Up to {share}% of the community, at most {count} person each season.',
+          other:'Up to {share}% of the community, at most {count} people each season.'}}},
+          {count:d.batchSize,share:sharePercent(d)})),
+        FB.T('No cost.')];
+      if (!q.allowed) lines.push(m.blocker(s,FB.stories.record(s,q.source.storyId),q.review.reason));
+      // The first route is named above; any further routes follow.
+      return lines.concat(d.routes.slice(1).map(function(route) {
+        return FB.T('Civilian route: {from} to {to}.',{from:countyName(route.from),to:countyName(route.to)});
+      }));
     }});
   FB.stories.registerType('civilian_migration',function (d) {
     migrationDefinition(d);
@@ -298,18 +498,18 @@
       day:function (s,r) { migrationDay(s,r,FB.stories.definition(s,d)); },
       title:function (s) { return text(s,d,'name'); },intro:function (s) { return text(s,d,'desc'); },
       status:function (s,r) {
-        if (r.phase === 'pending' && !migrationReady(s,FB.stories.definition(s,d))) return null;
-        return {phase:r.phase,name:r.phase === 'active' ? FB.T('Civilian evacuation underway') : r.phase === 'pending'
-          ? FB.T('Awaiting authorization') : FB.T('Civilian evacuation ended'),
-          lines:[FB.T('Relocated civilians: {count}.',{count:r.routes.reduce(function (n,route) {return n+route.moved;},0)})]};
+        var e=FB.stories.definition(s,d);
+        if (r.phase === 'pending' && !migrationReady(s,e)) return null;
+        return migrationStatus(s,r,e);
       },
       choices:function (s,r) {
         if (r.phase !== 'pending' || FB.startRealmId(s,d.actor.realmId) !== 'player') return [];
-        return [{id:'authorize',label:FB.T('Authorize civilian evacuation'),detail:FB.T('Move the declared civilian community in seasonal batches to the receiving counties. Existing culture, faith and total population are conserved.')},
-          {id:'decline',label:FB.T('Keep the present communities'),detail:FB.T('Close the evacuation opportunity without moving residents.')}];
+        return migrationChoices(s,FB.stories.definition(s,d));
       },
       quote:function (s,r,id) { return migrationQuote(s,r,FB.stories.definition(s,d),id); },
-      blocker:function () { return FB.T('Evacuation needs its date window, completed prerequisite, a living peaceful court and current control of both route ends. Review the current route again.'); },
+      blocker:function (s,r,reason) {
+        return s && reason ? migrationBlocker(s,FB.stories.definition(s,d),reason) : migrationClosedText();
+      },
       apply:function (s,r,id,reviewed) {
         var e=FB.stories.definition(s,d),q=migrationQuote(s,r,e,id);
         if (!reviewed || !q.allowed || q.id!==reviewed.id || q.stamp!==reviewed.stamp) return false;

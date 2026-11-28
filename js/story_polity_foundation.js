@@ -170,11 +170,21 @@
       intro:function (s) { return FB.dataText(s, null, 'storyFoundation', def.id, def, 'desc', {}); },
       status:function (s, rec) {
         if (rec.phase === 'pending' && s.date.year < def.firstYear) return null;
-        var names = { pending:FB.T('Awaiting a local opening'), rebelling:FB.T('Local revolt underway'),
-          founded:FB.T('A new court founded'), failed:FB.T('Foundation attempt ended'),
-          diverted:FB.T('History took another course') };
-        return { phase:rec.phase, name:names[rec.result || rec.phase],
-          lines:[FB.T('A conquered county must earn independence through its local uprising.')] };
+        var place = { realm:def.realm.name, county:FB.world.byId[def.realm.capital].name,
+          lost:FB.world.byId[def.collapse.provinceId].name };
+        var names = { pending:FB.T('Waiting for a chance at {county}', place),
+          rebelling:FB.T('{county} is in revolt', place), founded:FB.T('{realm} founded at {county}', place),
+          failed:FB.T('The revolt in {county} failed', place), diverted:FB.T('{county} took another course', place) };
+        var stage = names[rec.result || rec.phase], lines = [];
+        // A closed opportunity no longer says how the court could form.
+        if (rec.phase !== 'resolved') lines.push(FB.T('{realm} can form at {county} once {lost} has fallen: by a peaceful break from a surviving court, or by a revolt that wins.', place));
+        if (rec.phase === 'rebelling') {
+          // The attempt times out at the deadline, so the revolt has to win first.
+          var due = FB.dateAtTurn(s, rec.deadline);
+          lines.push(FB.T('The revolt must hold out and win before {date}.', {
+            date:FB.T('{season} {year}, day {day}', { season:FB.seasonName(due.season), year:due.year, day:due.day }) }));
+        }
+        return { phase:rec.phase, name:stage, stage:stage, lines:lines };
       } };
   }, 'js/story_polity_foundation.js', validateDefinition);
 })();

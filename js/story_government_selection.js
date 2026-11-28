@@ -18,25 +18,33 @@
       title:function (s) { return FB.dataText(s, null, 'governmentContest', def.id, def, 'name', {}); },
       intro:function (s) { return FB.dataText(s, null, 'governmentContest', def.id, def, 'desc', {}); },
       status:function (s, rec) {
+        function counted(message) {
+          return FB.renderMessage(message, { state:s, viewer:s.player && s.player.charId });
+        }
         var civic = FB.civicGovernment.row(s,rec.realmId);
         if (civic && FB.civicGovernment.active(s,rec.realmId)) {
           var vacancies = civic.offices.filter(function (o) { return o.vacancy && o.vacancy.status === 'open'; });
-          return { phase:vacancies.length ? 'active' : 'resolved',name:vacancies.length ? FB.T('Civic selection remains open') : FB.T('Civic offices are occupied'),
-            lines:[FB.T('{count} public offices await recognition; civic property and household livelihoods continue.',{ count:vacancies.length })] };
+          var offices = vacancies.length ? counted(FB.msg('fx.ui.story_contest_offices', { forms:{ select:'plural', param:'count', cases:{
+            one:'{count} civic office is vacant', other:'{count} civic offices are vacant' } } },
+            { count:vacancies.length })) : FB.T('All civic offices are filled');
+          return { phase:vacancies.length ? 'active' : 'resolved', name:offices, stage:offices, lines:[] };
         }
         var data = FB.governmentSelection.state(s, rec.realmId), v = data && data.vacancy;
         if (!v || ['contested','vacant','minority','resolved'].indexOf(v.status) < 0) return null;
-        var names = { contested:FB.T('Local recognition is divided'), vacant:FB.T('No eligible successor'),
-          minority:FB.T('Eligible candidates are still minors'), resolved:FB.T('Local accession recorded') };
+        var court = { realm:s.realms[rec.realmId].name };
+        var names = { contested:FB.T('{realm}’s kingship is disputed', court),
+          vacant:FB.T('{realm} has no eligible heir', court),
+          minority:FB.T('{realm}’s heirs are still children', court),
+          resolved:FB.T('The succession at {realm} is settled', court) };
         var t = s.realms[rec.realmId].succession;
         var claims = Object.keys(v.support).map(function (id) { return v.support[id].candidateId; }).filter(function (id, i, ids) {
           return id && ids.indexOf(id) === i && t.members[id];
         }).map(function (id) { return t.members[id].name; });
-        return { phase:v.status === 'resolved' ? 'resolved' : 'active', name:names[v.status],
-          lines:[FB.T('{count} eligible adult candidates; private households continue.',
-            { count:FB.governmentSelection.candidates(s, rec.realmId).length }),
-            FB.T('Current supported claims: {names}. County possession follows ordinary control and war.',
-              { names:claims.length ? claims.join(', ') : FB.T('None') })] };
+        return { phase:v.status === 'resolved' ? 'resolved' : 'active', name:names[v.status], stage:names[v.status],
+          lines:[counted(FB.msg('fx.ui.story_contest_candidates', { forms:{ select:'plural', param:'count', cases:{
+            one:'{count} adult candidate.', other:'{count} adult candidates.' } } },
+            { count:FB.governmentSelection.candidates(s, rec.realmId).length })),
+            FB.T('Claimants with support: {names}.', { names:claims.length ? claims.join(', ') : FB.T('None') })] };
       }
     };
   }, 'js/story_government_selection.js', validateDefinition);
