@@ -11,7 +11,7 @@ dependsOnRuntime(__filename, ['index.html','js/story_opening_goals.js','js/stori
   'js/government_collective.js','js/government_support.js','js/government_recognition.js','js/government_aristocracy.js',
   'js/treasury.js','js/events.js','js/starts.js','js/mods.js','js/save.js','js/save_v4.js','js/ui_modals.js',
   'data/starts.js','data/bookmark_711.js','data/bookmark_1204_terrain.js','data/actions.js','data/technology.js',
-  'data/start_ambitions.js']);
+  'data/start_ambitions.js','js/ui_misc.js','js/intrigue.js']);
 
 async function importedStart(page, info, publicProfile) {
   await openGame(page, info);
@@ -95,7 +95,132 @@ test('dismissal rechecks the current actor, death archives remaining goals, and 
       noFriend:!s.player.friendContacts || !s.player.friendContacts[person] };
   });
   expect(result).toMatchObject({ stale:false, dismissed:true, twice:false, unchangedPerson:true, archived:'archived', once:true, noFriend:true });
-  expect(result.unavailable).toContain('died');
+  expect(result.unavailable).toBe('Died.');
+});
+
+test('the opening sheet counts goals, lists each goal and dismisses without extra review lines', async function ({ page }, info) {
+  await importedStart(page, info, false);
+  const initial = await page.evaluate(function () {
+    const s = FB.state, id = 'proof_private_goals';
+    const status = FB.stories.status(s, id);
+    const card = FB.stories.cards(s).filter(function (row) { return row.id === id; })[0];
+    FB.ui.showStorySheet(id);
+    return { status:status, stage:card.stage, gold:Math.floor(s.player.gold) };
+  });
+  const rows = [
+    ['Earn three gold (Open)', 'Earn three gold through the ordinary rules. Earned work: 0/3 gold.'],
+    ['Keep a reserve (Open)', 'Keep a reserve through the ordinary rules. Private reserve: ' + initial.gold + '/999 gold.']
+  ];
+  expect(initial.stage).toBe('0 of 2 goals done');
+  expect(initial.status).toEqual({ phase:'opening_objectives', name:'0 of 2 goals done', stage:'0 of 2 goals done',
+    facts:rows, lines:[], progress:{ done:0, total:2 } });
+  const facts = page.locator('#gm-body [data-story-facts="proof_private_goals"]');
+  await expect(facts.locator('.kv span')).toHaveText(rows.map(function (row) { return row[0]; }));
+  await expect(facts.locator('.kv b')).toHaveText(rows.map(function (row) { return row[1]; }));
+  await expect(page.locator('#gm-body h3')).toHaveCount(0);
+  await expect(page.locator('#gm-body')).not.toContainText('Pending');
+  await expect(page.locator('#gm-body')).not.toContainText('Your opening goals');
+  // A living, free contact shows its description and nothing about access.
+  await expect(page.locator('[data-story-person] .hint')).toHaveText('A named authority, without an audience or friendship.');
+  const dismiss = page.locator('[data-story-choice="dismiss_proof_earn"]');
+  await expect(dismiss.locator('b')).toHaveText('Set aside Earn three gold');
+  await expect(dismiss.locator('.hint')).toHaveText('Removes this goal from your list. You cannot restore it.');
+  await dismiss.click();
+  await expect(page.locator('#gm-title')).toHaveText('Set aside Earn three gold');
+  await expect(page.locator('#gm-body p')).toHaveText(['Removes this goal from your list. You cannot restore it.']);
+  await page.locator('#gm-story-confirm').click();
+  await expect(page.locator('#gm-title')).toHaveText('Decision recorded');
+  const settled = await page.evaluate(function () {
+    const s = FB.state, id = 'proof_private_goals';
+    s.player.gold = 999; FB.stories.get(id).day(s, s.stories[id]);
+    const status = FB.stories.status(s, id);
+    return { stage:status.stage, facts:status.facts, review:FB.stories.get(id).review() };
+  });
+  expect(settled).toEqual({ stage:'1 of 2 goals done', review:[], facts:[
+    ['Earn three gold (Set aside)', 'Earn three gold through the ordinary rules.'],
+    ['Keep a reserve (Done)', 'Keep a reserve through the ordinary rules.']
+  ] });
+});
+
+test('opening contacts name only death, absence or captivity, and goals of a lost opening protagonist close', async function ({ page }, info) {
+  await importedStart(page, info, false);
+  const result = await page.evaluate(function () {
+    const s = FB.state, id = 'proof_private_goals', t = s.stories[id], story = FB.stories.get(id);
+    const person = t.contacts.proof_target;
+    function reason() { return story.people(s, t)[0].reason; }
+    const free = reason();
+    const captivity = FB.intrigueCaptivityOf;
+    FB.intrigueCaptivityOf = function (state, who) { return who === person ? { captiveId:who } : captivity(state, who); };
+    const captive = reason();
+    FB.intrigueCaptivityOf = captivity;
+    t.contacts.proof_target = null;
+    const missing = reason();
+    t.contacts.proof_target = person;
+    s.chars[person].dead = true;
+    const dead = reason();
+    s.chars[t.actorId].dead = true;
+    const unrecorded = story.status(s, t).facts;
+    story.day(s, t);
+    return { free:free, captive:captive, missing:missing, dead:dead, unrecorded:unrecorded,
+      recorded:story.status(s, t).facts, status:t.goals.proof_earn.status };
+  });
+  const closed = [
+    ['Earn three gold (Closed)', 'Earn three gold through the ordinary rules. Closed: this goal belonged to the opening ruler.'],
+    ['Keep a reserve (Closed)', 'Keep a reserve through the ordinary rules. Closed: this goal belonged to the opening ruler.']
+  ];
+  expect(result).toEqual({ free:'', captive:'Held captive; you cannot meet them now.', missing:'No longer in this world.',
+    dead:'Died.', unrecorded:closed, recorded:closed, status:'archived' });
+});
+
+test('a goal whose office was lost shows why it closed', async function ({ page }, info) {
+  await importedStart(page, info, true);
+  const result = await page.evaluate(function () {
+    const s = FB.state, id = 'proof_public_goals', t = s.stories[id], story = FB.stories.get(id);
+    const open = story.status(s, t).facts.map(function (pair) { return pair[0]; });
+    FB.governments.support.row(s, 'siwa_households_1204').mandate.status = 'ended';
+    const unrecorded = story.status(s, t).facts;
+    story.day(s, t);
+    const recorded = story.status(s, t).facts;
+    FB.ui.showStorySheet(id);
+    return { open:open, unrecorded:unrecorded, recorded:recorded, status:t.goals.proof_consent.status };
+  });
+  const closed = [
+    ['Resolve constituent consent (Closed)', 'Resolve constituent consent through the ordinary rules. Closed: you no longer hold the office.'],
+    ['Settle public receipts (Closed)', 'Settle public receipts through the ordinary rules. Closed: you no longer hold the office.']
+  ];
+  expect(result).toEqual({ open:['Resolve constituent consent (Open)', 'Settle public receipts (Open)'],
+    unrecorded:closed, recorded:closed, status:'archived' });
+  await expect(page.locator('#gm-body [data-story-facts="proof_public_goals"] .kv b'))
+    .toHaveText(closed.map(function (row) { return row[1]; }));
+});
+
+test('the Odoacer profile counts three open goals', async function ({ page }, info) {
+  await startParityGame(page, info, { bookmark:'476', scenario:'odoacer_476', declaredOpening:true });
+  const result = await page.evaluate(function () {
+    const s = FB.state, id = 'opening_odoacer_476', d = FB.stories.get(id).declaration;
+    const card = FB.stories.cards(s).filter(function (row) { return row.id === id; })[0];
+    FB.ui.showStorySheet(id);
+    return { stage:card.stage, facts:card.facts,
+      expected:d.goals.map(function (g) { return [FB.T(g.name) + ' (Open)', FB.T(g.text)]; }) };
+  });
+  expect(result.stage).toBe('0 of 3 goals done');
+  expect(result.facts).toEqual(result.expected);
+  await expect(page.locator('#gm-body [data-story-facts="opening_odoacer_476"] .kv')).toHaveCount(3);
+  await expect(page.locator('#gm-body h3')).toHaveCount(0);
+  await expect(page.locator('#gm-body')).not.toContainText('Pending');
+  await expect(page.locator('#gm-body')).not.toContainText('Your opening goals');
+});
+
+test('a held goal keeps its reason in its open row', async function ({ page }, info) {
+  await startParityGame(page, info, { bookmark:'1204', scenario:'siwa_delegate_1204', declaredOpening:true });
+  const result = await page.evaluate(function () {
+    const s = FB.state, id = 'opening_siwa_1204', d = FB.stories.get(id).declaration;
+    const index = d.goals.map(function (g) { return g.id; }).indexOf('oasis_reserve_1204'), goal = d.goals[index];
+    return { row:FB.stories.status(s, id).facts[index],
+      expected:[FB.T(goal.name) + ' (Open)', FB.T(goal.text) + ' ' + FB.T(goal.criterion.reason)] };
+  });
+  expect(result.row).toEqual(result.expected);
+  expect(result.row[1]).toContain('No ordinary private-to-institution');
 });
 
 test('a story-person contact keeps its record key distinct from story references and resolves at the opening', async function ({ page }, info) {

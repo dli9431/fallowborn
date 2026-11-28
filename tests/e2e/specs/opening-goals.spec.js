@@ -183,7 +183,7 @@ test('held operations remain explicit, pending and dismissible', async function 
   await startParityGame(page,info,{ bookmark:'1204',scenario:'siwa_delegate_1204',declaredOpening:true });
   const result = await page.evaluate(function () {
     const s = FB.state, id = 'opening_siwa_1204', t = s.stories[id], cash = s.player.gold;
-    const visible = FB.stories.status(s,id).lines.some(function (line) { return line.indexOf('No ordinary private-to-institution') >= 0; });
+    const visible = FB.stories.status(s,id).facts.some(function (pair) { return pair[1].indexOf('No ordinary private-to-institution') >= 0; });
     const pending = t.goals.oasis_reserve_1204.status;
     const choice = 'dismiss_oasis_reserve_1204', applied = FB.stories.apply(s,id,choice,FB.stories.quote(s,id,choice));
     return { visible:visible, pending:pending, applied:applied, status:t.goals.oasis_reserve_1204.status, cashSame:cash === s.player.gold };

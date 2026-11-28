@@ -242,7 +242,7 @@ for (const def of openings) {
       const saved = JSON.parse(FB.save.serialize()); FB.save.restore(saved);
       const restored = profile.people(FB.state,FB.state.stories[d.profile])[0];
       return {noFriend:noFriend,dead:person.dead,retained:after.characterId === original && restored.characterId === original,
-        unavailable:/died/.test(after.reason)};
+        unavailable:after.reason === 'Died.'};
     },def);
     expect(result).toEqual({noFriend:true,dead:true,retained:true,unavailable:true});
   });

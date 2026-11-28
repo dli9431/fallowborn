@@ -266,25 +266,33 @@
       },
       title:function () { return FB.T(d.title); }, intro:function () { return FB.T(d.intro); },
       status:function (s, t) {
-        var labels = { pending:FB.T('Pending'), completed:FB.T('Completed'), dismissed:FB.T('Dismissed'), archived:FB.T('Archived') };
-        var lines = d.goals.map(function (g) {
+        var labels = { pending:FB.TC('opening goal state', 'Open'), completed:FB.TC('opening goal state', 'Done'),
+          dismissed:FB.TC('opening goal state', 'Set aside'), archived:FB.TC('opening goal state', 'Closed') };
+        // The shared story status shape: one fact row per goal under a counted stage line.
+        var facts = d.goals.map(function (g) {
           var row = t.goals[g.id], state = row.status === 'pending' && (!personal(s, t) || g.office && !ownsOffice(s, d, t)) ? 'archived' : row.status;
-          return FB.T('{goal}: {status}. {detail}', { goal:FB.T(g.name), status:labels[state], detail:FB.T(g.text) }) +
-            (state === 'pending' ? ' ' + progress(s, t, g.criterion) : '') +
-            (g.criterion.kind === 'hold' && state === 'pending' ? ' ' + FB.T(g.criterion.reason) : '');
+          var detail = [FB.T(g.text)];
+          if (state === 'pending') {
+            detail.push(progress(s, t, g.criterion));
+            if (g.criterion.kind === 'hold') detail.push(FB.T(g.criterion.reason));
+          }
+          if (state === 'archived') detail.push(personal(s, t) && g.office ? FB.T('Closed: you no longer hold the office.') :
+            FB.T('Closed: this goal belonged to the opening ruler.'));
+          return [FB.T('{goal} ({state})', { goal:FB.T(g.name), state:labels[state] }), detail.filter(Boolean).join(' ')];
         });
         var completed = d.goals.filter(function (g) { return t.goals[g.id].status === 'completed'; }).length;
-        return { phase:'opening_objectives', name:FB.T('Your opening goals'), lines:lines,
+        var stage = FB.T('{done} of {total} goals done', { done:completed, total:d.goals.length });
+        return { phase:'opening_objectives', name:stage, stage:stage, facts:facts, lines:[],
           progress:{ done:completed, total:d.goals.length } };
       },
       people:function (s, t) { return d.contacts.map(function (c) {
         var id = t.contacts[c.id], person = id && s.chars[id];
-        var reason = !person ? FB.T('This person is unavailable; no replacement is introduced.') : person.dead ? FB.T('This person has died. The personal link stays with them.') :
-          FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(s, id) ? FB.T('This person is captive. Ordinary access restrictions apply.') : FB.T('Ordinary rank, presence, travel and social access rules apply.');
+        var reason = !person ? FB.T('No longer in this world.') : person.dead ? FB.T('Died.') :
+          FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(s, id) ? FB.T('Held captive; you cannot meet them now.') : '';
         return { characterId:person && person.id || null, label:FB.T(c.label), detail:FB.T(c.text), reason:reason };
       }); },
       choices:function (s, t) { return d.goals.filter(function (g) { return t.goals[g.id].status === 'pending'; }).map(function (g) {
-        return { id:'dismiss_' + g.id, label:FB.T('Set aside {goal}', { goal:FB.T(g.name) }), detail:FB.T('Dismiss this optional goal. No money, standing, authority or reward changes.') };
+        return { id:'dismiss_' + g.id, label:FB.T('Set aside {goal}', { goal:FB.T(g.name) }), detail:FB.T('Removes this goal from your list. You cannot restore it.') };
       }); },
       quote:fresh,
       apply:function (s, t, id, reviewed) {
@@ -293,7 +301,7 @@
         var g = d.goals.filter(function (goal) { return id === 'dismiss_' + goal.id; })[0];
         t.goals[g.id] = { status:'dismissed', turn:s.turn }; return true;
       },
-      review:function () { return [FB.T('This goal can be set aside freely. Completed transactions and other goals remain recorded.')]; },
+      review:function () { return []; },
       validate:function (t, s) {
         function need(ok) { if (!ok) throw new Error('Invalid opening profile record: ' + d.id + '.'); }
         need(keys(t, ['schema','actorId','scenarioId','provinceId','bookmarkId','revision','openedTurn','ready','office','goals','contacts','earnings','lastEarnedTurn','pacts']) && Object.keys(t).length === 14 && t.schema === 1);

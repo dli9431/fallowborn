@@ -145,7 +145,7 @@ test('contacts retain original people when the papal and imperial courts change'
     });
     FB.save.restore(JSON.parse(FB.save.serialize()));
     return {names:names,bound:contacts === JSON.stringify(FB.state.stories[id].contacts),
-      unavailable:people.every(function (p) { return p.reason.indexOf('has died') >= 0; }),step:FB.state.stories[agenda].step};
+      unavailable:people.every(function (p) { return p.reason === 'Died.'; }),step:FB.state.stories[agenda].step};
   })).toEqual({names:['Henry IV','Urban II'],bound:true,unavailable:true,step:5});
 });
 

@@ -55,19 +55,24 @@ test('Damascus entries lead Work & Wealth with goals beside the storyline and th
     const cards = body.querySelectorAll('[data-story-card]'), subhead = body.querySelector('.actionsubhead');
     const header = document.querySelector('#tab-actions [data-action-group="work"]');
     return {order:Array.prototype.map.call(cards,function (card) { return card.getAttribute('data-story-card'); }),
-      leading:!subhead || !!(cards[1].compareDocumentPosition(subhead) & Node.DOCUMENT_POSITION_FOLLOWING),
+      leading:!!(subhead.compareDocumentPosition(cards[0]) & Node.DOCUMENT_POSITION_FOLLOWING) &&
+        Array.prototype.every.call(body.querySelectorAll('[data-action-id]'),function (deed) {
+          return !!(cards[1].compareDocumentPosition(deed) & Node.DOCUMENT_POSITION_FOLLOWING);
+        }),
       counted:Number(header.lastElementChild.textContent.match(/\d+/)[0]) ===
         body.querySelectorAll('[data-action-id]').length + cards.length,
       waiting:header.getAttribute('data-story-waiting'),marker:!!header.querySelector('.deed-story-marker')};
   });
   expect(facts).toEqual({order:[TRACK,GOALS],leading:true,counted:true,waiting:'true',marker:true});
   const track = work.locator('[data-story-card="'+TRACK+'"]'), goals = work.locator('[data-story-card="'+GOALS+'"]');
-  // The face keeps only the action name; state and description live in Details.
+  // The face keeps the action name and one stage line; the description lives in Details.
   await expect(track).toContainText('📖 A living in Damascus…');
   await expect(goals).toContainText('🎯 The Household’s First Goals…');
-  await expect(work.locator('[data-story-card] .adesc')).toHaveCount(0);
+  await expect(work.locator('[data-story-card] .adesc')).toHaveText(['Household and stores','0 of 3 goals done']);
+  await expect(track.locator('.story-stage')).toHaveText('Household and stores');
+  await expect(goals.locator('.story-stage')).toHaveText('0 of 3 goals done');
   await expect(page.locator('#story-details-'+TRACK+' .deed-status-text')).toHaveText('Household and stores');
-  await expect(page.locator('#story-details-'+GOALS+' .deed-status-text')).toHaveText('0 of 3 goals met');
+  await expect(page.locator('#story-details-'+GOALS+' .deed-status-text')).toHaveText('0 of 3 goals done');
   await expect(page.locator('#story-details-'+TRACK)).toContainText('A Syriac Christian craft household considers work');
   // The story takes the section's first item key and opens the shared sheet.
   const sectionKey = await page.locator('#tab-actions [data-action-group="work"] .deed-section-keyhint').textContent();
