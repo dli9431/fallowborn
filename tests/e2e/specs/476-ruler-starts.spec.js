@@ -6,6 +6,7 @@ dependsOnRuntime(__filename, [
   'data/bookmark_476_italy.js', 'data/bookmark_476_dalmatia_east.js',
   'data/bookmark_476_gaul_iberia.js', 'data/bookmark_476_africa.js', 'data/eras.js', 'data/technology.js',
   'data/political_institutions.js', 'data/story_campaigns.js',
+  'data/story_ruler_agendas.js',
   'js/starts.js', 'js/stories.js', 'js/story_courts.js',
   'data/story_instances.js', 'js/story_campaign.js', 'js/story_track.js',
   'js/main.js', 'js/world.js', 'js/model.js', 'js/armies.js', 'js/wars.js',
@@ -143,6 +144,60 @@ test('an explicit review session opens the authored rulers in the 476 picker', a
   }
   expect(await page.evaluate(function () { return FB.startProgression.snapshot(); }))
     .toEqual({ v:1, highestAchievedTier:0, highestStartTier:0 });
+});
+
+test('476 ruler start text opens on each ruler’s situation and names where to begin', async function ({ page }, testInfo) {
+  await openGame(page, testInfo);
+  await choose476(page);
+  const odoacer = page.locator('#scenariolist [data-scenario="odoacer_476"]');
+  await expect(odoacer).toBeVisible();
+  const result = await page.evaluate(function () {
+    const banned = /grants? no |creates? no |Record (a |an )?(costless )?(priority|intention|preference)|Record attention|\bordinary\b|\bactual(ly)?\b|\bexisting\b|\boriginal\b|\bauthored\b|historical opportunity|political opportunity/i;
+    const lostApostrophe = /[A-Za-z]\?[A-Za-z]/;
+    const begin = {
+      peroz_476:'Start with Public administration in Deeds',
+      nepos_476:'Open the western claim story in Deeds',
+      odoacer_476:'Open the western court story in Deeds',
+      syagrius_476:'Open your court agenda in Deeds'
+    };
+    const faults = [];
+    function find(id) { return FBDATA.startScenarios.find(function (row) { return row.id === id; }); }
+    function sentences(text) { return text.split(/[.!?](?:\s+|$)/).filter(Boolean); }
+    Object.keys(begin).forEach(function (id) {
+      const sc = find(id);
+      [['desc', sc.desc, 2], ['intro', sc.intro, 4],
+        ['family desc', sc.familyPresets.standard.desc, 2]].forEach(function (row) {
+        const label = id + ' ' + row[0], value = row[1];
+        if (typeof value !== 'string' || !value) { faults.push(label + ' is missing'); return; }
+        if (lostApostrophe.test(value)) faults.push(label + ' has a lost apostrophe');
+        if (value.indexOf('\'') >= 0) faults.push(label + ' has a straight apostrophe');
+        if (banned.test(value)) faults.push(label + ' uses banned wording');
+        if (/—|\bgold\b/i.test(value)) faults.push(label + ' has a dash or a money word');
+        if (sentences(value).length > row[2]) faults.push(label + ' is too long');
+      });
+      const last = sentences(sc.intro).pop() || '';
+      if (sc.intro.indexOf('You are ') !== 0) faults.push(id + ' intro does not say who you are');
+      if (last.indexOf(begin[id]) !== 0) faults.push(id + ' intro does not end with where to begin');
+    });
+    const peroz = find('peroz_476'), copy = find('peroz_sasanian_476');
+    const host = find('odoacer_476');
+    return { faults:faults,
+      copy:!!copy && copy.desc === peroz.desc && copy.intro === peroz.intro &&
+        copy.familyPresets.standard.desc === peroz.familyPresets.standard.desc,
+      stories:find('nepos_476').tracks.indexOf('nepos_track_476') >= 0 &&
+        find('syagrius_476').tracks.indexOf('syagrius_agenda_476') >= 0,
+      desc:host.desc, intro:host.intro };
+  });
+  expect(result.faults).toEqual([]);
+  expect(result.copy).toBe(true);
+  expect(result.stories).toBe(true);
+  for (const text of [result.desc, result.intro]) {
+    expect(text).toContain('Ticinum');
+    expect(text).toContain('Ravenna');
+    expect(text).toMatch(/\bunpaid\b[^.]*\bhost\b/);
+    expect(text).not.toMatch(/victory|suppl(y|ies)/i);
+  }
+  await expect(odoacer.locator('p').first()).toHaveText(result.desc);
 });
 
 for (const def of STARTS) {
