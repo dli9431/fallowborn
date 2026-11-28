@@ -121,12 +121,18 @@
     var top = FB.topRealm(s, def.actor.realmId);
     if (FB.topRealm(s, def.grant.liege) !== top) return 'liege_changed';
     for (var county of facts.counties) {
-      if (!FB.world.byId[county[0]] || FB.world.byId[county[0]].wasteland ||
-          county[1] !== top || county[2] !== def.actor.realmId) return 'not_held';
-      if (FB.isProtected && FB.isProtected(s, 'grantCounty', county[0])) return 'protected';
-      if (!FB.political.power(s, { kind:'realm', id:def.actor.realmId }, 'consent', { provinceId:county[0] }).allowed)
-        return 'consent_power';
+      var fault = countyBlock(s, def, top, county);
+      if (fault) return fault;
     }
+    return null;
+  }
+  // One granted county's facts row: [county id, owner, holder].
+  function countyBlock(s, def, top, county) {
+    if (!FB.world.byId[county[0]] || FB.world.byId[county[0]].wasteland ||
+        county[1] !== top || county[2] !== def.actor.realmId) return 'not_held';
+    if (FB.isProtected && FB.isProtected(s, 'grantCounty', county[0])) return 'protected';
+    if (!FB.political.power(s, { kind:'realm', id:def.actor.realmId }, 'consent', { provinceId:county[0] }).allowed)
+      return 'consent_power';
     return null;
   }
   function partyIsPlayer(s, rec, def, party) {
@@ -191,6 +197,159 @@
     });
     grantPartition(s, rec, def);
   }
+  /* Presentation. Names are live display text for the sheet and the card;
+     saved news keeps its own message parameters. Every helper is a pure read. */
+  var STAGE = 'story stage';
+  function countyName(pid) { return FB.world.byId[pid] ? FB.world.byId[pid].name : pid; }
+  function kindName(kind) {
+    if (kind === 'county') return FB.T('{term:county}');
+    if (kind === 'duchy') return FB.T('{term:duchy}');
+    return kind === 'kingdom' ? FB.T('{term:kingdom}') : FB.T('{term:empire}');
+  }
+  function kindTitle(kind) {
+    if (kind === 'county') return FB.T('{Term:county}');
+    if (kind === 'duchy') return FB.T('{Term:duchy}');
+    return kind === 'kingdom' ? FB.T('{Term:kingdom}') : FB.T('{Term:empire}');
+  }
+  function parentStory(def) { return def.parentStoryId ? FB.stories.get(def.parentStoryId) : null; }
+  function parentName(s, def) {
+    var parent = parentStory(def);
+    if (!parent) return def.parentStoryId || '';
+    var grant = parent.declaration && parent.declaration.grant;
+    return grant ? grant.place : parent.title(s, FB.stories.record(s, parent.id));
+  }
+  /* A court as a message parameter. A parent partition's court has no realm
+     until that grant is made, so it is named from the declared grant. */
+  function courtParam(s, def, rid) {
+    if (rid === 'player' && !(s.realms.player && s.realms.player.name))
+      return FB.fullName(s.chars[s.player.charId]);
+    if (s.realms[rid]) return FB.realmNameParam(s, rid);
+    var parent = parentStory(def), grant = parent && parent.declaration && parent.declaration.grant;
+    return grant && grant.realmId === rid ?
+      FB.T('{style} of {name}', { style:kindTitle(grant.kind), name:grant.place }) : FB.T('No current court');
+  }
+  function courtText(s, def, rid) {
+    var court = courtParam(s, def, rid);
+    return court && court.$realmName ? FB.renderRealmNameSnapshot(court.$realmName) : court;
+  }
+  function partitionWords(s, rec, def) {
+    var b = s.chars[rec.beneficiaryId];
+    return { place:def.grant.place, name:b ? b.name : def.beneficiary.name,
+      grantor:courtParam(s, def, def.actor.realmId), liege:courtParam(s, def, def.grant.liege),
+      counties:def.grant.counties.map(countyName).join(', '), count:def.grant.counties.length,
+      capital:countyName(def.actor.capital), kind:kindName(def.grant.kind), last:def.lastDate.year };
+  }
+  function dateBlockText(def, when) {
+    return when === 'late' ? FB.T('Closed after {year}.', { year:def.lastDate.year }) :
+      FB.T('Opens in {season} {year}.',
+        { season:FB.seasonName(def.firstDate.season), year:def.firstDate.year });
+  }
+  function windowText(def) {
+    var p = { first:def.firstDate.year, last:def.lastDate.year };
+    return p.first === p.last ? String(p.first) : FB.T('{first} to {last}', p);
+  }
+  /* One sentence for each partitionBlock code and for a refused party. A
+     county code names the first county that fails the same checks. */
+  function partitionBlockText(s, rec, def, reason) {
+    var p = partitionWords(s, rec, def);
+    if (reason === 'closed') return FB.T('This partition is settled.');
+    if (reason === 'date') return dateBlockText(def, time(s, def));
+    if (reason === 'actor_changed') return FB.T('{grantor} has a new ruler; the offer lapsed.', p);
+    if (reason === 'beneficiary_dead') return FB.T('{name} has died.', p);
+    if (reason === 'capital_lost') return FB.T('{grantor} no longer holds {capital}.', p);
+    if (reason === 'parent_unsettled')
+      return FB.T('Waits until {parent} is granted.', { parent:parentName(s, def) });
+    if (reason === 'liege_missing') return FB.T('{liege} has no living ruler.', p);
+    if (reason === 'liege_rank') return FB.T('{liege} must outrank the new {kind} to grant it.', p);
+    if (reason === 'already_landed') return FB.T('{name} already rules land.', p);
+    if (reason === 'player_recipient') return FB.T('Not available while you play {name}.', p);
+    if (reason === 'captivity') return FB.T('{name} or one of the rulers is held captive.', p);
+    if (reason === 'war') return FB.T('{grantor} or {liege} is at war.', p);
+    if (reason === 'liege_changed') return FB.T('{liege} no longer shares {grantor}’s overlord.', p);
+    if (reason === 'not_party') return FB.T('You are not a party to this partition.');
+    if (['not_held','protected','consent_power'].indexOf(reason) < 0) return null;
+    var top = FB.topRealm(s, def.actor.realmId);
+    var failed = partitionFacts(s, rec, def).counties.filter(function (county) {
+      return countyBlock(s, def, top, county);
+    })[0];
+    p.county = countyName(failed ? failed[0] : def.grant.counties[0]);
+    if (reason === 'not_held') return FB.T('{grantor} must hold {county} directly.', p);
+    if (reason === 'protected') return FB.T('{county} cannot be granted right now.', p);
+    return FB.T('{grantor} lacks the authority to grant {county}.', p);
+  }
+  function partitionRole(s, rec, def) {
+    if (partyIsPlayer(s, rec, def, 'grantor')) return FB.T('Grantor');
+    if (partyIsPlayer(s, rec, def, 'beneficiary')) return FB.T('Recipient');
+    return partyIsPlayer(s, rec, def, 'liege') ? FB.T('Overlord') : FB.T('Observer');
+  }
+  // The player's own missing approval comes first; stale approvals do not count.
+  function awaitedParty(s, rec, def, facts) {
+    var parties = partitionParties(rec, def);
+    var approvals = rec.approvalStamp === partitionTerms(facts) ? rec.approvals : {};
+    var missing = parties.filter(function (party) { return !approvals[party]; });
+    var party = missing.filter(function (p) { return partyIsPlayer(s, rec, def, p); })[0] || missing[0] || parties[0];
+    if (party === 'beneficiary') return partitionWords(s, rec, def).name;
+    return courtParam(s, def, party === 'grantor' ? def.actor.realmId : def.grant.liege);
+  }
+  function partitionClosed(s, rec, def) {
+    var p = partitionWords(s, rec, def), reason = rec.reason;
+    if (reason === 'window_closed') return FB.T('Closed: the window ended in {last}.', p);
+    if (reason === 'parent_diverted')
+      return FB.T('Closed: {parent} was never granted.', { parent:parentName(s, def) });
+    if (reason === 'actor_changed') return FB.T('Closed: {grantor} changed rulers and the offer lapsed.', p);
+    if (reason === 'beneficiary_dead') return FB.T('Closed: {name} died.', p);
+    if (reason === 'capital_lost') return FB.T('Closed: {grantor} lost {capital}.', p);
+    if (reason === 'already_landed') return FB.T('Closed: {name} already rules land.', p);
+    if (reason === 'liege_changed') return FB.T('Closed: {liege} left {grantor}’s overlord.', p);
+    return FB.T('Closed: history took another course.');
+  }
+  // The present state: a short word for the stage line and the Now sentence.
+  function partitionProgress(s, rec, def) {
+    function out(state, text) { return { state:state, text:text }; }
+    var p = partitionWords(s, rec, def);
+    if (rec.phase === 'resolved') {
+      if (rec.result === 'granted') return out(FB.TC(STAGE, 'Granted'), FB.T('Granted: {name} rules {place}.', p));
+      if (rec.result === 'declined') return out(FB.TC(STAGE, 'Refused'), FB.T('Refused.'));
+      return out(FB.TC(STAGE, 'Closed'), partitionClosed(s, rec, def));
+    }
+    var when = time(s, def);
+    if (when !== 'open') return out(when === 'early' ? FB.TC(STAGE, 'Not open yet') : FB.TC(STAGE, 'Closed'),
+      partitionBlockText(s, rec, def, 'date'));
+    var facts = partitionFacts(s, rec, def), reason = partitionBlock(s, rec, def, facts);
+    return out(FB.TC(STAGE, 'Waiting'), reason ? partitionBlockText(s, rec, def, reason) :
+      FB.T('Waiting for {party} to agree.', { party:awaitedParty(s, rec, def, facts) }));
+  }
+  /* The shared story status shape (docs/designs/stories.md). */
+  function partitionStatus(s, rec, def) {
+    var p = partitionWords(s, rec, def), now = partitionProgress(s, rec, def);
+    var stage = FB.T('Partition of {place} · {state}', { place:p.place, state:now.state });
+    return { phase:rec.phase, name:stage, stage:stage, lines:[], facts:[
+      [FB.T('Your role'), partitionRole(s, rec, def)],
+      [FB.T('Counties'), p.counties],
+      [FB.T('Recipient'), p.name],
+      [FB.T('Overlord'), courtText(s, def, def.grant.liege)],
+      [FB.T('Window'), windowText(def)],
+      [FB.T('Now'), now.text]
+    ] };
+  }
+  function partitionChoice(s, rec, def, party) {
+    var p = partitionWords(s, rec, def), label, detail;
+    if (party === 'grantor') {
+      label = FB.T('Grant {place} to {name}', p);
+      detail = FB.T('{name} rules {counties} as a {term:vassal} of {liege} once every party agrees. You keep {capital}.', p);
+    } else {
+      label = party === 'beneficiary' ? FB.T('Accept {place} from {grantor}', p) :
+        FB.T('Approve {name} as ruler of {place}', p);
+      detail = FB.T('{name} rules {counties} as a {term:vassal} of {liege} once every party agrees.', p);
+    }
+    return [{ id:'accept_' + party, label:label, detail:detail },
+      { id:'decline_' + party, label:FB.T('Refuse the partition of {place}', p),
+        detail:FB.renderMessage(FB.msg('fx.ui.story_partition_refuse', { forms:{ select:'plural', param:'count', cases:{
+          one:'{counties} stays with {grantor}. The offer closes for good.',
+          other:'{counties} stay with {grantor}. The offer closes for good.' } } },
+          { count:p.count, counties:p.counties, grantor:p.grantor }),
+          { state:s, viewer:s.player && s.player.charId }) }];
+  }
   FB.storyPartition = { quote:partitionQuote, grant:grantPartition };
   FB.stories.registerType('partition', function (def) {
     partitionDefinition(def);
@@ -216,22 +375,17 @@
         if (rec.phase !== 'pending' || time(s, d) !== 'open') return [];
         var out = [];
         partitionParties(rec, d).forEach(function (party) {
-          if (!partyIsPlayer(s, rec, d, party)) return;
-          out.push({ id:'accept_' + party, label:FB.T('Accept the partition'),
-            detail:FB.T('Grant the listed counties to the named ruler under the listed {term:liege}. All living parties must accept; only actual demesne can be granted.') });
-          out.push({ id:'decline_' + party, label:FB.T('Decline the partition'),
-            detail:FB.T('Keep the current holdings and close this partition opportunity.') });
+          if (partyIsPlayer(s, rec, d, party)) out = out.concat(partitionChoice(s, rec, d, party));
         });
         return out;
       },
       quote:function (s, rec, choice) { return partitionQuote(s, rec, effective(s, def), choice); },
-      blocker:function () { return FB.T('The partition requires living parties, a peaceful court, the exact directly held counties and a consenting higher {term:liege}.'); },
+      blocker:function (s, rec, reason) { return partitionBlockText(s, rec, effective(s, def), reason); },
       review:function (s, rec) {
-        var d = effective(s, def), b = s.chars[rec.beneficiaryId];
-        return [FB.T('Recipient: {name}.', { name:b ? b.name : '' }),
-          FB.T('Counties: {names}.', { names:d.grant.counties.map(function (pid) { return FB.world.byId[pid].name; }).join(', ') }),
-          FB.T('{Term:liege}: {name}. Population, faith and private property are retained.',
-            { name:FB.realmNameParam(s, d.grant.liege) })];
+        var d = effective(s, def), p = partitionWords(s, rec, d);
+        return [FB.T('Recipient: {name}.', p),
+          FB.T('Counties: {names}.', { names:p.counties }),
+          FB.T('{Term:liege}: {name}.', { name:p.liege })];
       },
       apply:function (s, rec, choice, reviewed) {
         var d = effective(s, def), q = partitionQuote(s, rec, d, choice);
@@ -247,17 +401,7 @@
         }
         return true;
       },
-      status:function (s, rec) {
-        var names = { pending:FB.T('Prospective partition'), granted:FB.T('Partition accepted'),
-          declined:FB.T('Partition declined'), diverted:FB.T('History took another course'),
-          interrupted:FB.T('Partition interrupted') };
-        var d = effective(s, def);
-        if (rec.phase === 'pending' && time(s, d) === 'open' && partitionParties(rec, d).some(function (party) {
-          return partyIsPlayer(s, rec, d, party) && !rec.approvals[party];
-        })) names.pending = FB.T('Awaiting your partition decision');
-        return { phase:rec.phase, name:names[rec.result || rec.phase],
-          lines:[FB.T('Promised territory becomes a holding only after actual possession and consent.')] };
-      },
+      status:function (s, rec) { return partitionStatus(s, rec, effective(s, def)); },
       validate:function (rec, s) {
         basicRecord(rec, s, def, ['granted','declined','diverted','interrupted']);
         if (rec.phase === 'started' || !id(rec.actorId) || !id(rec.beneficiaryId) ||
@@ -467,6 +611,90 @@
     });
     return true;
   };
+  // The same name the campaign's own event context uses.
+  function targetName(def) {
+    var kingdom = FBDATA.kingdoms[def.target.kingdomId];
+    return kingdom ? kingdom.name : def.target.kingdomId;
+  }
+  function headControlled(s, def) {
+    var head = FB.religiousHeadSnapshot(s, def.religion), pope = popeSnapshot(s, def.religion);
+    return !!(head && controlled(s, head.id) || pope && pope.id === s.player.charId);
+  }
+  function headName(s, def) {
+    var pope = popeSnapshot(s, def.religion);
+    if (pope) return FB.fullName(pope);
+    var head = FB.religiousHeadSnapshot(s, def.religion);
+    return s.realms[head.id] ? FB.realmNameParam(s, head.id) : FB.fullName(head);
+  }
+  function openingOpen(s, rec, def) {
+    return !rec.openingCall || rec.openingCall.disposition === 'pending' && openingHeadMatches(s, rec, def);
+  }
+  /* The first cause that keeps the call closed, read from the quote's facts.
+     An observer is not told that someone else controls the head. */
+  function holyBlockText(s, rec, def, facts, observing) {
+    var p = { kingdom:targetName(def) };
+    if (facts.time !== 'open') return dateBlockText(def, facts.time);
+    if (!facts.head) return FB.T('Your faith has no religious head.');
+    if (!observing && !headControlled(s, def))
+      return FB.T('Only {head} can call this holy war.', { head:headName(s, def) });
+    if (!openingOpen(s, rec, def)) return FB.T('The head who could make this call has changed.');
+    if (s.greatHolyWar) return FB.T('Another holy war is already underway.');
+    var until = ((s.greatHolyWarHistory || {}).cooldownUntil || {})[def.religion] || 0;
+    if (until > s.turn) return FB.renderMessage(FB.msg('fx.ui.story_holy_war_cooldown', { forms:{
+      select:'plural', param:'days', cases:{
+        one:'Your faith called a holy war recently; wait {days} more day.',
+        other:'Your faith called a holy war recently; wait {days} more days.' } } }, { days:until - s.turn }),
+      { state:s, viewer:s.player && s.player.charId });
+    if (!facts.targets.some(function (t) { return (t.targetId || t.kingdomId) === def.target.kingdomId; }))
+      return FB.T('{kingdom} is no longer a valid target.', p);
+    return FB.T('The head’s authority is too low, the faith is divided by schism, or the treasury is under restriction.');
+  }
+  function holyEnded(def, rec) {
+    var p = { kingdom:targetName(def), last:def.lastDate.year }, reason = rec.reason;
+    if (rec.result === 'won') return FB.T('Ended: the holy war for {kingdom} was won.', p);
+    if (reason === 'campaign_missing') return FB.T('Ended: no result of the holy war was recorded.');
+    if (rec.result === 'failed') return FB.T('Ended: the holy war for {kingdom} failed.', p);
+    if (rec.result === 'declined') return FB.T('Ended: the call was declined.');
+    if (reason === 'window_closed') return FB.T('Ended: the window closed after {last}.', p);
+    if (reason === 'target_restored') return FB.T('Ended: {kingdom} is no longer a valid target.', p);
+    if (reason === 'head_changed') return FB.T('Ended: the head who could make this call has changed.');
+    if (reason === 'campaign_conflict') return FB.T('Ended: another holy war was already underway.');
+    if (reason === 'system_disabled') return FB.T('Ended: holy wars are not available.');
+    if (reason === 'head_or_target') return FB.T('Ended: the head could not call a holy war on {kingdom}.', p);
+    return FB.T('Ended: history took another course.');
+  }
+  function holyProgress(s, rec, def) {
+    function out(state, text) { return { state:state, text:text }; }
+    if (rec.phase === 'started') {
+      var since = FB.dateAtTurn(s, rec.calledTurn);
+      return out(FB.TC(STAGE, 'Underway'), FB.T('Underway since {season} {year}.',
+        { season:FB.seasonName(since.season), year:since.year }));
+    }
+    if (rec.phase === 'resolved') {
+      var states = { won:FB.TC(STAGE, 'Won'), failed:FB.TC(STAGE, 'Failed'),
+        declined:FB.TC(STAGE, 'Declined'), diverted:FB.TC(STAGE, 'Closed') };
+      return out(states[rec.result], holyEnded(def, rec));
+    }
+    var facts = holyQuote(s, rec, def, 'call').facts;
+    if (facts.time === 'open' && facts.eligible && openingOpen(s, rec, def))
+      return out(FB.TC(STAGE, 'Ready to call'), FB.T('Ready to call.'));
+    var caller = headControlled(s, def), person = s.chars[s.player.charId];
+    var text = caller || facts.time !== 'open' || person && person.religion === def.religion ?
+      holyBlockText(s, rec, def, facts, !caller) : FB.T('Waiting until the religious head can call it.');
+    return out(facts.time === 'late' ? FB.TC(STAGE, 'Closed') : FB.TC(STAGE, 'Waiting'), text);
+  }
+  function holyStatus(s, rec, def) {
+    var now = holyProgress(s, rec, def), kingdom = targetName(def);
+    var caller = rec.phase === 'pending' ? headControlled(s, def) : rec.result === 'declined' ||
+      !!rec.callerRealmId && (rec.callerCharacterId === s.player.charId || controlled(s, rec.callerRealmId));
+    var stage = FB.T('Holy war on {kingdom} · {state}', { kingdom:kingdom, state:now.state });
+    return { phase:rec.phase, name:stage, stage:stage, lines:[], facts:[
+      [FB.T('Your role'), caller ? FB.T('Caller') : FB.T('Observer')],
+      [FB.T('Target'), kingdom],
+      [FB.T('Window'), windowText(def)],
+      [FB.T('Now'), now.text]
+    ] };
+  }
   FB.stories.registerType('holy_war', function (def) {
     holyDefinition(def);
     return { id:def.id, kind:'world', requires:def.requires || [],
@@ -512,15 +740,19 @@
       title:function (s) { return text(s, def, 'name'); },
       intro:function (s) { return text(s, def, 'desc'); },
       choices:function (s, rec) {
-        var d = effective(s, def), head = FB.religiousHeadSnapshot(s, d.religion), pope = popeSnapshot(s, d.religion);
-        if (rec.phase !== 'pending' || time(s, d) !== 'open' ||
-            !(head && controlled(s, head.id) || pope && pope.id === s.player.charId)) return [];
-        return [{ id:'call', label:FB.T('Call the holy war'),
-          detail:FB.T('Call the faithful through the existing campaign rules. Authority, hostile objectives, preparation and actual fighting determine the outcome.') },
-          { id:'decline', label:FB.T('Decline the historical call'), detail:FB.T('Close this dated opportunity. Ordinary religious decisions remain available.') }];
+        var d = effective(s, def);
+        if (rec.phase !== 'pending' || time(s, d) !== 'open' || !headControlled(s, d)) return [];
+        var p = { kingdom:targetName(d) };
+        return [{ id:'call', label:FB.T('Call a holy war on {kingdom}', p),
+          detail:FB.T('The faithful go to war for {kingdom} at once; armies and allies decide it.', p) },
+          { id:'decline', label:FB.T('Let the call on {kingdom} pass', p),
+            detail:FB.T('No holy war now. You can still call one later through religious decisions.') }];
       },
       quote:function (s, rec, choice) { return holyQuote(s, rec, effective(s, def), choice); },
-      blocker:function () { return FB.T('The call requires the current religious head, sufficient authority, an eligible hostile target, an expired cooldown and an available campaign slot.'); },
+      blocker:function (s, rec) {
+        var d = effective(s, def);
+        return holyBlockText(s, rec, d, holyQuote(s, rec, d, 'call').facts);
+      },
       apply:function (s, rec, choice, reviewed) {
         var d = effective(s, def), q = holyQuote(s, rec, d, choice);
         if (!q.allowed || !reviewed || reviewed.id !== choice || reviewed.stamp !== q.stamp) return false;
@@ -534,11 +766,7 @@
       },
       status:function (s, rec) {
         if (rec.phase === 'pending' && time(s, def) === 'early') return null;
-        var names = { pending:FB.T('Awaiting a religious call'), started:FB.T('Holy war underway'),
-          won:FB.T('Campaign settled'), failed:FB.T('Campaign ended'), declined:FB.T('Call declined'),
-          diverted:FB.T('History took another course') };
-        return { phase:rec.phase, name:names[rec.result || rec.phase],
-          lines:[FB.T('The historical date offers a call; it guarantees neither a campaign nor a conquest.')] };
+        return holyStatus(s, rec, effective(s, def));
       },
       validate:function (rec, s) {
         basicRecord(rec, s, def, ['won','failed','declined','diverted']);

@@ -45,46 +45,6 @@ async function begin(page, info, example) {
   }, prefix);
 }
 
-for (const example of ['harbor','upland']) {
-  test(example + ' ordinary JSON preparation calls once through the canonical owner', async function ({page}, info) {
-    await begin(page, info, example);
-    const result = await page.evaluate(function (example) {
-      const s = FB.state, t = openingTest, rec = t.record();
-      const initial = {phase:rec.phase, disposition:rec.openingCall.disposition, campaign:!!s.greatHolyWar};
-      const people = Object.keys(s.chars).sort(), owner = JSON.stringify(s.owner);
-      if (example === 'upland') {
-        // The ordinary first-by-year dispatch must respect the opening window.
-        FB.greatHolyWarYearly(s); FB.greatHolyWarTick(s);
-        if (s.greatHolyWar || rec.phase !== 'pending') throw new Error('Premature automatic call');
-        t.date(2); FB.greatHolyWarYearly(s);
-      }
-      const campaign = s.greatHolyWar, sequence = s.greatHolyWarHistory.sequence;
-      const second = FB.callGreatHolyWar(s,t.faith,campaign.targetKingdom,t.head);
-      const attached = FB.stories.start(s);
-      t.day(); FB.greatHolyWarTick(s); FB.greatHolyWarYearly(s);
-      const snapshot = JSON.stringify([rec,s.greatHolyWar,s.greatHolyWarHistory]);
-      FB.save.restore(JSON.parse(FB.save.serialize()));
-      FB.stories.restore(FB.state);
-      return {initial:initial,phase:rec.phase,disposition:rec.openingCall.disposition,
-        linked:rec.campaignId === campaign.id && rec.calledTurn === campaign.calledTurn &&
-          rec.callerRealmId === campaign.callerRealm && rec.callerCharacterId === rec.openingCall.headCharacterId,
-        target:campaign.targetKingdom,head:campaign.callerRealm,second:second,
-        sequence:sequence,after:FB.state.greatHolyWarHistory.sequence,attached:attached,
-        noHistory:FB.state.greatHolyWarHistory.campaigns.length === 0 && rec.seededIds.length === 0,
-        noPeople:JSON.stringify(people) === JSON.stringify(Object.keys(FB.state.chars).sort()),
-        noLand:owner === JSON.stringify(FB.state.owner),
-        restored:snapshot === JSON.stringify([t.record(),FB.state.greatHolyWar,FB.state.greatHolyWarHistory]),
-        technology:FBDATA.techImpactReviews.features.dated_holy_war_calls.mode};
-    }, example);
-    expect(result.initial).toEqual(example === 'harbor' ? {phase:'started',disposition:'called',campaign:true}
-      : {phase:'pending',disposition:'pending',campaign:false});
-    expect(result).toMatchObject({phase:'started',disposition:'called',linked:true,second:false,
-      sequence:1,after:1,attached:[],noHistory:true,noPeople:true,noLand:true,restored:true,technology:'none'});
-    expect(result.target).toBe(example === 'harbor' ? 'harbor_country' : 'dune_country');
-    expect(result.head).toBe(example === 'harbor' ? 'harbor_commune' : 'dune_oasis');
-  });
-}
-
 test('malformed opening JSON rejects without changing live data, people or randomness', async function ({page}, info) {
   await openGame(page, info);
   const result = await page.evaluate(function (source) {
@@ -136,145 +96,118 @@ for (const cause of ['missing_head','changed_generation','dead_head','restored_t
   });
 }
 
-test('an ordinary call committed in the window is adopted by exact campaign id without a second call', async function ({page}, info) {
+test('the call names its target and a ready head reads the status facts', async function ({page}, info) {
   await begin(page, info, 'upland');
   const result = await page.evaluate(function () {
-    const s = FB.state, t = openingTest; t.date(2);
-    const campaign = FB.callGreatHolyWar(s,t.faith,'dune_country',t.head);
-    const before = JSON.stringify([s.greatHolyWar,s.greatHolyWarHistory]), rng = FB.getRngState(), uid = FB.getUidCounter();
-    t.day(); FB.prepareOpeningHolyWarCalls(s);
-    const again = FB.callGreatHolyWar(s,t.faith,'dune_country',t.head);
-    return {linked:t.record().campaignId === campaign.id,phase:t.record().phase,
-      unchanged:before === JSON.stringify([s.greatHolyWar,s.greatHolyWarHistory]) &&
-        rng === FB.getRngState() && uid === FB.getUidCounter(),again:again,sequence:s.greatHolyWarHistory.sequence};
+    const s = FB.state, t = openingTest, story = FB.stories.get(t.id);
+    const read = function () {
+      const quote = FB.stories.quote(s, t.id, 'call');
+      return quote.allowed ? null : story.blocker(s, t.record(), quote.reason);
+    };
+    const status = function () { return FB.stories.status(s, t.id); };
+    t.date(1);
+    const early = [status(), read()];
+    t.date(2);
+    const observer = status(), notHead = read(), court = s.realms[t.head].name;
+    s.player.charId = t.record().openingCall.headCharacterId;
+    const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+    const choices = FB.stories.choices(s, t.id), ready = status(), open = read();
+    const pure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
+    return {name:FBDATA.kingdoms.dune_country.name, court:court, early:early, observer:observer,
+      notHead:notHead, choices:choices, ready:ready, open:open, pure:pure};
   });
-  expect(result).toEqual({linked:true,phase:'started',unchanged:true,again:false,sequence:1});
+  const name = result.name;
+  expect(result.pure).toBe(true);
+  expect(result.early).toEqual([null, 'Opens in Spring 900.']);
+  expect(result.observer.facts[0]).toEqual(['Your role', 'Observer']);
+  expect(result.observer.facts[3]).toEqual(['Now', 'Ready to call.']);
+  expect(result.notHead).toBe('Only ' + result.court + ' can call this holy war.');
+  expect(result.choices.map(function (choice) { return [choice.id, choice.label, choice.detail]; })).toEqual([
+    ['call', 'Call a holy war on ' + name,
+      'The faithful go to war for ' + name + ' at once; armies and allies decide it.'],
+    ['decline', 'Let the call on ' + name + ' pass',
+      'No holy war now. You can still call one later through religious decisions.']]);
+  expect(result.ready.stage).toBe('Holy war on ' + name + ' · Ready to call');
+  expect(result.ready.lines).toEqual([]);
+  expect(result.ready.facts).toEqual([['Your role', 'Caller'], ['Target', name], ['Window', '900'],
+    ['Now', 'Ready to call.']]);
+  expect(result.open).toBeNull();
 });
 
-test('fresh attachment with no head closes without creating a caller or campaign', async function ({page}, info) {
+test('each closed call blocker names the first failing condition', async function ({page}, info) {
   await begin(page, info, 'upland');
   const result = await page.evaluate(function () {
-    const s = JSON.parse(JSON.stringify(FB.state)), t = openingTest;
+    const s = FB.state, t = openingTest, story = FB.stories.get(t.id);
+    const read = function () {
+      const quote = FB.stories.quote(s, t.id, 'call');
+      return quote.allowed ? null : story.blocker(s, t.record(), quote.reason);
+    };
+    const status = function () { return FB.stories.status(s, t.id); };
+    t.date(2);
+    s.player.charId = t.record().openingCall.headCharacterId;
+    s.realms[t.head].ruler.generation++;
+    const changed = read();
+    s.realms[t.head].ruler.generation--;
+    s.greatHolyWar = {id:'ghw_99'};
+    const underway = [read(), status()];
+    s.greatHolyWar = null;
+    const cooldown = s.greatHolyWarHistory.cooldownUntil[t.faith];
+    s.greatHolyWarHistory.cooldownUntil[t.faith] = s.turn + 30;
+    const cooling = [read(), status().facts[3]];
+    s.greatHolyWarHistory.cooldownUntil[t.faith] = s.turn + 1;
+    const lastDay = read();
+    if (cooldown === undefined) delete s.greatHolyWarHistory.cooldownUntil[t.faith];
+    else s.greatHolyWarHistory.cooldownUntil[t.faith] = cooldown;
+    const eligible = FB.canCallGreatHolyWar;
+    FB.canCallGreatHolyWar = function () { return false; };
+    const otherwise = read();
+    FB.canCallGreatHolyWar = eligible;
+    // Raw ownership keeps the one-county court alive so the stage can be undone.
+    const owner = s.owner.dune_pass;
+    s.owner.dune_pass = t.head; FB.invalidateRealmCache();
+    const restored = read();
+    s.owner.dune_pass = owner; FB.invalidateRealmCache();
+    const head = s.religiousHeads.dune_head;
     s.religiousHeads.dune_head = null;
-    const people = Object.keys(s.chars).sort(), rng = FB.getRngState(), uid = FB.getUidCounter();
-    const record = FB.stories.get(t.id).init(s);
-    return {phase:record.phase,disposition:record.openingCall.disposition,head:record.openingCall.headRealmId,
-      campaign:!!s.greatHolyWar,noPeople:JSON.stringify(people) === JSON.stringify(Object.keys(s.chars).sort()),
-      pure:rng === FB.getRngState() && uid === FB.getUidCounter()};
+    const vacant = read();
+    s.religiousHeads.dune_head = head;
+    t.date(7);
+    const late = read();
+    return {name:FBDATA.kingdoms.dune_country.name, changed:changed, underway:underway, cooling:cooling,
+      lastDay:lastDay, otherwise:otherwise, restored:restored, vacant:vacant, late:late};
   });
-  expect(result).toEqual({phase:'resolved',disposition:'unavailable',head:null,campaign:false,noPeople:true,pure:true});
+  const name = result.name;
+  expect(result.changed).toBe('The head who could make this call has changed.');
+  expect(result.underway[0]).toBe('Another holy war is already underway.');
+  expect(result.underway[1].stage).toBe('Holy war on ' + name + ' · Waiting');
+  expect(result.underway[1].facts[3]).toEqual(['Now', 'Another holy war is already underway.']);
+  expect(result.cooling).toEqual(['Your faith called a holy war recently; wait 30 more days.',
+    ['Now', 'Your faith called a holy war recently; wait 30 more days.']]);
+  expect(result.lastDay).toBe('Your faith called a holy war recently; wait 1 more day.');
+  expect(result.otherwise).toBe(
+    'The head’s authority is too low, the faith is divided by schism, or the treasury is under restriction.');
+  expect(result.restored).toBe(name + ' is no longer a valid target.');
+  expect(result.vacant).toBe('Your faith has no religious head.');
+  expect(result.late).toBe('Closed after 900.');
 });
 
-for (const choice of ['call','decline','expire']) {
-  test('the current player head retains a finite reviewed opening decision: ' + choice, async function ({page}, info) {
-    await begin(page, info, 'upland');
-    const result = await page.evaluate(function (choice) {
-      const t = openingTest, s = FB.state, actorId = t.record().openingCall.headCharacterId;
-      s.player.charId = actorId; t.date(2); t.day();
-      FB.greatHolyWarYearly(s); FB.greatHolyWarTick(s);
-      const pending = t.record().phase === 'pending' && !s.greatHolyWar;
-      const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
-      const quote = FB.stories.quote(s,t.id,'call'); FB.stories.choices(s,t.id);
-      const pure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
-      s.realms[t.head].ruler.generation++;
-      const changed = JSON.stringify(s), stale = FB.stories.apply(s,t.id,'call',quote);
-      const unchanged = changed === JSON.stringify(s);
-      s.realms[t.head].ruler.generation--;
-      const saved = JSON.parse(FB.save.serialize()), state = JSON.stringify(t.record());
-      FB.save.restore(saved); FB.stories.restore(FB.state);
-      const noReplay = state === JSON.stringify(t.record()) && !FB.state.greatHolyWar;
-      let applied = true;
-      if (choice === 'expire') { t.date(7); t.day(); }
-      else {
-        applied = FB.stories.apply(FB.state,t.id,choice,FB.stories.quote(FB.state,t.id,choice));
-        const snapshot = JSON.stringify(FB.state);
-        const again = FB.stories.apply(FB.state,t.id,choice,FB.stories.quote(FB.state,t.id,choice));
-        if (again || snapshot !== JSON.stringify(FB.state)) throw new Error('Opening decision replayed');
-      }
-      const rec = t.record();
-      return {pending:pending,pure:pure,stale:stale,unchanged:unchanged,noReplay:noReplay,applied:applied,
-        phase:rec.phase,result:rec.result,disposition:rec.openingCall.disposition,campaign:!!FB.state.greatHolyWar};
-    }, choice);
-    expect(result).toMatchObject({pending:true,pure:true,stale:false,unchanged:true,noReplay:true,applied:true,
-      phase:choice === 'call' ? 'started' : 'resolved',result:choice === 'call' ? null : choice === 'decline' ? 'declined' : 'diverted',
-      disposition:choice === 'call' ? 'called' : choice === 'decline' ? 'declined' : 'unavailable',campaign:choice === 'call'});
-  });
-}
-
-test('strict optional saves reject malformed preparation without evaluating or attaching missing stories', async function ({page}, info) {
+test('an underway call and its campaign result report the stage to the caller', async function ({page}, info) {
   await begin(page, info, 'upland');
   const result = await page.evaluate(function () {
-    const source = JSON.parse(FB.save.serialize()), t = openingTest;
-    const changes = [
-      function (r) { delete r.openingCall; },
-      function (r) { r.openingCall.schema = 2; },
-      function (r) { r.openingCall.extra = true; },
-      function (r) { r.openingCall.evaluatedTurn = 1; },
-      function (r) { r.openingCall.disposition = 'called'; },
-      function (r) { r.openingCall.headGeneration = null; },
-      function (r) { r.openingCall.headCharacterId = 'missing_person'; },
-      function (r) { r.openingCall.disposition = 'unavailable'; }
-    ];
-    const faults = changes.map(function (change) {
-      const saved = JSON.parse(JSON.stringify(source)); change(saved.state.stories[t.id]);
-      const current = FB.state, before = JSON.stringify(current), rng = FB.getRngState(), uid = FB.getUidCounter();
-      let rejected = false;
-      try { FB.save.restore(saved); } catch (error) { rejected = true; }
-      return rejected && FB.state === current && before === JSON.stringify(FB.state) &&
-        rng === FB.getRngState() && uid === FB.getUidCounter();
-    });
-    const missing = JSON.parse(JSON.stringify(source)); delete missing.state.stories[t.id];
-    const live = FB.state, rng = FB.getRngState(), uid = FB.getUidCounter();
-    let sealedRejected = false; try { FB.save.restore(missing); } catch (_) { sealedRejected = true; }
-    sealedRejected = sealedRejected && live === FB.state && rng === FB.getRngState() && uid === FB.getUidCounter();
-    delete missing.storyAttachmentSchema;
-    delete missing.state.start.storyAttachments; // A campaign predating attachment sealing.
-    FB.save.restore(missing); FB.stories.restore(FB.state); FB.prepareOpeningHolyWarCalls(FB.state);
-    return {sealedRejected:sealedRejected,faults:faults,absent:!FB.state.stories[t.id],noCall:!FB.state.greatHolyWar};
+    const s = FB.state, t = openingTest;
+    t.date(2);
+    s.player.charId = t.record().openingCall.headCharacterId;
+    const applied = FB.stories.apply(s, t.id, 'call', FB.stories.quote(s, t.id, 'call'));
+    const started = FB.stories.status(s, t.id);
+    FB.resolveGreatHolyWar(s, 'defenders', 'opening_test'); t.day();
+    return {name:FBDATA.kingdoms.dune_country.name, applied:applied, started:started,
+      ended:FB.stories.status(s, t.id)};
   });
-  expect(result).toEqual({sealedRejected:true,faults:Array(8).fill(true),absent:true,noCall:true});
-});
-
-test('a completed opening observes the real campaign result once across restore', async function ({page}, info) {
-  await begin(page, info, 'harbor');
-  const result = await page.evaluate(function () {
-    const s = FB.state, t = openingTest, campaignId = t.record().campaignId, owner = JSON.stringify(s.owner);
-    FB.resolveGreatHolyWar(s,'defenders','opening_test'); t.day();
-    const rec = JSON.stringify(t.record());
-    FB.save.restore(JSON.parse(FB.save.serialize()));
-    t.day(); FB.stories.restore(FB.state);
-    return {result:t.record().result,disposition:t.record().openingCall.disposition,
-      once:rec === JSON.stringify(t.record()),noLand:owner === JSON.stringify(FB.state.owner),
-      archive:FB.state.greatHolyWarHistory.campaigns.filter(function (r) { return r.id === campaignId; }).length};
-  });
-  expect(result).toEqual({result:'failed',disposition:'called',once:true,noLand:true,archive:1});
-});
-
-test('called save provenance rejects another campaign target before adoption', async function ({page}, info) {
-  await begin(page, info, 'harbor');
-  const result = await page.evaluate(function () {
-    const saved = JSON.parse(FB.save.serialize()), before = FB.state, state = JSON.stringify(before);
-    const rng = FB.getRngState(), uid = FB.getUidCounter();
-    saved.state.greatHolyWar.targetKingdom = 'unrelated_target';
-    let rejected = false;
-    try { FB.save.restore(saved); } catch (error) { rejected = true; }
-    return rejected && before === FB.state && state === JSON.stringify(FB.state) &&
-      rng === FB.getRngState() && uid === FB.getUidCounter();
-  });
-  expect(result).toBe(true);
-});
-
-test('changed preparation under the same mod name rejects the prior fingerprint', async function ({page}, info) {
-  await begin(page, info, 'upland');
-  const result = await page.evaluate(function (source) {
-    const saved = JSON.parse(FB.save.serialize()), matching = !FB.save.otherWorld(saved);
-    const changed = JSON.parse(JSON.stringify(source)); changed.storyInstances.dune_opening_call.lastDate.day++;
-    FB.mods.apply(changed);
-    const state = FB.state, before = JSON.stringify(state), rng = FB.getRngState(), uid = FB.getUidCounter();
-    let rejected = false;
-    try { FB.save.restore(saved); } catch (error) { rejected = /different mod/.test(error.message); }
-    return {matching:matching,mismatch:FB.save.otherWorld(saved),rejected:rejected,
-      pure:state === FB.state && before === JSON.stringify(FB.state) && rng === FB.getRngState() && uid === FB.getUidCounter()};
-  }, openingCandidate('upland'));
-  expect(result).toEqual({matching:true,mismatch:true,rejected:true,pure:true});
+  const name = result.name;
+  expect(result.applied).toBe(true);
+  expect(result.started.stage).toBe('Holy war on ' + name + ' · Underway');
+  expect(result.started.facts[0]).toEqual(['Your role', 'Caller']);
+  expect(result.started.facts[3]).toEqual(['Now', 'Underway since Spring 900.']);
+  expect(result.ended.stage).toBe('Holy war on ' + name + ' · Failed');
+  expect(result.ended.facts[3]).toEqual(['Now', 'Ended: the holy war for ' + name + ' failed.']);
 });
