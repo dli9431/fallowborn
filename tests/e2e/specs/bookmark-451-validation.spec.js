@@ -555,3 +555,90 @@ test('the hidden date review offers a civic household whose records earnings sur
   expect(await page.evaluate(snapshot,civicReview)).toEqual(paid);
   expect(await page.evaluate(function () { return FB.bookmarkAvailable('451'); })).toBe(false);
 });
+
+test('451 coalition and Aetius story text names the stakes in plain words',async function ({page},info) {
+  await openGame(page,info);
+  const result = await page.evaluate(function () {
+    const processWords = /\b(ordinary|actual|actually|existing|current|original|authored|declared)\b/i;
+    const banned = /grants? no |creates? no |Record (a |an )?(costless )?(priority|intention|preference)|Record attention|\bordinary\b|\bactual(ly)?\b|\bexisting\b|\boriginal\b|\bauthored\b|historical opportunity|political opportunity/i;
+    const faults = [];
+    const seen = {choices:0,goals:0,stages:0};
+    function clean(label,value) {
+      if (typeof value !== 'string' || !value) { faults.push(label + ' is missing'); return; }
+      if (/[A-Za-z]\?[A-Za-z]/.test(value)) faults.push(label + ' has a lost apostrophe');
+      if (value.indexOf('\'') >= 0) faults.push(label + ' has a straight apostrophe');
+      if (/—|\bgold\b/i.test(value.replace(/\{[^}]*\}/g,''))) faults.push(label + ' has a dash or a money word');
+    }
+    function prose(label,value) {
+      clean(label,value);
+      if (banned.test(value)) faults.push(label + ' uses banned wording');
+    }
+    ['attila_agenda_451','aetius_service_track_451','opening_attila_451','opening_gallic_curialis_451',
+      'opening_gallic_colonus_451','opening_federate_soldier_451','opening_aetius_451',
+      'western_objective_451','gallic_relocation_451'].forEach(function (id) {
+      const story = FBDATA.storyInstances[id];
+      if (!story) { faults.push(id + ' is not declared'); return; }
+      clean(id + ' title',story.title || story.name);
+      prose(id + ' intro',story.intro || story.desc);
+      const stages = Array.isArray(story.stages) ? story.stages :
+        Object.keys(story.stages || {}).map(function (key) { return story.stages[key]; });
+      stages.forEach(function (stage,index) {
+        const at = id + ' stage ' + (stage.id || index);
+        seen.stages++;
+        clean(at + ' name',stage.name);
+        prose(at + ' text',stage.text);
+        (stage.choices || []).forEach(function (choice) {
+          const row = at + ' ' + choice.id;
+          seen.choices++;
+          clean(row + ' label',choice.label);
+          prose(row + ' detail',choice.detail);
+          if (String(choice.label).split(/\s+/).length > 8) faults.push(row + ' label is too long');
+          if (processWords.test(choice.label)) faults.push(row + ' label uses a process word');
+        });
+      });
+      (story.goals || []).forEach(function (goal) {
+        seen.goals++;
+        clean(id + ' ' + goal.id + ' goal name',goal.name);
+        prose(id + ' ' + goal.id + ' goal text',goal.text);
+      });
+      (story.contacts || []).forEach(function (contact) {
+        clean(id + ' ' + contact.id + ' contact label',contact.label);
+        prose(id + ' ' + contact.id + ' contact text',contact.text);
+      });
+    });
+    function find(id) { return FBDATA.startScenarios.find(function (row) { return row.id === id; }); }
+    ['attila_451','aetius_451'].forEach(function (id) {
+      const start = find(id);
+      clean(id + ' name',start.name);
+      prose(id + ' desc',start.desc);
+      prose(id + ' intro',start.intro);
+      Object.keys(start.familyPresets).forEach(function (key) {
+        prose(id + ' ' + key + ' family name',start.familyPresets[key].name);
+      });
+    });
+    const agenda = FBDATA.storyInstances.attila_agenda_451,
+      objective = FBDATA.storyInstances.western_objective_451,
+      expedition = FBDATA.storyExpeditions_451.western_objective_451,
+      attila = find('attila_451'), aetius = find('aetius_451');
+    return {faults:faults,seen:seen,agendaTitle:agenda.title,firstStage:agenda.stages[0].text,
+      goalTexts:FBDATA.storyInstances.opening_attila_451.goals.map(function (goal) { return goal.text; }),
+      attilaIntro:attila.intro,aetiusText:[aetius.desc,aetius.intro],
+      aetiusTitle:FBDATA.storyInstances.aetius_service_track_451.title,
+      aetiusGoal:FBDATA.storyInstances.opening_aetius_451.goals[0].text,
+      objective:{name:objective.name,desc:objective.desc},
+      expedition:{name:expedition.name,desc:expedition.desc}};
+  });
+  expect(result.faults).toEqual([]);
+  // Five agenda stages plus the four service stages; four, one, one, one and one opening goals.
+  expect(result.seen).toEqual({choices:27,goals:8,stages:9});
+  expect(result.firstStage).toContain('Sirmium');
+  expect(result.goalTexts).toHaveLength(4);
+  result.goalTexts.forEach(function (text) { expect(text).toContain(result.agendaTitle); });
+  expect(result.attilaIntro).toContain(result.agendaTitle);
+  expect(result.aetiusText[1]).toContain(result.aetiusTitle);
+  expect(result.aetiusGoal).toContain(result.aetiusTitle);
+  result.aetiusText.forEach(function (text) {
+    expect(text).not.toMatch(/grants? no |commissions no |no (battlefield|forces|host|land|money|command)/i);
+  });
+  expect(result.expedition).toEqual(result.objective);
+});

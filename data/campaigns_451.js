@@ -4,8 +4,8 @@ FBDATA.storyCampaigns451 = {
   "western_objective_451": {
     "id": "western_objective_451",
     "type": "campaign",
-    "name": "A western objective",
-    "desc": "The coalition may seek Aurelianum through an ordinary aggression review. Members must assent, the actual host must campaign and defenders may prevail. This opportunity grants no route, supplies, army, land or settlement.",
+    "name": "The march on Aurelianum",
+    "desc": "In 451 the coalition can march on Aurelianum, held by the western court. The members must agree, and the host must take the city by force.",
     "firstYear": 451,
     "lastYear": 452,
     "durationDays": 180,
@@ -57,7 +57,7 @@ FBDATA.storyCampaigns451 = {
       "western_objective_451"
     ],
     "name": "Relocation after the western fighting",
-    "desc": "If the coalition fails and the western court still holds both Aurelianum and Parisii at peace, it may relocate a bounded share of the local Gallo-Roman Nicene community. This is a simulation option, not an attested evacuation or a promise of safety. Population and community identity are conserved.",
+    "desc": "If the coalition’s march fails, the western court may move some Gallo-Roman Nicene families from the fought-over city of Aurelianum to Parisii. No source records this evacuation.",
     "firstYear": 451,
     "lastYear": 453,
     "actor": {
