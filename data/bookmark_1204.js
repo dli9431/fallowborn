@@ -1511,7 +1511,7 @@ FBDATA.bookmarkContent['1204'] = {
   FBDATA.bookmarks['1204'] = FBDATA.bookmarkCandidates['1204'];
   FBDATA.storyCivicSelections = {
     venetian_offices_1204:{ id:'venetian_offices_1204',type:'government_contest',realmId:'venice_1204',
-      name:'The ducal commune',desc:'The civic institution endures beyond a doge. Offices follow civic recognition; households keep their property and foreign quarters remain limited rights.' }
+      name:'The ducal commune',desc:'Venice’s leading men seek the doge’s office, and the councils of the commune decide who holds it.' }
   };
   FBDATA.bookmarks['1204'].stories.push('venetian_offices_1204');
 })();
