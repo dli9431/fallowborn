@@ -5,7 +5,7 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
     "id": "salona_service_household",
     "type": "household_track",
     "title": "A household in imperial service",
-    "intro": "Seek a real commission, review an order for its exact host and accept actual dismissal or expiry. Your household and the court keep separate resources. You may stop at every review.",
+    "intro": "Win a commission from the Dalmatian court at Salona, lead its host where ordered, and keep your household’s money apart from the court’s. You can set the plan aside at any step.",
     "homeProvinceId": "split",
     "continuity": "protagonist",
     "interruptedStage": "interrupted",
@@ -23,12 +23,12 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
     "stages": {
       "petition": {
         "name": "A commission, not an estate",
-        "text": "A rising officer needs a living court and a real host. In Deeds, Offices & Legitimacy reviews the court service commission. The petition requires military skill 6, retained prestige 20 and a private registration payment of {money:15}. You may remain a private soldier.",
+        "text": "The Dalmatian court at Salona gives commissions to officers who can lead its hosts. You need Military skill 6, prestige 20 and enough Standing with the court, and you pay a fee of {money:15} from your own purse. The petition is also in Offices & Legitimacy in Deeds, or you may stay a private soldier.",
         "choices": [
           {
             "id": "service_petition",
             "label": "Petition for the service commission",
-            "detail": "Review the actual available host, qualification, retained prestige and private registration fee. Confirmation alone obtains the commission.",
+            "detail": "If the Dalmatian court has a host free, you pay {money:15} and take command of it at once. Your prestige is checked, not spent.",
             "operation": {
               "kind": "mandate_service",
               "service": {
@@ -43,7 +43,7 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
           {
             "id": "service_stop_petition",
             "label": "Set the service plan aside",
-            "detail": "Conclude this personal program without a petition, payment or public action.",
+            "detail": "You stay a private soldier at Salona and keep your {money:15}.",
             "operation": {
               "kind": "record_decision"
             },
@@ -52,7 +52,7 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
           {
             "id": "service_seek_eastern_court",
             "label": "Seek service at the eastern court",
-            "detail": "Review the ordinary paid-service journey. No commission, host or appointment is promised; permanent residence requires the normal stay and settlement review.",
+            "detail": "You pay the fare and set out for Constantinople. The eastern court promises you no commission or host there.",
             "operation": {
               "kind": "travel_realm",
               "realmId": "byzantium",
@@ -74,13 +74,13 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
         ]
       },
       "scope": {
-        "name": "The limits of command",
-        "text": "A commissioned host remains the court’s force. Officers command only the hosts covered by an effective mandate. Ordinary army controls and the court mandate review retain their current route, availability and authority checks.",
+        "name": "Leading the court’s host",
+        "text": "The host you lead belongs to the Dalmatian court, and you may move only the host your commission names. The court orders it to Iader.",
         "choices": [
           {
             "id": "service_scope",
-            "label": "Review the commissioned host’s order",
-            "detail": "Commit an ordinary march for the exact commissioned host to the disclosed destination. The mandate, route and host must remain current.",
+            "label": "March the host as ordered",
+            "detail": "The host sets out for Iader. Your commission must still be valid when it arrives.",
             "operation": {
               "kind": "mandate_service",
               "service": {
@@ -97,7 +97,7 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
           {
             "id": "service_stop_scope",
             "label": "Set the service plan aside",
-            "detail": "Conclude this personal program without a petition, payment or public action.",
+            "detail": "The story ends before you march to Iader. Your commission stays in force.",
             "operation": {
               "kind": "record_decision"
             },
@@ -118,12 +118,12 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
       },
       "gates": {
         "name": "An unpaid group at the gates",
-        "text": "A group seeking federate service brings a list of mouths and a demand for pay. Review actual offered contracts before treating anyone as a serving contingent. Initial support and continuing seasonal obligations belong to the court account.",
+        "text": "A band from another court comes to Salona seeking paid service, with families to feed and a demand for pay. Their own ruler must agree before they serve, and their pay comes from the Dalmatian treasury, not your household.",
         "choices": [
           {
             "id": "service_gates",
-            "label": "Consider the proposed service",
-            "detail": "Record an intention to inspect actual contract terms. No contract, payment, land or recognition is created.",
+            "label": "Hear out the men at the gates",
+            "detail": "You hear their terms and turn to the Dalmatian court’s accounts. Nobody is hired yet.",
             "operation": {
               "kind": "record_decision"
             },
@@ -132,7 +132,7 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
           {
             "id": "service_stop_gates",
             "label": "Set the service plan aside",
-            "detail": "Conclude this personal program without a petition, payment or public action.",
+            "detail": "The story ends, and the band at Salona’s gates is left to the court.",
             "operation": {
               "kind": "record_decision"
             },
@@ -140,8 +140,8 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
           },
           {
             "id": "salona_service_household_gates_consent",
-            "label": "Review an actual service offer",
-            "detail": "Wait for the outside court’s real consent. Review the exact initial public payment and seasonal obligation before completing the contract; refusal supplies no consent.",
+            "label": "Hire the band for the court",
+            "detail": "Once their ruler agrees, the Dalmatian treasury pays {money:12} at once and {money:8} each season for a year.",
             "operation": {
               "kind": "mandate_service",
               "service": {
@@ -170,12 +170,12 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
       },
       "accounts": {
         "name": "The emperor tests the accounts",
-        "text": "A request to explain command expenses tests whether you distinguish a public obligation from your own purse. Mandate reviews disclose the actual payer, available funds, initial support and seasonal reserve.",
+        "text": "The emperor at Salona asks you to explain what your command costs. Hosts and hired bands are paid from the Dalmatian treasury; your fee and your wages stay in your household purse.",
         "choices": [
           {
             "id": "service_accounts",
             "label": "Keep the accounts separate",
-            "detail": "Record the distinction. Use the court mandate review for actual negotiations and payments; this choice spends nothing.",
+            "detail": "You answer the emperor with the court’s spending set apart from your own, then turn to Salona’s senators and bishop.",
             "operation": {
               "kind": "record_decision"
             },
@@ -184,7 +184,7 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
           {
             "id": "service_stop_accounts",
             "label": "Set the service plan aside",
-            "detail": "Conclude this personal program without a petition, payment or public action.",
+            "detail": "The story ends before the emperor at Salona sees your accounts.",
             "operation": {
               "kind": "record_decision"
             },
@@ -205,12 +205,12 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
       },
       "interests": {
         "name": "Senators and bishops have interests",
-        "text": "Senatorial property and episcopal influence are interests to consider, not signatures you can supply. Actual appointments, local institutions and recognition retain their separate lawful principals.",
+        "text": "The landowning senators of Salona and its bishop have interests of their own. You can win their support, but your commission cannot speak for them.",
         "choices": [
           {
             "id": "service_interests",
-            "label": "Consider independent interests",
-            "detail": "Record attention without promising a senator’s vote, a bishop’s support or any appointment.",
+            "label": "Weigh the senators and the bishop",
+            "detail": "You take the Salona senators’ and bishop’s interests into account. None of them is bound to back you.",
             "operation": {
               "kind": "record_decision"
             },
@@ -219,7 +219,7 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
           {
             "id": "service_stop_interests",
             "label": "Set the service plan aside",
-            "detail": "Conclude this personal program without a petition, payment or public action.",
+            "detail": "The story ends with Salona’s senators and bishop left to themselves.",
             "operation": {
               "kind": "record_decision"
             },
@@ -240,12 +240,12 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
       },
       "favor": {
         "name": "The army’s mood and court favor",
-        "text": "Praise among soldiers does not make a suspended warrant effective. The service mandate requires court Standing of at least -20 and lasts at most 720 days. Lost favor suspends acts; expiry and lawful removal retain their own rules.",
+        "text": "The soldiers’ praise cannot lift a suspension. Your commission needs Standing of at least -20 with the Dalmatian court and lasts at most 720 days. Below that you cannot act on it; it ends when its term runs out or the court dismisses you.",
         "choices": [
           {
             "id": "service_favor",
-            "label": "Consider the limits of favor",
-            "detail": "Record the warning. Inspect current Standing and the live mandate; no favor or authority is added.",
+            "label": "Mind your Standing at court",
+            "detail": "You watch your Standing with the Dalmatian court and look ahead to how your commission ends.",
             "operation": {
               "kind": "record_decision"
             },
@@ -254,7 +254,7 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
           {
             "id": "service_stop_favor",
             "label": "Set the service plan aside",
-            "detail": "Conclude this personal program without a petition, payment or public action.",
+            "detail": "The story ends; your Standing with the Dalmatian court is your own affair.",
             "operation": {
               "kind": "record_decision"
             },
@@ -275,12 +275,12 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
       },
       "loss": {
         "name": "Life after a commission",
-        "text": "Wait here or continue ordinary household play until the court actually dismisses you or the finite term expires. Suspended favor alone is not expiry. Acceptance records the real loss; it does not restore command or spend public funds.",
+        "text": "Your commission ends when the Dalmatian court dismisses you or its 720 days run out; a suspension alone does not end it. Until then, wait here or go about your household’s work.",
         "choices": [
           {
             "id": "service_loss",
-            "label": "Accept the ended mandate",
-            "detail": "This becomes available only after actual dismissal or expiry. Accept that loss without restoring any powers, spending public money or erasing court obligations.",
+            "label": "Accept the end of your commission",
+            "detail": "Opens once the Dalmatian court dismisses you or your term runs out. You give up command, and the court’s contracts stay in force.",
             "operation": {
               "kind": "mandate_service",
               "service": {
@@ -295,7 +295,7 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
           {
             "id": "service_stop_loss",
             "label": "Set the service plan aside",
-            "detail": "Conclude this personal program without a petition, payment or public action.",
+            "detail": "The story ends while your Dalmatian commission runs its course.",
             "operation": {
               "kind": "record_decision"
             },
@@ -316,12 +316,12 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
       },
       "purple": {
         "name": "An offer of the purple",
-        "text": "An approach from soldiers may tempt an officer toward the purple. A declaration requires the actual mandate’s eligibility and independent recognition. A living emperor is not removed by an invitation. Any lawful accession or disputed campaign retains its canonical review and may fail.",
+        "text": "Soldiers at Salona urge you to claim the purple. Their cheers do not unseat the living emperor: a claim needs recognition beyond the army, and any bid for the throne has its own review and may fail.",
         "choices": [
           {
             "id": "service_purple",
-            "label": "Decline to treat an invitation as authority",
-            "detail": "Conclude the personal review. No claim, support, war or accession is created.",
+            "label": "Turn the soldiers’ offer down",
+            "detail": "You refuse the soldiers at Salona and close this story without a claim to the throne.",
             "operation": {
               "kind": "record_decision"
             },
@@ -330,7 +330,7 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
           {
             "id": "service_stop_purple",
             "label": "Set the service plan aside",
-            "detail": "Conclude this personal program without a petition, payment or public action.",
+            "detail": "The story ends with the soldiers’ offer at Salona unanswered.",
             "operation": {
               "kind": "record_decision"
             },
@@ -350,41 +350,41 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
         ]
       },
       "complete": {
-        "name": "The service review is complete",
-        "text": "Your committed acts remain recorded. Actual commissions, hosts, obligations and claims keep their canonical terms.",
+        "name": "Your service story is done",
+        "text": "What you did in service stays on record. Your commission, hosts and contracts keep their own terms.",
         "terminal": true,
         "choices": [],
         "transitions": []
       },
       "deferred": {
         "name": "Private life continues",
-        "text": "You set the service plan aside. Your household may continue ordinary work without seeking an office.",
+        "text": "You set the service plan aside. Your household goes on with its work without seeking an office.",
         "terminal": true,
         "choices": [],
         "transitions": []
       },
       "elsewhere": {
-        "name": "Away from the opening court",
-        "text": "Leaving Salona ends this local review. No office, family relocation or renewed mandate follows.",
+        "name": "Away from the court",
+        "text": "You left the court where this service began, so this story ends. No office, household move or new commission follows from it.",
         "terminal": true,
         "choices": [],
         "transitions": []
       },
       "interrupted": {
-        "name": "The original officer’s review ended",
-        "text": "Death or protagonist succession ended this personal program. Its intentions grant the next protagonist no office.",
+        "name": "The officer’s story ended",
+        "text": "Death or succession ended this story with the officer who began it. The heir gains no office from it.",
         "terminal": true,
         "choices": [],
         "transitions": []
       },
       "eastern_road": {
-        "name": "The road to the court",
-        "text": "Follow the ordinary journey. On arrival, remain for the normal residence period before reviewing a household move. Travel can fail or be interrupted.",
+        "name": "The road to Constantinople",
+        "text": "You are on the road to Constantinople to seek service with the eastern court. Once there, live a year in the city before you can move your household. The journey can fail or be cut short.",
         "choices": [
           {
             "id": "service_road_stop",
             "label": "Set this program aside",
-            "detail": "Continue the ordinary journey without a story obligation.",
+            "detail": "You keep travelling, but this story ends.",
             "operation": {
               "kind": "record_decision"
             },
@@ -403,12 +403,12 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
       },
       "eastern_residence": {
         "name": "A household at the eastern court",
-        "text": "After the ordinary year of residence, review one permanent household move. Until then you may wait or conclude this program; no public commission follows from living here.",
+        "text": "After a year living in Constantinople you may move your household here for good. Until then you can wait or end this story; living here earns you no commission.",
         "choices": [
           {
             "id": "service_eastern_settle",
-            "label": "Review permanent residence",
-            "detail": "Use the ordinary settlement review after its full residence period. This uses your one household relocation; no office or land is awarded.",
+            "label": "Settle your household in Constantinople",
+            "detail": "Uses your one household move once the year’s residence is complete. No office or land comes with it.",
             "operation": {
               "kind": "settle_household"
             },
@@ -417,7 +417,7 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
           {
             "id": "service_residence_stop",
             "label": "Set this program aside",
-            "detail": "Keep the present home and ordinary journey.",
+            "detail": "You keep your present home, and this story ends.",
             "operation": {
               "kind": "record_decision"
             },
@@ -428,12 +428,12 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
       },
       "east_petition": {
         "name": "A commission, not an estate",
-        "text": "The eastern court has existing commissioned forces. Review a genuinely available host, Military skill 6, retained prestige 20, private fee {money:15} and current court Standing. An occupied or lost host remains unavailable.",
+        "text": "The eastern court at Constantinople already has officers for most of its hosts. You need a host it has free, Military skill 6, prestige 20, enough Standing with the court and a fee of {money:15} from your own purse. A host with a commander, or one that is lost, cannot be yours.",
         "choices": [
           {
             "id": "east_service_petition",
             "label": "Petition for the service commission",
-            "detail": "Review the actual available host, qualification, retained prestige and private registration fee. Confirmation alone obtains the commission.",
+            "detail": "If the eastern court has a host free, you pay {money:15} and take command of it at once. Your prestige is checked, not spent.",
             "operation": {
               "kind": "mandate_service",
               "service": {
@@ -448,7 +448,7 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
           {
             "id": "east_service_stop_petition",
             "label": "Set the service plan aside",
-            "detail": "Conclude this personal program without a petition, payment or public action.",
+            "detail": "You stay a private soldier in Constantinople and keep your {money:15}.",
             "operation": {
               "kind": "record_decision"
             },
@@ -468,13 +468,13 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
         ]
       },
       "east_scope": {
-        "name": "The limits of command",
-        "text": "A commissioned host remains the court’s force. Officers command only the hosts covered by an effective mandate. Ordinary army controls and the court mandate review retain their current route, availability and authority checks.",
+        "name": "Leading the court’s host",
+        "text": "The host you lead belongs to the eastern court, and you may move only the host your commission names. The court orders it to Hadrianopolis.",
         "choices": [
           {
             "id": "east_service_scope",
-            "label": "Review the commissioned host’s order",
-            "detail": "Commit an ordinary march for the exact commissioned host to the disclosed destination. The mandate, route and host must remain current.",
+            "label": "March the host as ordered",
+            "detail": "The host sets out for Hadrianopolis. Your commission must still be valid when it arrives.",
             "operation": {
               "kind": "mandate_service",
               "service": {
@@ -491,7 +491,7 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
           {
             "id": "east_service_stop_scope",
             "label": "Set the service plan aside",
-            "detail": "Conclude this personal program without a petition, payment or public action.",
+            "detail": "The story ends before you march to Hadrianopolis. Your commission stays in force.",
             "operation": {
               "kind": "record_decision"
             },
@@ -512,12 +512,12 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
       },
       "east_gates": {
         "name": "An unpaid group at the gates",
-        "text": "A group seeking federate service brings a list of mouths and a demand for pay. Review actual offered contracts before treating anyone as a serving contingent. Initial support and continuing seasonal obligations belong to the court account.",
+        "text": "A band from another court comes to Constantinople seeking paid service, with families to feed and a demand for pay. Their own ruler must agree before they serve, and their pay comes from the eastern treasury, not your household.",
         "choices": [
           {
             "id": "east_service_gates",
-            "label": "Consider the proposed service",
-            "detail": "Record an intention to inspect actual contract terms. No contract, payment, land or recognition is created.",
+            "label": "Hear out the men at the gates",
+            "detail": "You hear their terms and turn to the eastern court’s accounts. Nobody is hired yet.",
             "operation": {
               "kind": "record_decision"
             },
@@ -526,7 +526,7 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
           {
             "id": "east_service_stop_gates",
             "label": "Set the service plan aside",
-            "detail": "Conclude this personal program without a petition, payment or public action.",
+            "detail": "The story ends, and the band at the city gates is left to the court.",
             "operation": {
               "kind": "record_decision"
             },
@@ -534,8 +534,8 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
           },
           {
             "id": "salona_service_household_east_gates_consent",
-            "label": "Review an actual service offer",
-            "detail": "Wait for the outside court’s real consent. Review the exact initial public payment and seasonal obligation before completing the contract; refusal supplies no consent.",
+            "label": "Hire the band for the court",
+            "detail": "Once their ruler agrees, the eastern treasury pays {money:12} at once and {money:8} each season for a year.",
             "operation": {
               "kind": "mandate_service",
               "service": {
@@ -564,12 +564,12 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
       },
       "east_accounts": {
         "name": "The emperor tests the accounts",
-        "text": "A request to explain command expenses tests whether you distinguish a public obligation from your own purse. Mandate reviews disclose the actual payer, available funds, initial support and seasonal reserve.",
+        "text": "The emperor in Constantinople asks you to explain what your command costs. Hosts and hired bands are paid from the eastern treasury; your fee and your wages stay in your household purse.",
         "choices": [
           {
             "id": "east_service_accounts",
             "label": "Keep the accounts separate",
-            "detail": "Record the distinction. Use the court mandate review for actual negotiations and payments; this choice spends nothing.",
+            "detail": "You answer the emperor with the court’s spending set apart from your own, then turn to the senators and bishops of Constantinople.",
             "operation": {
               "kind": "record_decision"
             },
@@ -578,7 +578,7 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
           {
             "id": "east_service_stop_accounts",
             "label": "Set the service plan aside",
-            "detail": "Conclude this personal program without a petition, payment or public action.",
+            "detail": "The story ends before the emperor in Constantinople sees your accounts.",
             "operation": {
               "kind": "record_decision"
             },
@@ -599,12 +599,12 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
       },
       "east_interests": {
         "name": "Senators and bishops have interests",
-        "text": "Senatorial property and episcopal influence are interests to consider, not signatures you can supply. Actual appointments, local institutions and recognition retain their separate lawful principals.",
+        "text": "The senators of Constantinople and its bishops have interests of their own. You can win their support, but your commission cannot speak for them.",
         "choices": [
           {
             "id": "east_service_interests",
-            "label": "Consider independent interests",
-            "detail": "Record attention without promising a senator’s vote, a bishop’s support or any appointment.",
+            "label": "Weigh the senators and bishops",
+            "detail": "You take the interests of the city’s senators and bishops into account. None of them is bound to back you.",
             "operation": {
               "kind": "record_decision"
             },
@@ -613,7 +613,7 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
           {
             "id": "east_service_stop_interests",
             "label": "Set the service plan aside",
-            "detail": "Conclude this personal program without a petition, payment or public action.",
+            "detail": "The story ends with the city’s senators and bishops left to themselves.",
             "operation": {
               "kind": "record_decision"
             },
@@ -634,12 +634,12 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
       },
       "east_favor": {
         "name": "The army’s mood and court favor",
-        "text": "Praise among soldiers does not make a suspended warrant effective. The service mandate requires court Standing of at least -20 and lasts at most 720 days. Lost favor suspends acts; expiry and lawful removal retain their own rules.",
+        "text": "The soldiers’ praise cannot lift a suspension. Your commission needs Standing of at least -20 with the eastern court and lasts at most 720 days. Below that you cannot act on it; it ends when its term runs out or the court dismisses you.",
         "choices": [
           {
             "id": "east_service_favor",
-            "label": "Consider the limits of favor",
-            "detail": "Record the warning. Inspect current Standing and the live mandate; no favor or authority is added.",
+            "label": "Mind your Standing at court",
+            "detail": "You watch your Standing with the eastern court and look ahead to how your commission ends.",
             "operation": {
               "kind": "record_decision"
             },
@@ -648,7 +648,7 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
           {
             "id": "east_service_stop_favor",
             "label": "Set the service plan aside",
-            "detail": "Conclude this personal program without a petition, payment or public action.",
+            "detail": "The story ends; your Standing with the eastern court is your own affair.",
             "operation": {
               "kind": "record_decision"
             },
@@ -669,12 +669,12 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
       },
       "east_loss": {
         "name": "Life after a commission",
-        "text": "Wait here or continue ordinary household play until the court actually dismisses you or the finite term expires. Suspended favor alone is not expiry. Acceptance records the real loss; it does not restore command or spend public funds.",
+        "text": "Your commission ends when the eastern court dismisses you or its 720 days run out; a suspension alone does not end it. Until then, wait here or go about your household’s work.",
         "choices": [
           {
             "id": "east_service_loss",
-            "label": "Accept the ended mandate",
-            "detail": "This becomes available only after actual dismissal or expiry. Accept that loss without restoring any powers, spending public money or erasing court obligations.",
+            "label": "Accept the end of your commission",
+            "detail": "Opens once the eastern court dismisses you or your term runs out. You give up command, and the court’s contracts stay in force.",
             "operation": {
               "kind": "mandate_service",
               "service": {
@@ -689,7 +689,7 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
           {
             "id": "east_service_stop_loss",
             "label": "Set the service plan aside",
-            "detail": "Conclude this personal program without a petition, payment or public action.",
+            "detail": "The story ends while your eastern commission runs its course.",
             "operation": {
               "kind": "record_decision"
             },
@@ -710,12 +710,12 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
       },
       "east_purple": {
         "name": "An offer of the purple",
-        "text": "An approach from soldiers may tempt an officer toward the purple. A declaration requires the actual mandate’s eligibility and independent recognition. A living emperor is not removed by an invitation. Any lawful accession or disputed campaign retains its canonical review and may fail.",
+        "text": "Soldiers in Constantinople urge you to claim the purple. Their cheers do not unseat the living emperor: a claim needs recognition beyond the army, and any bid for the throne has its own review and may fail.",
         "choices": [
           {
             "id": "east_service_purple",
-            "label": "Decline to treat an invitation as authority",
-            "detail": "Conclude the personal review. No claim, support, war or accession is created.",
+            "label": "Turn the soldiers’ offer down",
+            "detail": "You refuse the soldiers in Constantinople and close this story without a claim to the throne.",
             "operation": {
               "kind": "record_decision"
             },
@@ -724,7 +724,7 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
           {
             "id": "east_service_stop_purple",
             "label": "Set the service plan aside",
-            "detail": "Conclude this personal program without a petition, payment or public action.",
+            "detail": "The story ends with the soldiers’ offer in Constantinople unanswered.",
             "operation": {
               "kind": "record_decision"
             },
@@ -749,7 +749,7 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
     "id": "eastern_service_household_493",
     "type": "household_track",
     "title": "A household in imperial service",
-    "intro": "Seek a real commission, review an order for its exact host and accept actual dismissal or expiry. Your household and the court keep separate resources. You may stop at every review.",
+    "intro": "Win a commission from the eastern court at Constantinople, lead its host where ordered, and keep your household’s money apart from the court’s. You can set the plan aside at any step.",
     "homeProvinceId": "constantinople",
     "continuity": "protagonist",
     "interruptedStage": "interrupted",
@@ -765,12 +765,12 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
     "stages": {
       "petition": {
         "name": "A commission, not an estate",
-        "text": "A rising officer may seek a real eastern commission when a court host is available. Work and training remain ordinary household actions. The review requires Military skill 6, retained prestige 20, private fee {money:15} and sufficient court Standing. No host is created for this petition.",
+        "text": "In Constantinople the eastern court commissions officers when it has a host free; it raises no new host for you. You need Military skill 6, prestige 20, enough Standing with the court and a fee of {money:15} from your own purse. Until then, work and training go on at home.",
         "choices": [
           {
             "id": "eastern_service_petition",
             "label": "Petition for the service commission",
-            "detail": "Review the actual available host, qualification, retained prestige and private registration fee. Confirmation alone obtains the commission.",
+            "detail": "When a court host is free, you pay the {money:15} fee and command it from that day. Prestige 20 is required but not spent.",
             "operation": {
               "kind": "mandate_service",
               "service": {
@@ -785,7 +785,7 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
           {
             "id": "eastern_service_stop_petition",
             "label": "Set the service plan aside",
-            "detail": "Conclude this personal program without a petition, payment or public action.",
+            "detail": "You keep your {money:15} and your household’s work, and seek no commission.",
             "operation": {
               "kind": "record_decision"
             },
@@ -805,13 +805,13 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
         ]
       },
       "scope": {
-        "name": "The limits of command",
-        "text": "A commissioned host remains the court’s force. Officers command only the hosts covered by an effective mandate. Ordinary army controls and the court mandate review retain their current route, availability and authority checks.",
+        "name": "Leading the court’s host",
+        "text": "Your host is the eastern court’s force, not yours, and your commission covers that host alone. The court wants it at Hadrianopolis.",
         "choices": [
           {
             "id": "eastern_service_scope",
-            "label": "Review the commissioned host’s order",
-            "detail": "Commit an ordinary march for the exact commissioned host to the disclosed destination. The mandate, route and host must remain current.",
+            "label": "March the host as ordered",
+            "detail": "Your host marches for Hadrianopolis. The march needs your commission to hold until the host arrives.",
             "operation": {
               "kind": "mandate_service",
               "service": {
@@ -828,7 +828,7 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
           {
             "id": "eastern_service_stop_scope",
             "label": "Set the service plan aside",
-            "detail": "Conclude this personal program without a petition, payment or public action.",
+            "detail": "The story ends with your host still short of Hadrianopolis; you keep the commission.",
             "operation": {
               "kind": "record_decision"
             },
@@ -849,12 +849,12 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
       },
       "gates": {
         "name": "An unpaid group at the gates",
-        "text": "A group seeking federate service brings a list of mouths and a demand for pay. Review actual offered contracts before treating anyone as a serving contingent. Initial support and continuing seasonal obligations belong to the court account.",
+        "text": "Fighters from a neighboring court reach Constantinople asking to be hired, with families in tow and pay to settle. Their ruler must agree to the contract, and the eastern treasury pays them, not your household.",
         "choices": [
           {
             "id": "eastern_service_gates",
-            "label": "Consider the proposed service",
-            "detail": "Record an intention to inspect actual contract terms. No contract, payment, land or recognition is created.",
+            "label": "Hear out the men at the gates",
+            "detail": "You listen to the fighters’ demands, then turn to the court’s books. No one is hired yet.",
             "operation": {
               "kind": "record_decision"
             },
@@ -863,7 +863,7 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
           {
             "id": "eastern_service_stop_gates",
             "label": "Set the service plan aside",
-            "detail": "Conclude this personal program without a petition, payment or public action.",
+            "detail": "The story ends; the court deals with the fighters without you.",
             "operation": {
               "kind": "record_decision"
             },
@@ -871,8 +871,8 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
           },
           {
             "id": "eastern_service_household_493_gates_consent",
-            "label": "Review an actual service offer",
-            "detail": "Wait for the outside court’s real consent. Review the exact initial public payment and seasonal obligation before completing the contract; refusal supplies no consent.",
+            "label": "Hire the fighters for the court",
+            "detail": "After their ruler agrees, the court treasury in Constantinople pays {money:12} now and {money:8} a season for a year.",
             "operation": {
               "kind": "mandate_service",
               "service": {
@@ -901,12 +901,12 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
       },
       "accounts": {
         "name": "The emperor tests the accounts",
-        "text": "A request to explain command expenses tests whether you distinguish a public obligation from your own purse. Mandate reviews disclose the actual payer, available funds, initial support and seasonal reserve.",
+        "text": "The emperor wants to know where the money for your command goes. The eastern treasury pays for hosts and hired fighters; your fee and private earnings belong to your household.",
         "choices": [
           {
             "id": "eastern_service_accounts",
             "label": "Keep the accounts separate",
-            "detail": "Record the distinction. Use the court mandate review for actual negotiations and payments; this choice spends nothing.",
+            "detail": "You keep the court’s books and your household’s purse apart, and look next to the senate and the clergy.",
             "operation": {
               "kind": "record_decision"
             },
@@ -915,7 +915,7 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
           {
             "id": "eastern_service_stop_accounts",
             "label": "Set the service plan aside",
-            "detail": "Conclude this personal program without a petition, payment or public action.",
+            "detail": "The story ends with the emperor’s question about your accounts unanswered.",
             "operation": {
               "kind": "record_decision"
             },
@@ -936,12 +936,12 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
       },
       "interests": {
         "name": "Senators and bishops have interests",
-        "text": "Senatorial property and episcopal influence are interests to consider, not signatures you can supply. Actual appointments, local institutions and recognition retain their separate lawful principals.",
+        "text": "The senate of Constantinople holds great estates and the clergy hold the city’s ear. Their support is theirs to give; your commission cannot give it for them.",
         "choices": [
           {
             "id": "eastern_service_interests",
-            "label": "Consider independent interests",
-            "detail": "Record attention without promising a senator’s vote, a bishop’s support or any appointment.",
+            "label": "Weigh the senate and the clergy",
+            "detail": "You keep the senate’s and the clergy’s wishes in mind. Neither owes you its support.",
             "operation": {
               "kind": "record_decision"
             },
@@ -950,7 +950,7 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
           {
             "id": "eastern_service_stop_interests",
             "label": "Set the service plan aside",
-            "detail": "Conclude this personal program without a petition, payment or public action.",
+            "detail": "The story ends before you deal with the senate or the clergy.",
             "operation": {
               "kind": "record_decision"
             },
@@ -971,12 +971,12 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
       },
       "favor": {
         "name": "The army’s mood and court favor",
-        "text": "Praise among soldiers does not make a suspended warrant effective. The service mandate requires court Standing of at least -20 and lasts at most 720 days. Lost favor suspends acts; expiry and lawful removal retain their own rules.",
+        "text": "Cheering soldiers cannot restore a suspended commission. You need Standing of at least -20 with the eastern court to act, and the commission runs for at most 720 days. It ends when that term is over or the court dismisses you.",
         "choices": [
           {
             "id": "eastern_service_favor",
-            "label": "Consider the limits of favor",
-            "detail": "Record the warning. Inspect current Standing and the live mandate; no favor or authority is added.",
+            "label": "Mind your Standing at court",
+            "detail": "You keep your Standing in Constantinople at -20 or better and prepare for the day your term ends.",
             "operation": {
               "kind": "record_decision"
             },
@@ -985,7 +985,7 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
           {
             "id": "eastern_service_stop_favor",
             "label": "Set the service plan aside",
-            "detail": "Conclude this personal program without a petition, payment or public action.",
+            "detail": "The story ends; court favor in Constantinople is left to you.",
             "operation": {
               "kind": "record_decision"
             },
@@ -1006,12 +1006,12 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
       },
       "loss": {
         "name": "Life after a commission",
-        "text": "Wait here or continue ordinary household play until the court actually dismisses you or the finite term expires. Suspended favor alone is not expiry. Acceptance records the real loss; it does not restore command or spend public funds.",
+        "text": "Your eastern commission lasts until the court dismisses you or its 720 days are up; a suspension does not end it. Meanwhile your household carries on its work in Constantinople.",
         "choices": [
           {
             "id": "eastern_service_loss",
-            "label": "Accept the ended mandate",
-            "detail": "This becomes available only after actual dismissal or expiry. Accept that loss without restoring any powers, spending public money or erasing court obligations.",
+            "label": "Accept the end of your commission",
+            "detail": "Available after dismissal or the end of your term. Your command ends; contracts the court made remain its obligations.",
             "operation": {
               "kind": "mandate_service",
               "service": {
@@ -1026,7 +1026,7 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
           {
             "id": "eastern_service_stop_loss",
             "label": "Set the service plan aside",
-            "detail": "Conclude this personal program without a petition, payment or public action.",
+            "detail": "The story ends and your commission runs on until its term or a dismissal.",
             "operation": {
               "kind": "record_decision"
             },
@@ -1047,12 +1047,12 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
       },
       "purple": {
         "name": "An offer of the purple",
-        "text": "An approach from soldiers may tempt an officer toward the purple. A declaration requires the actual mandate’s eligibility and independent recognition. A living emperor is not removed by an invitation. Any lawful accession or disputed campaign retains its canonical review and may fail.",
+        "text": "Some soldiers would raise you to the purple. The reigning emperor stays on the throne until a claim wins recognition beyond the army, and any bid has its own review and can fail.",
         "choices": [
           {
             "id": "eastern_service_purple",
-            "label": "Decline to treat an invitation as authority",
-            "detail": "Conclude the personal review. No claim, support, war or accession is created.",
+            "label": "Turn the soldiers’ offer down",
+            "detail": "You send the soldiers away, make no claim to the throne and close this story.",
             "operation": {
               "kind": "record_decision"
             },
@@ -1061,7 +1061,7 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
           {
             "id": "eastern_service_stop_purple",
             "label": "Set the service plan aside",
-            "detail": "Conclude this personal program without a petition, payment or public action.",
+            "detail": "The story ends, and you leave the soldiers without an answer.",
             "operation": {
               "kind": "record_decision"
             },
@@ -1081,29 +1081,29 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
         ]
       },
       "complete": {
-        "name": "The service review is complete",
-        "text": "Your committed acts remain recorded. Actual commissions, hosts, obligations and claims keep their canonical terms.",
+        "name": "Your service story is done",
+        "text": "Your service in Constantinople stays on record. Any commission, host or contract keeps its own terms.",
         "terminal": true,
         "choices": [],
         "transitions": []
       },
       "deferred": {
         "name": "Private life continues",
-        "text": "You set the service plan aside. Your household may continue ordinary work without seeking an office.",
+        "text": "You set the service plan aside. Your household keeps working in Constantinople without an office.",
         "terminal": true,
         "choices": [],
         "transitions": []
       },
       "elsewhere": {
-        "name": "Away from the opening court",
-        "text": "Leaving this court closes the local program. Existing obligations and household property remain with their ordinary owners.",
+        "name": "Away from the court",
+        "text": "You left Constantinople, so this story ends. Your household keeps its property, and the court keeps its contracts.",
         "terminal": true,
         "choices": [],
         "transitions": []
       },
       "interrupted": {
-        "name": "The original officer’s review ended",
-        "text": "Death or protagonist succession ended this personal program. Its intentions grant the next protagonist no office.",
+        "name": "The officer’s story ended",
+        "text": "This story ended with the death or succession of the officer who began it. The heir inherits no office from it.",
         "terminal": true,
         "choices": [],
         "transitions": []
@@ -1117,25 +1117,25 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
     "type": "ruler_agenda",
     "subjectRealmId": "croatia",
     "title": "The emperor and his commanders",
-    "intro": "Govern through an actual subordinate commander. This program follows the original court and generation; it cannot borrow the commander’s personal consent or the household purse.",
+    "intro": "Rule from Salona through your commander: keep the host paid and loyal, and dismiss the commander who fails you. These priorities shape your court’s story; orders, payments and wars go through Rank & Realm, Land and the map.",
     "stages": [
       {
         "id": "imperial_service_emperor_service",
         "name": "Command and public obligations",
-        "text": "Inspect actual commissions, hosts and available public funds. Another commander’s soldiers and a household purse are not interchangeable public resources.",
+        "text": "Your commander leads a Dalmatian host and spends from the court’s treasury. Each commander commands only the host named in the commission, and no commander’s own purse belongs to the court.",
         "year": 476,
         "season": 0,
         "choices": [
           {
             "id": "imperial_service_emperor_service_priority",
-            "label": "Keep this responsibility in view",
-            "detail": "Record a costless priority without appointing, paying, moving or recognizing anyone.",
+            "label": "Put the host’s pay first",
+            "detail": "You turn first to the host and what the Dalmatian treasury owes it.",
             "operation": "agenda_priority"
           },
           {
             "id": "imperial_service_emperor_service_finish",
             "label": "Conclude the program",
-            "detail": "Finish without changing actual service, claims or obligations.",
+            "detail": "You end this agenda before weighing Salona’s senators and bishop.",
             "operation": "agenda_finish"
           }
         ]
@@ -1143,20 +1143,20 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
       {
         "id": "imperial_service_emperor_interests",
         "name": "Civil and religious interests",
-        "text": "Consider senators, bishops and independent commanders through their actual institutions. A declared priority supplies none of their consent or recognition.",
+        "text": "Salona’s senators, its bishop and commanders outside your court each answer to their own interests. Their support must be won from them, not assumed.",
         "year": 476,
         "season": 0,
         "choices": [
           {
             "id": "imperial_service_emperor_interests_priority",
-            "label": "Keep this responsibility in view",
-            "detail": "Record a costless priority without appointing, paying, moving or recognizing anyone.",
+            "label": "Court Salona’s senators and bishop",
+            "detail": "You turn to the senators and bishop of Salona and the commanders beyond your court.",
             "operation": "agenda_priority"
           },
           {
             "id": "imperial_service_emperor_interests_finish",
             "label": "Conclude the program",
-            "detail": "Finish without changing actual service, claims or obligations.",
+            "detail": "You end this agenda before judging how your commander serves.",
             "operation": "agenda_finish"
           }
         ]
@@ -1164,14 +1164,14 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
       {
         "id": "imperial_service_emperor_continuity",
         "name": "Service, loss and continuation",
-        "text": "A real commander remains accountable to this court. Review dismissal only for the currently bound service warrant. Public obligations survive; the former holder loses delegated powers.",
+        "text": "Your commander answers to you. You can dismiss the commander who holds your service commission now; the court’s contracts with hired men stand, and the dismissed commander loses command.",
         "year": 476,
         "season": 0,
         "choices": [
           {
             "id": "service_emperor_dismiss",
-            "label": "Review dismissal of the commander",
-            "detail": "The lawful court removes the actual service warrant. This ends command, negotiation and spending powers without erasing accepted obligations or taking private property.",
+            "label": "Dismiss your commander",
+            "detail": "The commander loses command, spending and negotiation at once. Contracts the court has made stay in force, and the commander keeps their own property.",
             "operation": "agenda_mandate",
             "service": {
               "realmId": "croatia",
@@ -1182,14 +1182,14 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
           },
           {
             "id": "imperial_service_emperor_continuity_priority",
-            "label": "Keep this responsibility in view",
-            "detail": "Record a costless priority without appointing, paying, moving or recognizing anyone.",
+            "label": "Keep your commander in post",
+            "detail": "You keep faith with your Dalmatian commander and watch how the host serves.",
             "operation": "agenda_priority"
           },
           {
             "id": "imperial_service_emperor_continuity_finish",
             "label": "Conclude the program",
-            "detail": "Finish without changing actual service, claims or obligations.",
+            "detail": "You end this agenda and leave your commander’s commission as it stands.",
             "operation": "agenda_finish"
           }
         ]
@@ -1205,19 +1205,19 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
     "type": "ruler_agenda",
     "subjectRealmId": "croatia",
     "title": "The commander and the court",
-    "intro": "This program waits for your actual non-sovereign service appointment. Its original holder and court generation remain bound after acquisition. It grants no commission or independent rule.",
+    "intro": "Serve the Dalmatian court as its commander: lead the host it gives you, keep its money apart from yours and accept the end of your commission when it comes. These priorities shape your court’s story; orders, payments and wars go through Rank & Realm, Land and the map.",
     "stages": [
       {
         "id": "imperial_service_commander_service",
         "name": "Command and public obligations",
-        "text": "Inspect actual commissions, hosts and available public funds. Another commander’s soldiers and a household purse are not interchangeable public resources.",
+        "text": "You lead only the host your commission names, and the Dalmatian treasury pays for it. Other commanders’ soldiers and your household’s purse are not yours to spend on it.",
         "year": 476,
         "season": 0,
         "choices": [
           {
             "id": "service_commander_command",
-            "label": "Review the host’s order",
-            "detail": "Use the exact living mandate and canonical review. No personal acknowledgment substitutes for the transaction.",
+            "label": "March the host to Iader",
+            "detail": "Your Dalmatian host marches to Iader on the court’s order, as long as your commission holds.",
             "operation": "agenda_mandate",
             "service": {
               "realmId": "croatia",
@@ -1230,14 +1230,14 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
           },
           {
             "id": "imperial_service_commander_service_priority",
-            "label": "Keep this responsibility in view",
-            "detail": "Record a costless priority without appointing, paying, moving or recognizing anyone.",
+            "label": "Put your host first",
+            "detail": "You turn to your Dalmatian host, its pay and its readiness to march.",
             "operation": "agenda_priority"
           },
           {
             "id": "imperial_service_commander_service_finish",
             "label": "Conclude the program",
-            "detail": "Finish without changing actual service, claims or obligations.",
+            "detail": "You end this agenda and keep your Dalmatian command as it is.",
             "operation": "agenda_finish"
           }
         ]
@@ -1245,20 +1245,20 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
       {
         "id": "imperial_service_commander_interests",
         "name": "Civil and religious interests",
-        "text": "Consider senators, bishops and independent commanders through their actual institutions. A declared priority supplies none of their consent or recognition.",
+        "text": "The senators and bishop of Salona, and commanders outside the court, follow their own interests. You can seek their support, but your commission does not command it.",
         "year": 476,
         "season": 0,
         "choices": [
           {
             "id": "imperial_service_commander_interests_priority",
-            "label": "Keep this responsibility in view",
-            "detail": "Record a costless priority without appointing, paying, moving or recognizing anyone.",
+            "label": "Seek friends among Salona’s notables",
+            "detail": "You look for allies among Salona’s senators and clergy.",
             "operation": "agenda_priority"
           },
           {
             "id": "imperial_service_commander_interests_finish",
             "label": "Conclude the program",
-            "detail": "Finish without changing actual service, claims or obligations.",
+            "detail": "You end this agenda without seeking allies in Salona.",
             "operation": "agenda_finish"
           }
         ]
@@ -1266,14 +1266,14 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
       {
         "id": "imperial_service_commander_continuity",
         "name": "Service, loss and continuation",
-        "text": "Read the current office and recognition records. Favor, finite tenure, changed rulers and dismissal can end effective service. Neither past acclaim nor this program restores a warrant.",
+        "text": "Lost favor, the end of its term, a new ruler or a dismissal can end your Dalmatian commission. Past acclaim does not bring it back.",
         "year": 476,
         "season": 0,
         "choices": [
           {
             "id": "service_commander_accept_loss",
-            "label": "Accept actual loss of service",
-            "detail": "Use the exact living mandate and canonical review. No personal acknowledgment substitutes for the transaction.",
+            "label": "Accept the end of your commission",
+            "detail": "Once the court at Salona dismisses you or your term runs out, you hand back your command. Nothing is paid.",
             "operation": "agenda_mandate",
             "service": {
               "realmId": "croatia",
@@ -1284,14 +1284,14 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
           },
           {
             "id": "imperial_service_commander_continuity_priority",
-            "label": "Keep this responsibility in view",
-            "detail": "Record a costless priority without appointing, paying, moving or recognizing anyone.",
+            "label": "Prepare for life after command",
+            "detail": "You plan for the day your Dalmatian commission ends.",
             "operation": "agenda_priority"
           },
           {
             "id": "imperial_service_commander_continuity_finish",
             "label": "Conclude the program",
-            "detail": "Finish without changing actual service, claims or obligations.",
+            "detail": "You end this agenda while your Dalmatian commission runs on.",
             "operation": "agenda_finish"
           }
         ]
@@ -1307,25 +1307,25 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
     "type": "ruler_agenda",
     "subjectRealmId": "east_493",
     "title": "The emperor and his commanders",
-    "intro": "This program waits until you actually become the eastern court’s ruler through ordinary political procedures. It then follows that incumbent and court generation, with an actual subordinate commander. No office or other person’s consent is granted.",
+    "intro": "If you come to rule the eastern court in Constantinople, rule through your commander: keep the host paid and loyal, and dismiss the commander who fails you. These priorities shape your court’s story; orders, payments and wars go through Rank & Realm, Land and the map.",
     "stages": [
       {
         "id": "imperial_service_emperor_service_493",
         "name": "Command and public obligations",
-        "text": "Inspect actual commissions, hosts and available public funds. Another commander’s soldiers and a household purse are not interchangeable public resources.",
+        "text": "Your commander leads an eastern host and draws on the treasury in Constantinople. A commission covers one named host, and the commander’s own money is not the court’s.",
         "year": 493,
         "season": 0,
         "choices": [
           {
             "id": "imperial_service_emperor_service_priority_493",
-            "label": "Keep this responsibility in view",
-            "detail": "Record a costless priority without appointing, paying, moving or recognizing anyone.",
+            "label": "Put the host’s pay first",
+            "detail": "You see first to the eastern host and the pay the treasury owes it.",
             "operation": "agenda_priority"
           },
           {
             "id": "imperial_service_emperor_service_finish_493",
             "label": "Conclude the program",
-            "detail": "Finish without changing actual service, claims or obligations.",
+            "detail": "You close this agenda before turning to the senate and the clergy.",
             "operation": "agenda_finish"
           }
         ]
@@ -1333,20 +1333,20 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
       {
         "id": "imperial_service_emperor_interests_493",
         "name": "Civil and religious interests",
-        "text": "Consider senators, bishops and independent commanders through their actual institutions. A declared priority supplies none of their consent or recognition.",
+        "text": "The senate of Constantinople, its clergy and commanders beyond your court follow interests of their own. You must win their support; your rule does not supply it.",
         "year": 493,
         "season": 0,
         "choices": [
           {
             "id": "imperial_service_emperor_interests_priority_493",
-            "label": "Keep this responsibility in view",
-            "detail": "Record a costless priority without appointing, paying, moving or recognizing anyone.",
+            "label": "Court the senate and the clergy",
+            "detail": "You turn to the senate, the clergy of Constantinople and the commanders outside your court.",
             "operation": "agenda_priority"
           },
           {
             "id": "imperial_service_emperor_interests_finish_493",
             "label": "Conclude the program",
-            "detail": "Finish without changing actual service, claims or obligations.",
+            "detail": "You close this agenda before judging your eastern commander.",
             "operation": "agenda_finish"
           }
         ]
@@ -1354,14 +1354,14 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
       {
         "id": "imperial_service_emperor_continuity_493",
         "name": "Service, loss and continuation",
-        "text": "A real commander remains accountable to this court. Review dismissal only for the currently bound service warrant. Public obligations survive; the former holder loses delegated powers.",
+        "text": "Your eastern commander answers to you, and you may dismiss whoever holds your service commission now. Contracts the court has made stand after the dismissal.",
         "year": 493,
         "season": 0,
         "choices": [
           {
             "id": "service_emperor_dismiss_493",
-            "label": "Review dismissal of the commander",
-            "detail": "The lawful court removes the actual service warrant. This ends command, negotiation and spending powers without erasing accepted obligations or taking private property.",
+            "label": "Dismiss your commander",
+            "detail": "Your commander’s command and powers to pay and negotiate end at once. The court’s contracts stand, and the commander’s own property is untouched.",
             "operation": "agenda_mandate",
             "service": {
               "realmId": "east_493",
@@ -1372,14 +1372,14 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
           },
           {
             "id": "imperial_service_emperor_continuity_priority_493",
-            "label": "Keep this responsibility in view",
-            "detail": "Record a costless priority without appointing, paying, moving or recognizing anyone.",
+            "label": "Keep your commander in post",
+            "detail": "You stand by your eastern commander and watch the host’s conduct.",
             "operation": "agenda_priority"
           },
           {
             "id": "imperial_service_emperor_continuity_finish_493",
             "label": "Conclude the program",
-            "detail": "Finish without changing actual service, claims or obligations.",
+            "detail": "You close this agenda and leave the eastern commander’s commission as it stands.",
             "operation": "agenda_finish"
           }
         ]
@@ -1396,19 +1396,19 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
     "type": "ruler_agenda",
     "subjectRealmId": "east_493",
     "title": "The commander and the court",
-    "intro": "This program waits for your actual non-sovereign service appointment. Its original holder and court generation remain bound after acquisition. It grants no commission or independent rule.",
+    "intro": "Serve the eastern court in Constantinople as its commander: lead the host it entrusts to you, keep its treasury apart from your purse and accept your dismissal when it comes. These priorities shape your court’s story; orders, payments and wars go through Rank & Realm, Land and the map.",
     "stages": [
       {
         "id": "imperial_service_commander_service_493",
         "name": "Command and public obligations",
-        "text": "Inspect actual commissions, hosts and available public funds. Another commander’s soldiers and a household purse are not interchangeable public resources.",
+        "text": "Your commission covers one eastern host, paid from the treasury in Constantinople. You cannot take another commander’s soldiers, and your own money stays your household’s.",
         "year": 493,
         "season": 0,
         "choices": [
           {
             "id": "service_commander_command_493",
-            "label": "Review the host’s order",
-            "detail": "Use the exact living mandate and canonical review. No personal acknowledgment substitutes for the transaction.",
+            "label": "March the host to Hadrianopolis",
+            "detail": "On the eastern court’s order your host sets out for Hadrianopolis. Your commission must hold for the march.",
             "operation": "agenda_mandate",
             "service": {
               "realmId": "east_493",
@@ -1421,14 +1421,14 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
           },
           {
             "id": "imperial_service_commander_service_priority_493",
-            "label": "Keep this responsibility in view",
-            "detail": "Record a costless priority without appointing, paying, moving or recognizing anyone.",
+            "label": "Put your host first",
+            "detail": "You see to your eastern host’s pay, supplies and readiness.",
             "operation": "agenda_priority"
           },
           {
             "id": "imperial_service_commander_service_finish_493",
             "label": "Conclude the program",
-            "detail": "Finish without changing actual service, claims or obligations.",
+            "detail": "You close this agenda and carry on commanding your eastern host.",
             "operation": "agenda_finish"
           }
         ]
@@ -1436,20 +1436,20 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
       {
         "id": "imperial_service_commander_interests_493",
         "name": "Civil and religious interests",
-        "text": "Consider senators, bishops and independent commanders through their actual institutions. A declared priority supplies none of their consent or recognition.",
+        "text": "The senate of Constantinople, the clergy and commanders outside the court each pursue their own interests. Your commission gives you no claim on their support.",
         "year": 493,
         "season": 0,
         "choices": [
           {
             "id": "imperial_service_commander_interests_priority_493",
-            "label": "Keep this responsibility in view",
-            "detail": "Record a costless priority without appointing, paying, moving or recognizing anyone.",
+            "label": "Seek friends in the senate and clergy",
+            "detail": "You look for allies among the senators and clergy of Constantinople.",
             "operation": "agenda_priority"
           },
           {
             "id": "imperial_service_commander_interests_finish_493",
             "label": "Conclude the program",
-            "detail": "Finish without changing actual service, claims or obligations.",
+            "detail": "You close this agenda without courting the senate or the clergy.",
             "operation": "agenda_finish"
           }
         ]
@@ -1457,14 +1457,14 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
       {
         "id": "imperial_service_commander_continuity_493",
         "name": "Service, loss and continuation",
-        "text": "Read the current office and recognition records. Favor, finite tenure, changed rulers and dismissal can end effective service. Neither past acclaim nor this program restores a warrant.",
+        "text": "Falling from favor, the end of your term, a new emperor or a dismissal can end your eastern commission. Old acclaim will not restore it.",
         "year": 493,
         "season": 0,
         "choices": [
           {
             "id": "service_commander_accept_loss_493",
-            "label": "Accept actual loss of service",
-            "detail": "Use the exact living mandate and canonical review. No personal acknowledgment substitutes for the transaction.",
+            "label": "Accept the end of your commission",
+            "detail": "After the eastern court dismisses you or your term expires, you give up the host. It costs you nothing.",
             "operation": "agenda_mandate",
             "service": {
               "realmId": "east_493",
@@ -1475,14 +1475,14 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
           },
           {
             "id": "imperial_service_commander_continuity_priority_493",
-            "label": "Keep this responsibility in view",
-            "detail": "Record a costless priority without appointing, paying, moving or recognizing anyone.",
+            "label": "Prepare for life after command",
+            "detail": "You make plans for when your eastern commission ends.",
             "operation": "agenda_priority"
           },
           {
             "id": "imperial_service_commander_continuity_finish_493",
             "label": "Conclude the program",
-            "detail": "Finish without changing actual service, claims or obligations.",
+            "detail": "You close this agenda while your eastern commission lasts.",
             "operation": "agenda_finish"
           }
         ]
@@ -1498,19 +1498,19 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
     "type": "ruler_agenda",
     "subjectRealmId": "byzantium",
     "title": "Service at the eastern court",
-    "intro": "This program waits for your actual non-sovereign service appointment. Its original holder and court generation remain bound after acquisition. It grants no commission or independent rule.",
+    "intro": "If you take service in Constantinople, serve the Eastern Roman Court as its commander: lead the host it hands you, spend its treasury only on that host and accept the end of your commission when it comes. These priorities shape your court’s story; orders, payments and wars go through Rank & Realm, Land and the map.",
     "stages": [
       {
         "id": "eastern_imperial_service_commander_service",
         "name": "Command and public obligations",
-        "text": "Inspect actual commissions, hosts and available public funds. Another commander’s soldiers and a household purse are not interchangeable public resources.",
+        "text": "The Eastern Roman Court pays for the one host your commission names. Soldiers under other commanders, and the money your household earns, stay outside your command.",
         "year": 476,
         "season": 0,
         "choices": [
           {
             "id": "eastern_service_commander_command",
-            "label": "Review the host’s order",
-            "detail": "Use the exact living mandate and canonical review. No personal acknowledgment substitutes for the transaction.",
+            "label": "Lead the host to Hadrianopolis",
+            "detail": "The court orders your host to Hadrianopolis, and it goes while your eastern commission is valid.",
             "operation": "agenda_mandate",
             "service": {
               "realmId": "byzantium",
@@ -1523,14 +1523,14 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
           },
           {
             "id": "eastern_imperial_service_commander_service_priority",
-            "label": "Keep this responsibility in view",
-            "detail": "Record a costless priority without appointing, paying, moving or recognizing anyone.",
+            "label": "Put your eastern host first",
+            "detail": "You give your attention to the eastern host you lead and what it needs to march.",
             "operation": "agenda_priority"
           },
           {
             "id": "eastern_imperial_service_commander_service_finish",
             "label": "Conclude the program",
-            "detail": "Finish without changing actual service, claims or obligations.",
+            "detail": "You end this agenda and go on leading the Eastern Roman host.",
             "operation": "agenda_finish"
           }
         ]
@@ -1538,20 +1538,20 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
       {
         "id": "eastern_imperial_service_commander_interests",
         "name": "Civil and religious interests",
-        "text": "Consider senators, bishops and independent commanders through their actual institutions. A declared priority supplies none of their consent or recognition.",
+        "text": "In Constantinople the senators, the bishops and commanders outside the court answer to their own interests. Serving the court does not win you their backing.",
         "year": 476,
         "season": 0,
         "choices": [
           {
             "id": "eastern_imperial_service_commander_interests_priority",
-            "label": "Keep this responsibility in view",
-            "detail": "Record a costless priority without appointing, paying, moving or recognizing anyone.",
+            "label": "Make allies in Constantinople",
+            "detail": "You seek backers among the city’s senators and bishops.",
             "operation": "agenda_priority"
           },
           {
             "id": "eastern_imperial_service_commander_interests_finish",
             "label": "Conclude the program",
-            "detail": "Finish without changing actual service, claims or obligations.",
+            "detail": "You end this agenda without seeking backers in Constantinople.",
             "operation": "agenda_finish"
           }
         ]
@@ -1559,14 +1559,14 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
       {
         "id": "eastern_imperial_service_commander_continuity",
         "name": "Service, loss and continuation",
-        "text": "Read the current office and recognition records. Favor, finite tenure, changed rulers and dismissal can end effective service. Neither past acclaim nor this program restores a warrant.",
+        "text": "Losing the emperor’s favor, reaching the end of your term, a change of ruler or a dismissal can end your service to the Eastern Roman Court. Earlier acclaim does not renew it.",
         "year": 476,
         "season": 0,
         "choices": [
           {
             "id": "eastern_service_commander_accept_loss",
-            "label": "Accept actual loss of service",
-            "detail": "Use the exact living mandate and canonical review. No personal acknowledgment substitutes for the transaction.",
+            "label": "Accept the end of your commission",
+            "detail": "When the Eastern Roman Court dismisses you or your term is over, you step down from command at no cost.",
             "operation": "agenda_mandate",
             "service": {
               "realmId": "byzantium",
@@ -1577,14 +1577,14 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
           },
           {
             "id": "eastern_imperial_service_commander_continuity_priority",
-            "label": "Keep this responsibility in view",
-            "detail": "Record a costless priority without appointing, paying, moving or recognizing anyone.",
+            "label": "Prepare for life after command",
+            "detail": "You think ahead to life after your service in Constantinople.",
             "operation": "agenda_priority"
           },
           {
             "id": "eastern_imperial_service_commander_continuity_finish",
             "label": "Conclude the program",
-            "detail": "Finish without changing actual service, claims or obligations.",
+            "detail": "You end this agenda and serve the Eastern Roman Court until your term ends.",
             "operation": "agenda_finish"
           }
         ]
@@ -1600,8 +1600,8 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
   "opening_imperial_service": {
     "id": "opening_imperial_service",
     "type": "opening_profile",
-    "title": "Learning the service warrant",
-    "intro": "Optional goals observe actual acquisition, delegated command and acceptance of an ended warrant. No reward or acknowledgment can substitute for these transactions.",
+    "title": "First steps in Dalmatian service",
+    "intro": "Three goals for an officer of the Dalmatian court, or of the eastern court if you move to Constantinople: win a commission, march its host as ordered, and accept the commission’s end when it comes.",
     "scenarioIds": [
       "court_service_household_476"
     ],
@@ -1614,8 +1614,8 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
     "goals": [
       {
         "id": "service_petition_review",
-        "name": "Obtain a real mandate",
-        "text": "Confirm an available commission. The original appointment and its fee must actually commit.",
+        "name": "Win a service commission",
+        "text": "Done when the Dalmatian or eastern court confirms your petition and you pay its {money:15} fee.",
         "criterion": {
           "kind": "any",
           "conditions": [
@@ -1634,8 +1634,8 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
       },
       {
         "id": "service_accounts_review",
-        "name": "Use the commissioned command",
-        "text": "Confirm an ordinary order for the exact commissioned host while authority remains effective.",
+        "name": "March your host as ordered",
+        "text": "Done when you march your host to Iader or Hadrianopolis while your commission is in force.",
         "criterion": {
           "kind": "any",
           "conditions": [
@@ -1654,8 +1654,8 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
       },
       {
         "id": "service_loss_review",
-        "name": "Accept actual loss",
-        "text": "Wait for actual dismissal or expiry, then accept the loss through its canonical review. A suspension or personal acknowledgment does not complete this goal.",
+        "name": "Accept the end of your commission",
+        "text": "Done when you accept your commission’s end after a dismissal or the end of its term; a suspension does not count.",
         "criterion": {
           "kind": "any",
           "conditions": [
@@ -1678,8 +1678,8 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
   "opening_imperial_service_493": {
     "id": "opening_imperial_service_493",
     "type": "opening_profile",
-    "title": "Learning the service warrant",
-    "intro": "Optional goals observe actual acquisition, delegated command and acceptance of an ended warrant. No reward or acknowledgment can substitute for these transactions.",
+    "title": "First steps in eastern service",
+    "intro": "Three goals for an officer of the eastern court in Constantinople: win a commission, march its host as ordered, and accept the commission’s end when it comes.",
     "scenarioIds": [
       "farmer_493"
     ],
@@ -1692,8 +1692,8 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
     "goals": [
       {
         "id": "service_petition_review",
-        "name": "Obtain a real mandate",
-        "text": "Confirm an available commission. The original appointment and its fee must actually commit.",
+        "name": "Win a service commission",
+        "text": "Done when the eastern court confirms your petition and you pay its {money:15} fee.",
         "criterion": {
           "kind": "mandate_transaction",
           "storyId": "eastern_service_household_493",
@@ -1702,8 +1702,8 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
       },
       {
         "id": "service_accounts_review",
-        "name": "Use the commissioned command",
-        "text": "Confirm an ordinary order for the exact commissioned host while authority remains effective.",
+        "name": "March your host as ordered",
+        "text": "Done when you march your host to Hadrianopolis while your commission is in force.",
         "criterion": {
           "kind": "mandate_transaction",
           "storyId": "eastern_service_household_493",
@@ -1712,8 +1712,8 @@ FB.bookmarkSources.stage({source:'data/story_imperial_service.js',bookmarks:['47
       },
       {
         "id": "service_loss_review",
-        "name": "Accept actual loss",
-        "text": "Wait for actual dismissal or expiry, then accept the loss through its canonical review. A suspension or personal acknowledgment does not complete this goal.",
+        "name": "Accept the end of your commission",
+        "text": "Done when you accept the end of your eastern commission after a dismissal or its term runs out; a suspension does not count.",
         "criterion": {
           "kind": "mandate_transaction",
           "storyId": "eastern_service_household_493",
