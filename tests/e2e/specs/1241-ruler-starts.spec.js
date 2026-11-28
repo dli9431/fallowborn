@@ -1,4 +1,7 @@
 'use strict';
+const fs = require('fs');
+const path = require('path');
+const {applyLaterContributions} = require('../support/game/bookmark-sources-legacy');
 const {installRestoreFacts} = require('../support/game/restore-facts');
 const {restoreBookmark} = require('../support/game/bookmark-acceptance');
 const {test,expect} = require('../support/fixture');
@@ -95,6 +98,81 @@ test('the current and retained 1241 revisions validate with separate households 
     {oldCourt:false,newCourt:true,excluded:true,head:'geo_obuda_3054643',detached:true},
     {oldCourt:false,newCourt:true,excluded:true,head:'geo_vladimir_473247',detached:true}
   ]});
+});
+
+test('1241 Bela, Yaroslav and Batu text says what is going on',async function ({page},info) {
+  await openGame(page,info);
+  const result = await page.evaluate(function () {
+    const processWords = /\b(ordinary|actual|actually|existing|current|original|authored|declared)\b/i;
+    const disclaimers = /grants? no |creates? no |Record (a |an )?(costless )?(priority|intention|preference)|Record attention|\bordinary\b|\bactual(ly)?\b|\bexisting\b|\boriginal\b|\bauthored\b|historical opportunity|political opportunity/i;
+    const lostApostrophe = /[A-Za-z]\?[A-Za-z]/;
+    const limit = 'These priorities shape your court’s story; orders, payments and wars go through Rank & Realm, Land and the map.';
+    const faults = [];
+    let checked = 0, labels = 0;
+    function prose(where, value) {
+      checked++;
+      if (!value || disclaimers.test(value) || lostApostrophe.test(value) || value.indexOf(String.fromCharCode(8212)) >= 0 || /\bgold\b/i.test(value)) faults.push(where + ': ' + value);
+    }
+    function sentences(value) { return value.split(/[.!?](?:\s|$)/).filter(Boolean).length; }
+    ['bela_agenda_1241','yaroslav_agenda_1241'].forEach(function (id) {
+      const d = FBDATA.storyInstances[id];
+      prose(id + ' intro', d.intro);
+      if (!d.intro.endsWith(limit)) faults.push(id + ' limit sentence');
+      d.stages.forEach(function (st) {
+        prose(st.id + ' text', st.text);
+        st.choices.forEach(function (c) {
+          labels++;
+          prose(c.id + ' detail', c.detail);
+          if (!c.label || c.label.trim().split(/\s+/).length > 8 || processWords.test(c.label) || lostApostrophe.test(c.label)) {
+            faults.push(c.id + ' label: ' + c.label);
+          }
+        });
+      });
+    });
+    ['opening_bela_1241','opening_yaroslav_1241'].forEach(function (id) {
+      const d = FBDATA.storyInstances[id];
+      prose(id + ' intro', d.intro);
+      d.goals.forEach(function (g) { prose(g.id + ' text', g.text); });
+      d.contacts.forEach(function (c) { prose(c.id + ' text', c.text); });
+    });
+    ['bela_1241','yaroslav_1241','batu_1241'].forEach(function (id) {
+      const sc = FBDATA.startScenarios.find(function (row) { return row.id === id; });
+      prose(id + ' desc', sc.desc);
+      prose(id + ' intro', sc.intro);
+      prose(id + ' family', sc.familyPresets.standard.desc);
+      if (sentences(sc.desc) > 2 || sentences(sc.intro) > 4 || !/^You /.test(sc.intro) || !/ in Deeds/.test(sc.intro)) faults.push(id + ' shape');
+    });
+    const hosted = FBDATA.storyInstances.bela_agenda_1241.stages.find(function (st) { return st.id === 'bela_hosted_people'; });
+    const north = FBDATA.storyInstances.yaroslav_agenda_1241.stages.find(function (st) { return st.id === 'yaroslav_north'; });
+    const batu = FBDATA.startScenarios.find(function (row) { return row.id === 'batu_1241'; });
+    return {faults:faults,checked:checked,labels:labels,hosted:hosted.text,north:north.text,batu:batu.desc};
+  });
+  expect(result.faults).toEqual([]);
+  expect(result.checked).toBe(72);
+  expect(result.labels).toBe(32);
+  // The hosted-people review names the people and place and no longer disclaims its own effect.
+  for (const name of ['Koten','Cumans','Obuda']) expect(result.hosted).toContain(name);
+  expect(result.hosted).not.toMatch(/changes? (none|nothing)|priority changes/i);
+  expect(result.north).toContain('Alexander');
+  expect(result.batu).toContain('Volodymyr');
+  expect(result.batu).not.toMatch(/actual|depends on/i);
+});
+
+test('the 1241 ruler and start text changes stay exact against the frozen predecessor sources',async function () {
+  const root = path.resolve(__dirname,'../../..');
+  const frozen = path.resolve(__dirname,'../fixtures/bookmark-composition/native-before-shared');
+  const declarations = {
+    'starts_1241.js':[/FBDATA\.startScenarios_1241 = \[[\s\S]*?\n\];\n/],
+    'story_ruler_agendas_1241.js':[/FBDATA\.rulerAgendas_1241 = \{[\s\S]*?\n\};\n/,/FBDATA\.openingProfiles_rulers_1241 = \{[\s\S]*?\n\};\n/]
+  };
+  for (const name of Object.keys(declarations)) {
+    const former = fs.readFileSync(path.join(frozen,name),'utf8');
+    // Each recorded span must occur exactly once on both sides.
+    const applied = applyLaterContributions('data/'+name,former);
+    expect(applied,name).not.toBe(former);
+    const current = fs.readFileSync(path.join(root,'data',name),'utf8');
+    for (const pattern of declarations[name]) expect(applied.match(pattern)[0],name).toBe(current.match(pattern)[0]);
+  }
 });
 
 for (const row of openings) {

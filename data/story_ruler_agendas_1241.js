@@ -18,118 +18,118 @@ FBDATA.royalCourts_1241 = {
 
 FBDATA.rulerAgendas_1241 = {
   bela_agenda_1241:{ id:'bela_agenda_1241', type:'ruler_agenda', subjectRealmId:'hungary_1241',
-    title:'Bela: court and preparation', intro:'Review real resources and public obligations. These priorities create no troops, protection agreement or historical outcome.',
+    title:'Bela: court and preparation', intro:'You are king of Hungary in spring 1241. Batu’s Mongols are already through the Carpathian passes, and your lords blame the Cumans you took in. These priorities shape your court’s story; orders, payments and wars go through Rank & Realm, Land and the map.',
     stages:[
-      { id:'bela_accounts', name:'The present crown', year:1241, season:0,
-        text:'Your lands and treasury are the existing crown’s. Review them in Rank & Realm before choosing a priority.', choices:[
-          { id:'bela_review_accounts', label:'Prioritize the current accounts', detail:'Record a costless priority. The current treasury and all public obligations remain unchanged.', operation:'agenda_priority' },
-          { id:'bela_keep_accounts', label:'Retain present arrangements', detail:'Continue ordinary government without an additional commitment.', operation:'agenda_priority' }
+      { id:'bela_accounts', name:'The royal treasury', year:1241, season:0,
+        text:'For years you have taken back crown lands your father gave away, and many lords resent it. Your treasury must now carry the defense of Hungary.', choices:[
+          { id:'bela_review_accounts', label:'Put the royal treasury first', detail:'You turn to the crown’s revenues and what they can pay for this year.', operation:'agenda_priority' },
+          { id:'bela_keep_accounts', label:'Leave the accounts to your officials', detail:'You trust your officials with the treasury and look elsewhere.', operation:'agenda_priority' }
         ] },
       { id:'bela_family', name:'The royal household', year:1241, season:0,
-        text:'Maria and Stephen are existing family members. Coloman is your brother in Slavonia. Kinship alone provides no command, relocation or promise of safety.', choices:[
-          { id:'bela_family_priority', label:'Keep the household in view', detail:'Record attention to the family. Any journey or political action retains its ordinary requirements.', operation:'agenda_priority' },
-          { id:'bela_defer_family', label:'Leave household plans open', detail:'Make no journey, appointment or protection pledge.', operation:'agenda_priority' }
+        text:'Queen Maria Laskarina and your infant son Stephen are with you at Obuda. Your younger brother Coloman rules Slavonia in the south.', choices:[
+          { id:'bela_family_priority', label:'Keep Maria and Stephen close', detail:'You turn to the safety of the queen and your heir.', operation:'agenda_priority' },
+          { id:'bela_defer_family', label:'Rely on Coloman in Slavonia', detail:'You turn to your brother and the south of Hungary.', operation:'agenda_priority' }
         ] },
       { id:'bela_defense', name:'Preparation and resources', year:1241, season:0,
-        text:'Use ordinary military and treasury controls for actual preparations. A priority here does not muster or provision a host.', choices:[
-          { id:'bela_defensive_priority', label:'Favor defensive preparation', detail:'Record a preference without spending public or private funds or raising soldiers.', operation:'agenda_priority' },
-          { id:'bela_defer_defense', label:'Defer a new commitment', detail:'Keep current forces and obligations.', operation:'agenda_priority' }
+        text:'Batu’s columns stand at Cluj and Gyula, and more are riding through Poland. Raising and feeding a royal host will cost the treasury dearly.', choices:[
+          { id:'bela_defensive_priority', label:'Prepare Hungary’s defense', detail:'You turn to the passes, the fortresses and the royal host.', operation:'agenda_priority' },
+          { id:'bela_defer_defense', label:'Wait for clearer news of the Mongols', detail:'You hold back from new spending until the danger is plain.', operation:'agenda_priority' }
         ] },
       { id:'bela_hosted_people', name:'People under royal protection', year:1241, season:0,
-        text:'Historical accounts describe already hosted Cumans and a guarded personal party near the court. Consult the current following, guard and access records for their actual situation. This personal priority changes none of those arrangements.', choices:[
-          { id:'bela_review_protection', label:'Consider lawful protection', detail:'Record a priority only. Actual protection and access require their own living parties, authority and resources.', operation:'agenda_priority' },
-          { id:'bela_keep_protection', label:'Leave present arrangements unchanged', detail:'Create no agreement, accusation, expulsion or private reward.', operation:'agenda_priority' }
+        text:'Khan Koten and his Cumans have sheltered in Hungary under your protection. Your nobles distrust them, and Koten is kept under guard near Obuda.', choices:[
+          { id:'bela_review_protection', label:'Stand by Koten and the Cumans', detail:'You turn to keeping your promise of shelter to Koten’s people.', operation:'agenda_priority' },
+          { id:'bela_keep_protection', label:'Heed the lords who distrust the Cumans', detail:'You turn to the nobles who want Koten’s people watched.', operation:'agenda_priority' }
         ] },
       { id:'bela_contacts', name:'Neighbors and obligations', year:1241, season:1,
-        text:'Review living courts through ordinary diplomacy. No report here proves an approaching army or a local attack.', choices:[
-          { id:'bela_diplomatic_priority', label:'Prioritize current diplomacy', detail:'Record a preference without a treaty, payment or declaration of war.', operation:'agenda_priority' },
-          { id:'bela_keep_diplomacy', label:'Keep existing relations', detail:'Retain the ordinary diplomacy and access rules.', operation:'agenda_priority' }
+        text:'Austria, Poland, the Pope and Frederick II all watch the Mongols too. None of them has promised you help.', choices:[
+          { id:'bela_diplomatic_priority', label:'Seek help from your neighbors', detail:'You turn to envoys and letters to Austria, the Pope and Frederick II.', operation:'agenda_priority' },
+          { id:'bela_keep_diplomacy', label:'Rely on Hungary’s own strength', detail:'You turn away from foreign courts and look to your own lords.', operation:'agenda_priority' }
         ] },
-      { id:'bela_war_review', name:'The actual military situation', year:1241, season:1,
-        text:'Inspect current wars and host positions. Historical battle dates do not determine this campaign’s outcome.', choices:[
-          { id:'bela_review_war', label:'Review the current defense', detail:'Record a priority without reporting a battle, casualty, victory or defeat.', operation:'agenda_priority' },
-          { id:'bela_defer_war', label:'Make no additional commitment', detail:'Keep existing orders and forces.', operation:'agenda_priority' }
+      { id:'bela_war_review', name:'The Mongols in Hungary', year:1241, season:1,
+        text:'Batu’s columns entered Hungary this spring. Where the fighting goes from here, and who wins, is decided on the map.', choices:[
+          { id:'bela_review_war', label:'Lead the defense of Hungary yourself', detail:'You turn your attention to the royal host and the fight ahead.', operation:'agenda_priority' },
+          { id:'bela_defer_war', label:'Hold back and guard the court', detail:'You turn to keeping the royal family and Obuda safe.', operation:'agenda_priority' }
         ] },
-      { id:'bela_response', name:'A sustainable response', year:1241, season:2,
-        text:'A funded response belongs to the ordinary treasury and military controls. The family and crown retain their actual resources.', choices:[
-          { id:'bela_resource_priority', label:'Prioritize sustainable obligations', detail:'Record a policy without collecting revenue or paying an expense.', operation:'agenda_priority' },
-          { id:'bela_defer_response', label:'Postpone a new response', detail:'Create no order or payment.', operation:'agenda_priority' }
+      { id:'bela_response', name:'Paying for the war', year:1241, season:2,
+        text:'Whatever the fighting has brought, the crown must pay its soldiers and rebuild from its own treasury and lands.', choices:[
+          { id:'bela_resource_priority', label:'Keep the crown’s spending within its means', detail:'You turn to what the treasury can afford through the coming winter.', operation:'agenda_priority' },
+          { id:'bela_defer_response', label:'Wait before spending more', detail:'You hold the treasury back until Hungary’s state is clear.', operation:'agenda_priority' }
         ] },
       { id:'bela_continuation', name:'The court continues', year:1241, season:3,
-        text:'Conclude this personal review from the campaign as it stands. The conclusion neither restores lands nor guarantees household survival.', choices:[
-          { id:'bela_continue', label:'Continue ordinary government', detail:'Close the opening program with the actual court and obligations.', operation:'agenda_priority' },
-          { id:'bela_finish', label:'Conclude without another priority', detail:'End this personal program without an additional effect.', operation:'agenda_finish' }
+        text:'The winter of 1241 closes the year of the Mongol invasion. Take stock of the lands and family you still have.', choices:[
+          { id:'bela_continue', label:'Carry the crown into the new year', detail:'You turn to ruling Hungary through the winter ahead.', operation:'agenda_priority' },
+          { id:'bela_finish', label:'Close your court agenda', detail:'You end this agenda and govern on from where you stand.', operation:'agenda_finish' }
         ] }
     ] },
   yaroslav_agenda_1241:{ id:'yaroslav_agenda_1241', type:'ruler_agenda', subjectRealmId:'vladimir_1241',
-    title:'Yaroslav: recovery and northern relations', intro:'Govern the existing principality and consider its living neighbors. No future confirmation, journey or tribute agreement is supplied.',
+    title:'Yaroslav: recovery and northern relations', intro:'You rule Vladimir three years after the Mongols burned it and killed your brother Yuri, and last winter Batu’s armies took Kyiv. These priorities shape your court’s story; orders, payments and wars go through Rank & Realm, Land and the map.',
     stages:[
       { id:'yaroslav_accounts', name:'The present principality', year:1241, season:0,
-        text:'Review the actual lands, treasury and obligations in Rank & Realm. Earlier destruction supplies context, not an automatic new loss or recovery award.', choices:[
-          { id:'yaroslav_review_accounts', label:'Prioritize the current accounts', detail:'Record a costless priority without changing money, population or holdings.', operation:'agenda_priority' },
-          { id:'yaroslav_keep_accounts', label:'Retain present arrangements', detail:'Continue the existing government.', operation:'agenda_priority' }
+        text:'The sack of 1238 left Vladimir and its towns poor and half rebuilt. Your treasury must pay for whatever you mend.', choices:[
+          { id:'yaroslav_review_accounts', label:'Put Vladimir’s treasury first', detail:'You turn to your revenues and what they can rebuild.', operation:'agenda_priority' },
+          { id:'yaroslav_keep_accounts', label:'Leave the accounts to your officials', detail:'You trust your officials with the treasury and look elsewhere.', operation:'agenda_priority' }
         ] },
       { id:'yaroslav_family', name:'One princely family', year:1241, season:0,
-        text:'Feodosia, Alexander and Andrei are your existing kin. Alexander and his wife have a separate northern home; kinship does not install either son at Novgorod.', choices:[
-          { id:'yaroslav_family_priority', label:'Consider the family’s positions', detail:'Record attention to actual people without creating an office, marriage or move.', operation:'agenda_priority' },
-          { id:'yaroslav_defer_family', label:'Leave family plans open', detail:'Keep the existing relationships and homes.', operation:'agenda_priority' }
+        text:'Your wife Feodosia and your sons Alexander and Andrei are your family. Alexander, back from Novgorod after a quarrel with the city, keeps his own household with his wife, a daughter of Bryachislav of Polotsk.', choices:[
+          { id:'yaroslav_family_priority', label:'Settle your sons’ places', detail:'You turn to what Alexander and Andrei should hold.', operation:'agenda_priority' },
+          { id:'yaroslav_defer_family', label:'Let your sons find their own way', detail:'You leave Alexander and Andrei to their own households for now.', operation:'agenda_priority' }
         ] },
       { id:'yaroslav_north', name:'Novgorod and its choices', year:1241, season:0,
-        text:'Novgorod has its own court. The historical recall involved requests and negotiation; this agenda neither grants its office nor schedules a return.', choices:[
-          { id:'yaroslav_northern_priority', label:'Prioritize northern relations', detail:'Record a preference. No Novgorod authority or hereditary claim is awarded.', operation:'agenda_priority' },
-          { id:'yaroslav_keep_north', label:'Retain current relations', detail:'Create no appointment or treaty.', operation:'agenda_priority' }
+        text:'Novgorod chooses its own prince. After quarrelling with your son Alexander, the city may yet ask for him back.', choices:[
+          { id:'yaroslav_northern_priority', label:'Court Novgorod for your house', detail:'You turn to winning back Novgorod’s goodwill for Alexander or Andrei.', operation:'agenda_priority' },
+          { id:'yaroslav_keep_north', label:'Leave Novgorod to its own quarrels', detail:'You wait for Novgorod to send its envoys to you.', operation:'agenda_priority' }
         ] },
-      { id:'yaroslav_reports', name:'Reports and present limits', year:1241, season:0,
-        text:'Current wars and living courts are available through the ordinary controls. This review reports no unseen local battle or compulsory foreign demand.', choices:[
-          { id:'yaroslav_review_reports', label:'Keep decisions tied to current affairs', detail:'Record a costless priority without asserting a new event.', operation:'agenda_priority' },
-          { id:'yaroslav_defer_reports', label:'Wait before another commitment', detail:'Retain the present obligations.', operation:'agenda_priority' }
+      { id:'yaroslav_reports', name:'News from the south and west', year:1241, season:0,
+        text:'Batu’s armies took Kyiv last winter and now ride west into Poland and Hungary. For now they make no new demand on Vladimir.', choices:[
+          { id:'yaroslav_review_reports', label:'Watch Batu’s armies in the west', detail:'You turn to the news from Kyiv and beyond.', operation:'agenda_priority' },
+          { id:'yaroslav_defer_reports', label:'Keep your mind on Vladimir', detail:'You turn back to your own lands and leave distant wars aside.', operation:'agenda_priority' }
         ] },
       { id:'yaroslav_recovery', name:'Recovery and expenditure', year:1241, season:1,
-        text:'Actual development, work and military expenditure retain their ordinary costs. The calendar grants no replacement population or rebuilt holding.', choices:[
-          { id:'yaroslav_recovery_priority', label:'Favor sustainable recovery', detail:'Record a priority without spending funds or creating resources.', operation:'agenda_priority' },
-          { id:'yaroslav_defer_recovery', label:'Defer new expenditure', detail:'Leave existing resources unchanged.', operation:'agenda_priority' }
+        text:'Burned towns and empty villages need money and labor to rebuild. Every coin you spend comes from your own treasury.', choices:[
+          { id:'yaroslav_recovery_priority', label:'Rebuild Vladimir and its towns', detail:'You turn to the slow work of restoring what was burned.', operation:'agenda_priority' },
+          { id:'yaroslav_defer_recovery', label:'Save the treasury for harder times', detail:'You hold back spending until the land is safer.', operation:'agenda_priority' }
         ] },
-      { id:'yaroslav_diplomacy', name:'Lawful diplomacy', year:1241, season:1,
-        text:'Consider actual neighboring courts through ordinary diplomacy. Later confirmation by Batu is historical context, not an opening treaty or tribute contract.', choices:[
-          { id:'yaroslav_diplomatic_priority', label:'Prioritize present diplomacy', detail:'Record a preference without a foreign journey, recognition or submission.', operation:'agenda_priority' },
-          { id:'yaroslav_keep_diplomacy', label:'Keep current relations', detail:'Create no additional obligation.', operation:'agenda_priority' }
+      { id:'yaroslav_diplomacy', name:'Neighbors and rivals', year:1241, season:1,
+        text:'Other Rus princes, the Swedes and the Livonian Order all press on Novgorod and your borders. Batu has not yet summoned the Rus princes to his camp.', choices:[
+          { id:'yaroslav_diplomatic_priority', label:'Seek allies among the Rus princes', detail:'You turn to envoys and marriages with neighboring courts.', operation:'agenda_priority' },
+          { id:'yaroslav_keep_diplomacy', label:'Keep to your own borders', detail:'You avoid new ties and watch your neighbors.', operation:'agenda_priority' }
         ] },
-      { id:'yaroslav_obligations', name:'Present obligations', year:1241, season:2,
-        text:'Review what your actual government and wars require. This principality does not automatically govern every Rus court.', choices:[
-          { id:'yaroslav_review_obligations', label:'Prioritize the existing domain', detail:'Record a priority without extending jurisdiction or collecting a payment.', operation:'agenda_priority' },
-          { id:'yaroslav_defer_obligations', label:'Avoid a new commitment', detail:'Retain current authority and resources.', operation:'agenda_priority' }
+      { id:'yaroslav_obligations', name:'First among the Rus princes', year:1241, season:2,
+        text:'As grand prince you rank first among the Rus princes, but you rule only your own lands. The others follow you only as far as they choose.', choices:[
+          { id:'yaroslav_review_obligations', label:'Strengthen your hold on Vladimir', detail:'You turn to the lands and towns you rule yourself.', operation:'agenda_priority' },
+          { id:'yaroslav_defer_obligations', label:'Leave the other princes to themselves', detail:'You make no new claims on the other Rus courts.', operation:'agenda_priority' }
         ] },
       { id:'yaroslav_continuation', name:'The principality continues', year:1241, season:3,
-        text:'Conclude the opening review from the living court’s actual position. Ordinary succession, diplomacy and recovery continue.', choices:[
-          { id:'yaroslav_continue', label:'Continue ordinary government', detail:'Close this personal program without a reward or promised recognition.', operation:'agenda_priority' },
-          { id:'yaroslav_finish', label:'Conclude without another priority', detail:'End the program without creating a new obligation.', operation:'agenda_finish' }
+        text:'By the winter of 1241 your year of rebuilding is ending. Take stock of Vladimir, your sons and Novgorod.', choices:[
+          { id:'yaroslav_continue', label:'Carry Vladimir into the new year', detail:'You turn to ruling the principality through the winter ahead.', operation:'agenda_priority' },
+          { id:'yaroslav_finish', label:'Close your court agenda', detail:'You end this agenda and govern on from where you stand.', operation:'agenda_finish' }
         ] }
     ] }
 };
 
 FBDATA.openingProfiles_rulers_1241 = {
   opening_bela_1241:{ id:'opening_bela_1241', type:'opening_profile', title:'The crown’s opening goals',
-    intro:'Optional personal decisions and actual funded service. Completion grants no extra reward.',
+    intro:'Three goals for your first year at Obuda. They carry no reward.',
     scenarioIds:['bela_1241'], officeRealmId:'hungary_1241', requires:['bela_agenda_1241'],
     goals:[
-      { id:'bela_accounts_goal', name:'Choose an administrative priority', text:'Commit an opening accounts decision.', office:true, criterion:{ kind:'story_choice', storyId:'bela_agenda_1241', choiceIds:['bela_review_accounts','bela_keep_accounts'] } },
-      { id:'bela_defense_goal', name:'Review preparation', text:'Commit a defensive priority or a deliberate deferral.', office:true, criterion:{ kind:'story_choice', storyId:'bela_agenda_1241', choiceIds:['bela_defensive_priority','bela_defer_defense'] } },
-      { id:'bela_host_payment', name:'Meet an actual host expense', text:'Pay a positive ordinary military expense. A priority alone cannot complete this goal.', office:true, criterion:{ kind:'event', eventKind:'profile_host_payment', realmId:'hungary_1241' } }
+      { id:'bela_accounts_goal', name:'Set the course of the treasury', text:'Done when you put the royal treasury first or leave it to your officials.', office:true, criterion:{ kind:'story_choice', storyId:'bela_agenda_1241', choiceIds:['bela_review_accounts','bela_keep_accounts'] } },
+      { id:'bela_defense_goal', name:'Decide on the defense of Hungary', text:'Done when you prepare Hungary’s defense or wait for clearer news of the Mongols.', office:true, criterion:{ kind:'story_choice', storyId:'bela_agenda_1241', choiceIds:['bela_defensive_priority','bela_defer_defense'] } },
+      { id:'bela_host_payment', name:'Pay your soldiers from the treasury', text:'Done when the royal treasury pays your soldiers’ upkeep in full.', office:true, criterion:{ kind:'event', eventKind:'profile_host_payment', realmId:'hungary_1241' } }
     ], contacts:[
-      { id:'bela_maria', label:'The queen', text:'Maria is the existing spouse. Ordinary kin and household access remains authoritative.', linkKind:'kin', required:true, person:{ source:'royal_member', realmId:'hungary_1241', memberId:'maria' } },
-      { id:'bela_coloman', label:'A brother in Slavonia', text:'Coloman is external kin. This contact grants no commission or command.', linkKind:'kin', required:true, person:{ source:'royal_member', realmId:'hungary_1241', memberId:'coloman' } }
+      { id:'bela_maria', label:'The queen', text:'Maria Laskarina, daughter of Theodore Laskaris of Nicaea, is your wife and the mother of your heir Stephen.', linkKind:'kin', required:true, person:{ source:'royal_member', realmId:'hungary_1241', memberId:'maria' } },
+      { id:'bela_coloman', label:'A brother in Slavonia', text:'Coloman is your younger brother and rules Slavonia in the south of Hungary.', linkKind:'kin', required:true, person:{ source:'royal_member', realmId:'hungary_1241', memberId:'coloman' } }
     ] },
   opening_yaroslav_1241:{ id:'opening_yaroslav_1241', type:'opening_profile', title:'The principality’s opening goals',
-    intro:'Optional priorities and actual public receipts. These goals create no new authority or reward.',
+    intro:'Three goals for your first year at Vladimir. They carry no reward.',
     scenarioIds:['yaroslav_1241'], officeRealmId:'vladimir_1241', requires:['yaroslav_agenda_1241'],
     goals:[
-      { id:'yaroslav_accounts_goal', name:'Choose an administrative priority', text:'Commit an opening accounts decision.', office:true, criterion:{ kind:'story_choice', storyId:'yaroslav_agenda_1241', choiceIds:['yaroslav_review_accounts','yaroslav_keep_accounts'] } },
-      { id:'yaroslav_north_goal', name:'Consider northern relations', text:'Commit a northern priority or retain the current relations.', office:true, criterion:{ kind:'story_choice', storyId:'yaroslav_agenda_1241', choiceIds:['yaroslav_northern_priority','yaroslav_keep_north'] } },
-      { id:'yaroslav_receipt', name:'Receive an ordinary public receipt', text:'Receive a positive payment through the existing public account.', office:true, criterion:{ kind:'event', eventKind:'profile_receipt', realmId:'vladimir_1241' } }
+      { id:'yaroslav_accounts_goal', name:'Set the course of the treasury', text:'Done when you put Vladimir’s treasury first or leave it to your officials.', office:true, criterion:{ kind:'story_choice', storyId:'yaroslav_agenda_1241', choiceIds:['yaroslav_review_accounts','yaroslav_keep_accounts'] } },
+      { id:'yaroslav_north_goal', name:'Decide on Novgorod', text:'Done when you court Novgorod for your house or leave it to its own quarrels.', office:true, criterion:{ kind:'story_choice', storyId:'yaroslav_agenda_1241', choiceIds:['yaroslav_northern_priority','yaroslav_keep_north'] } },
+      { id:'yaroslav_receipt', name:'Collect revenue for Vladimir', text:'Done when taxes or other income reach Vladimir’s treasury.', office:true, criterion:{ kind:'event', eventKind:'profile_receipt', realmId:'vladimir_1241' } }
     ], contacts:[
-      { id:'yaroslav_feodosia', label:'The prince’s wife', text:'Feodosia is one existing person, also Alexander’s mother. This contact creates no relocation.', linkKind:'kin', required:true, person:{ source:'royal_member', realmId:'vladimir_1241', memberId:'feodosia' } },
-      { id:'yaroslav_alexander', label:'Alexander', text:'The existing son retains his northern home and ordinary access. No Novgorod office is implied.', linkKind:'kin', required:true, person:{ source:'royal_member', realmId:'vladimir_1241', memberId:'alexander' } },
-      { id:'yaroslav_andrei', label:'Andrei', text:'The existing son is not installed as Novgorod’s ruler by this contact.', linkKind:'kin', required:true, person:{ source:'royal_member', realmId:'vladimir_1241', memberId:'andrei' } }
+      { id:'yaroslav_feodosia', label:'The prince’s wife', text:'Feodosia is your wife and the mother of Alexander and Andrei.', linkKind:'kin', required:true, person:{ source:'royal_member', realmId:'vladimir_1241', memberId:'feodosia' } },
+      { id:'yaroslav_alexander', label:'Alexander', text:'Alexander is your elder son, who left Novgorod after quarrelling with the city.', linkKind:'kin', required:true, person:{ source:'royal_member', realmId:'vladimir_1241', memberId:'alexander' } },
+      { id:'yaroslav_andrei', label:'Andrei', text:'Andrei is your younger son, a prince Novgorod may also ask for.', linkKind:'kin', required:true, person:{ source:'royal_member', realmId:'vladimir_1241', memberId:'andrei' } }
     ] }
 };
 

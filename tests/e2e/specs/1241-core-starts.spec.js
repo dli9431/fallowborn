@@ -1,4 +1,7 @@
 'use strict';
+const fs=require('fs');
+const path=require('path');
+const {applyLaterContributions}=require('../support/game/bookmark-sources-legacy');
 const {test,expect}=require('../support/fixture');
 const {openGame}=require('../support/game/navigation');
 const {installRestoreFacts}=require('../support/game/restore-facts');
@@ -85,6 +88,61 @@ test('all four core starts resolve purely, earlier worlds retain their starts an
       pure:bytes===JSON.stringify(FBDATA) && rng===FB.getRngState() && uid===FB.getUidCounter()};
   },earlier)).toEqual({revision:'core_starts_v2',opening:'operations_v2',profiles:[true,true,true,true],
     valid:true,retained:true,sameOpening:true,sameRealms:true,extraStarts:true,layout:true,noDanylo:true,pure:true});
+});
+
+test('Koten’s start and guarded review say what is going on',async function ({page},info) {
+  await openGame(page,info);
+  const result=await page.evaluate(function (track) {
+    const processWords=/\b(ordinary|actual|actually|existing|current|original|authored|declared)\b/i;
+    const disclaimers=/grants? no |creates? no |Record (a |an )?(costless )?(priority|intention|preference)|Record attention|\bordinary\b|\bactual(ly)?\b|\bexisting\b|\boriginal\b|\bauthored\b|historical opportunity|political opportunity/i;
+    const lostApostrophe=/[A-Za-z]\?[A-Za-z]/;
+    const faults=[];
+    let checked=0,labels=0;
+    function prose(where,value) {
+      checked++;
+      if (!value || disclaimers.test(value) || lostApostrophe.test(value) || value.indexOf(String.fromCharCode(8212))>=0 || /\bgold\b/i.test(value)) faults.push(where+': '+value);
+    }
+    function sentences(value) {return value.split(/[.!?](?:\s|$)/).filter(Boolean).length;}
+    const d=FBDATA.storyInstances[track];
+    prose(track+' intro',d.intro);
+    Object.keys(d.stages).forEach(function (id) {
+      const st=d.stages[id];
+      prose(id+' text',st.text);
+      st.choices.forEach(function (c) {
+        labels++;
+        prose(c.id+' detail',c.detail);
+        if (!c.label || c.label.trim().split(/\s+/).length>8 || processWords.test(c.label) || lostApostrophe.test(c.label)) faults.push(c.id+' label: '+c.label);
+      });
+    });
+    const sc=FBDATA.startScenarios.find(function (row) {return row.id==='koten_1241';});
+    prose('koten_1241 desc',sc.desc);
+    prose('koten_1241 intro',sc.intro);
+    prose('koten_1241 family',sc.familyPresets.standard.desc);
+    if (sentences(sc.desc)>2 || sentences(sc.intro)>4 || !/^You /.test(sc.intro) || !/ in Deeds\.$/.test(sc.intro)) faults.push('koten_1241 shape');
+    const hosting=d.stages.hosting.text;
+    return {faults:faults,checked:checked,labels:labels,hosting:hosting,sentences:sentences(hosting),
+      stages:Object.keys(d.stages).length,terminal:Object.keys(d.stages).filter(function (id) {return d.stages[id].terminal;}).length};
+  },track);
+  expect(result.faults).toEqual([]);
+  expect(result.checked).toBe(24);
+  expect(result.labels).toBe(10);
+  expect({stages:result.stages,terminal:result.terminal}).toEqual({stages:10,terminal:5});
+  // The hosting review names Bela’s court in one or two sentences.
+  expect(result.hosting).toContain('Bela’s court');
+  expect(result.sentences).toBeGreaterThanOrEqual(1);
+  expect(result.sentences).toBeLessThanOrEqual(2);
+});
+
+test('the Koten review text changes stay exact against the frozen predecessor source',async function () {
+  const root=path.resolve(__dirname,'../../..');
+  const name='story_koten_1241.js';
+  const former=fs.readFileSync(path.resolve(__dirname,'../fixtures/bookmark-composition/native-before-shared',name),'utf8');
+  // Each recorded span must occur exactly once on both sides.
+  const applied=applyLaterContributions('data/'+name,former);
+  expect(applied).not.toBe(former);
+  const current=fs.readFileSync(path.join(root,'data',name),'utf8');
+  const declaration=/FBDATA\.householdTracks_koten_1241 = \{[\s\S]*?\n\};\n/;
+  expect(applied.match(declaration)[0]).toBe(current.match(declaration)[0]);
 });
 
 for (const mode of ['picker','code','direct']) {
