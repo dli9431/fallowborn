@@ -1677,9 +1677,9 @@ FBDATA.bookmarks['711'].localInstitutions = {
 };
 FBDATA.storyGovernmentSelections711 = {
   toledo_crown_711:{ type:'government_contest', id:'toledo_crown_711', realmId:'visigoths_711',
-    name:'The Toledo crown', desc:'Noble and clerical assent recognizes this crown. Divided selection leaves rival claims without dividing possession or private inheritance.' },
+    name:'The Toledo crown', desc:'Nobles and bishops make the Gothic king at Toledo. Roderic holds the crown; Achila’s party in the northeast refuses him.' },
   northeastern_crown_711:{ type:'government_contest', id:'northeastern_crown_711', realmId:'achila_711',
-    name:'The northeastern crown', desc:'This court retains its own territory and political recognition. No election proves which opening Gothic claimant was legitimate.' }
+    name:'The northeastern crown', desc:'Nobles and bishops of the northeast make their own Gothic king at Narbonne. Achila holds this crown and rejects Roderic at Toledo.' }
 };
 FBDATA.bookmarks['711'].stories.push('toledo_crown_711', 'northeastern_crown_711');
 });

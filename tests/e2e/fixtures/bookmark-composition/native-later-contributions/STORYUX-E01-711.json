@@ -1,15 +1,4 @@
 {
-  "description": "The Roderic agenda no longer forwards defender campaign choices for the crossing and Toledo. The removed ids stay listed as retired choices so saves that hold them restore as decided stages.",
-  "changes": [
-    {
-      "file": "data/story_ruler_agendas_711.js",
-      "before": "choices:[\n          { id:'roderic_face_crossing', label:'Face the existing campaign', detail:'Authorize this opportunity only if the source currently permits it. Ordinary war decides the result.', operation:'agenda_story_choice', storyId:'strait_crossing_711', choiceId:'face_campaign' },\n          { id:'roderic_leave_crossing', label:'Use ordinary diplomacy', detail:'Close only this authored opportunity if the source permits. Independent wars and diplomacy remain available.', operation:'agenda_story_choice', storyId:'strait_crossing_711', choiceId:'leave_campaign' },\n",
-      "after": "retiredChoiceIds:['roderic_face_crossing','roderic_leave_crossing'], choices:[\n"
-    },
-    {
-      "file": "data/story_ruler_agendas_711.js",
-      "before": "choices:[\n          { id:'roderic_face_toledo', label:'Face the existing campaign', detail:'Authorize only the current source opportunity if you still hold the required authority.', operation:'agenda_story_choice', storyId:'toledo_campaign_711', choiceId:'face_campaign' },\n          { id:'roderic_leave_toledo', label:'Use ordinary diplomacy', detail:'Close only this source opportunity if its live review permits it.', operation:'agenda_story_choice', storyId:'toledo_campaign_711', choiceId:'leave_campaign' },\n",
-      "after": "retiredChoiceIds:['roderic_face_toledo','roderic_leave_toledo'], choices:[\n"
-    }
-  ]
+  "description": "The removal of the Roderic defender campaign choices is now recorded together with the later wording of the same agenda in STORYUX-C13.json, which took over both entries.",
+  "changes": []
 }

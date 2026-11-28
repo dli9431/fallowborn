@@ -244,8 +244,10 @@ test('foundation stage lines name the county, the new court and the revolt deadl
       return { county:FB.world.byId.oviedo.name, lost:FB.world.byId.toledo.name,
         season:FB.seasonName(due.season), year:due.year, day:due.day,
         pending:[pending.stage, pending.lines], rebelling:[rebelling.stage, rebelling.lines],
-        closed:closed, founded:[founded.stage, founded.lines] };
+        closed:closed, founded:[founded.stage, founded.lines], intro:story.intro(s) };
     }, STORY);
+    // The sheet intro says who wants what; the formation condition stays in the status lines.
+    expect(result.intro).toBe('If Toledo falls, Pelayo wants a court of his own in the Asturian uplands, beyond Umayyad rule.');
     const county = result.county;
     const formation = 'Asturias can form at ' + county + ' once ' + result.lost +
       ' has fallen: by a peaceful break from a surviving court, or by a revolt that wins.';

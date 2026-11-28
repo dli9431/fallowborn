@@ -144,6 +144,69 @@ for (const row of rulers) {
   });
 }
 
+test('711 court, campaign and crown text states plain decisions', async function ({ page }, info) {
+  await useReleasedStartRules(page);
+  await openGame(page, info);
+  const result = await page.evaluate(function () {
+    const processWords = /\b(ordinary|actual|actually|existing|current|original|authored|declared)\b/i;
+    const disclaimers = /grants? no |creates? no |Record (a |an )?(costless )?(priority|intention|preference)|Record attention|\bordinary\b|\bactual(ly)?\b|\bexisting\b|\boriginal\b|\bauthored\b|historical opportunity|political opportunity/i;
+    const lostApostrophe = /[A-Za-z]\?[A-Za-z]/;
+    const limit = 'These priorities shape your court’s story; orders, payments and wars go through Rank & Realm, Land and the map.';
+    const faults = [];
+    let checked = 0;
+    function prose(where, value) {
+      checked++;
+      if (!value || disclaimers.test(value) || lostApostrophe.test(value)) faults.push(where + ': ' + value);
+    }
+    FBDATA.startScenarios_rulers_711.forEach(function (start) {
+      prose(start.id + ' desc', start.desc);
+      prose(start.id + ' intro', start.intro);
+      prose(start.id + ' family', start.familyPresets.standard.desc);
+      if (!start.intro.endsWith('Open your court agenda in Deeds.')) faults.push(start.id + ' beginning');
+    });
+    ['roderic_agenda_711','tariq_agenda_711'].forEach(function (id) {
+      const d = FBDATA.rulerAgendas_711[id];
+      prose(id + ' intro', d.intro);
+      if (!d.intro.endsWith(limit)) faults.push(id + ' limit sentence');
+      d.stages.forEach(function (st) {
+        prose(st.id + ' text', st.text);
+        st.choices.forEach(function (c) {
+          prose(c.id + ' detail', c.detail);
+          if (c.label.trim().split(/\s+/).length > 8 || processWords.test(c.label) || lostApostrophe.test(c.label)) {
+            faults.push(c.id + ' label: ' + c.label);
+          }
+        });
+      });
+    });
+    ['strait_crossing_711','toledo_campaign_711','septimania_campaign_711','gaul_campaign_711'].forEach(function (id) {
+      prose(id + ' desc', FBDATA.storyCampaigns711[id].desc);
+    });
+    prose('asturias_foundation_711 desc', FBDATA.storyFoundations.asturias_foundation_711.desc);
+    ['toledo_crown_711','northeastern_crown_711'].forEach(function (id) {
+      prose(id + ' desc', FBDATA.storyGovernmentSelections711[id].desc);
+    });
+    function stage(agenda, id) {
+      return FBDATA.rulerAgendas_711[agenda].stages.find(function (st) { return st.id === id; });
+    }
+    function rows(st) { return st.choices.map(function (c) { return [c.operation, c.label]; }); }
+    const coast = stage('roderic_agenda_711','roderic_coast_review_711');
+    const toledo = stage('roderic_agenda_711','roderic_toledo_review_714');
+    const crossing = stage('tariq_agenda_711','tariq_crossing_review_711');
+    return { faults:faults, checked:checked, coast:rows(coast), toledo:rows(toledo),
+      crossingNames:['caliph','Musa'].every(function (name) { return crossing.text.indexOf(name) >= 0; }),
+      crossingRecord:crossing.choices.find(function (c) { return c.id === 'tariq_record_crossing'; }).label };
+  });
+  expect(result.faults).toEqual([]);
+  // Two starts, two agendas with every stage and choice, and seven descriptions.
+  expect(result.checked).toBeGreaterThan(40);
+  expect(result.coast).toEqual([['agenda_story_fact','Note how the war for Malaga ended'],
+    ['agenda_priority','Guard the southern coast']]);
+  expect(result.toledo).toEqual([['agenda_story_fact','Note how the war for Toledo ended'],
+    ['agenda_priority','Hold Toledo against the invaders']]);
+  expect(result.crossingNames).toBe(true);
+  expect(result.crossingRecord).toBe('Note how the war for Malaga ended');
+});
+
 test('Tariq cannot choose the sovereign crossing', async function ({ page }, info) {
   await beginRuler(page, info, rulers[1], false);
   expect(await page.evaluate(function () {
