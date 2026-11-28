@@ -552,8 +552,8 @@ FBDATA.householdTracks_451 = {
   "aetius_service_track_451": {
     "id": "aetius_service_track_451",
     "type": "household_track",
-    "title": "Court service without an estate",
-    "intro": "The original western court appointment supplies finite negotiating authority, never private ownership of the court’s money or soldiers. Every action uses the actual mandate.",
+    "title": "Aetius’s warrant at Ravenna",
+    "intro": "Your warrant from the western court lets you arrange paid service for it. The court’s money and soldiers do not become yours.",
     "homeProvinceId": "ravenna",
     "continuity": "protagonist",
     "interruptedStage": "interrupted",
@@ -568,13 +568,13 @@ FBDATA.householdTracks_451 = {
     },
     "stages": {
       "service": {
-        "name": "Review actual paid service",
-        "text": "The court-service warrant expires after 360 days and may be suspended or removed earlier. Consent applies only to an actual offered paid-service contract under this mandate. The outside party must separately agree; public obligations remain separate from private gold. Close the sheet to retain current arrangements.",
+        "name": "Agree to paid service",
+        "text": "Your warrant lasts 360 days, and the court may suspend or remove it sooner. Once another court has agreed to serve for pay, you can consent for the western court, which pays from its public funds.",
         "choices": [
           {
             "id": "consent_service",
-            "label": "Review a real service agreement",
-            "detail": "Use the current mandate to consent to an offered court-paid-service contract. No host, land, private wage or outside consent is created by viewing it.",
+            "label": "Consent to the paid service offer",
+            "detail": "Binds the western court to pay from public funds for service another court has agreed to give. You need that open offer and your warrant.",
             "operation": {
               "kind": "mandate_service",
               "service": {
@@ -590,8 +590,8 @@ FBDATA.householdTracks_451 = {
           },
           {
             "id": "accept_loss",
-            "label": "Accept an actual loss of office",
-            "detail": "Available only after the ordinary mandate owner records removal, expiry or another supported loss. No office is restored.",
+            "label": "Accept the loss of your office",
+            "detail": "Closes your court service once the court has dismissed you or your term has ended. It does not give the office back.",
             "operation": {
               "kind": "mandate_service",
               "service": {
@@ -607,22 +607,22 @@ FBDATA.householdTracks_451 = {
         "transitions": []
       },
       "consented": {
-        "name": "The mandate holder consented",
-        "text": "The actual holder supplied consent through the mandate owner. The contract still needs its other party and ordinary public funding; no completed service or battlefield result is claimed.",
+        "name": "You consented to the service",
+        "text": "The western court has your consent to the paid service contract and has made the first payment. The service itself is still to come.",
         "terminal": true,
         "choices": [],
         "transitions": []
       },
       "released": {
-        "name": "Service authority has ended",
-        "text": "The original mandate’s ordinary loss is recorded. Private life and surviving commitments retain their existing owners.",
+        "name": "Your warrant has ended",
+        "text": "You have accepted the loss of your office. Your private life goes on, and the court keeps the promises it made.",
         "terminal": true,
         "choices": [],
         "transitions": []
       },
       "interrupted": {
-        "name": "The original officeholder is unavailable",
-        "text": "Death or succession ended this person’s unfinished review without transferring the commission.",
+        "name": "Aetius can no longer serve",
+        "text": "Death or succession ended Aetius’s court service. The warrant does not pass to an heir.",
         "terminal": true,
         "choices": [],
         "transitions": []
@@ -635,13 +635,13 @@ FBDATA.rulerAgendas_451 = {
     "id": "attila_agenda_451",
     "type": "ruler_agenda",
     "subjectRealmId": "hunnic_coalition_451",
-    "title": "The coalition: receipts, cohesion and a place to live",
-    "intro": "Members decide actual proposals. Outside courts may refuse. Completed payments, resolved sorties, distributed receipts, physical arrival and lawful settlement supply the evidence. No anniversary decides the following’s future.",
+    "title": "From Sirmium to Mursa",
+    "intro": "Your members must agree to demands, raids and settlement, and other courts may refuse you. Make Sirmium pay, raid it, share the takings, move to Mursa and settle your people.",
     "stages": [
       {
         "id": "demand",
-        "name": "Receive one accepted demand",
-        "text": "Propose these exact terms here. In Mobile coalition, assent as your own member and wait for the other members to answer. Return here to send the demand. The outside court may refuse; only its actual public payment completes this stage.",
+        "name": "Make Sirmium pay tribute",
+        "text": "Put a demand on Sirmium to the members, add your assent in Mobile coalition, then send it. This step is done when Sirmium pays.",
         "year": 451,
         "season": 0,
         "completion": {
@@ -650,8 +650,8 @@ FBDATA.rulerAgendas_451 = {
         "choices": [
           {
             "id": "propose_demand",
-            "label": "Propose these terms to the members",
-            "detail": "No payment or outcome. Replaces the pending proposal. Supply only your own assent in Mobile coalition; other members decide separately.",
+            "label": "Put the Sirmium demand to the members",
+            "detail": "Asks the members to approve demanding {money:1} for 30 days under threat of a raid, replacing any pending proposal. Then add your assent in Mobile coalition.",
             "operation": "agenda_mobile_prepare",
             "action": "demand",
             "terms": {
@@ -666,8 +666,8 @@ FBDATA.rulerAgendas_451 = {
           },
           {
             "id": "commit_demand",
-            "label": "Send the demand",
-            "detail": "Ask for one money unit under an explicit raid threat for thirty days. No payment occurs unless the outside court accepts.",
+            "label": "Send the demand to Sirmium",
+            "detail": "Demands {money:1} for 30 days under threat of a raid. The coalition is paid only if Sirmium accepts.",
             "operation": "agenda_mobile",
             "action": "demand",
             "terms": {
@@ -682,22 +682,22 @@ FBDATA.rulerAgendas_451 = {
           },
           {
             "id": "observed_demand",
-            "label": "Record the actual completed transaction",
-            "detail": "Available only after the actual action succeeds. Records its outcome and adds no money, food or authority.",
+            "label": "Record the paid demand",
+            "detail": "Marks this step done once Sirmium has paid.",
             "operation": "agenda_mobile_result"
           },
           {
             "id": "defer_demand",
-            "label": "Defer this review",
-            "detail": "Spend nothing and leave this stage pending. Return later or set the program aside.",
+            "label": "Leave the demand for later",
+            "detail": "Spends nothing. This step stays open.",
             "operation": "agenda_defer"
           }
         ]
       },
       {
         "id": "raid",
-        "name": "Resolve one bounded raid",
-        "text": "An accepted demand reserves a finite tribute commitment. Wait for its thirty-day term to end before raiding. Propose the local sortie here, assent in Mobile coalition and wait for other members. Return to commit the reviewed sortie. It risks fighter losses and provides finite spoils, without occupation or land.",
+        "name": "Raid Sirmium",
+        "text": "Once the 30 days of tribute end, put a raid on Sirmium to the members, add your assent in Mobile coalition, then send the host. Fighters may die, and the raid brings coin and food but no land. This step is done when the raid is over.",
         "year": 451,
         "season": 0,
         "completion": {
@@ -706,8 +706,8 @@ FBDATA.rulerAgendas_451 = {
         "choices": [
           {
             "id": "propose_raid",
-            "label": "Propose these terms to the members",
-            "detail": "No payment or outcome. Replaces the pending proposal. Supply only your own assent in Mobile coalition; other members decide separately.",
+            "label": "Put the Sirmium raid to the members",
+            "detail": "Asks the members to approve the raid, replacing any pending proposal. Then add your assent in Mobile coalition.",
             "operation": "agenda_mobile_prepare",
             "action": "raid",
             "terms": {
@@ -717,8 +717,8 @@ FBDATA.rulerAgendas_451 = {
           },
           {
             "id": "commit_raid",
-            "label": "Review and commit the sortie",
-            "detail": "Resolve ordinary resistance, casualties and finite public coin and county food. No land is granted.",
+            "label": "Send the host to raid Sirmium",
+            "detail": "Raids at once for coin and food, at the risk of your fighters. The members must agree and any tribute term must be over.",
             "operation": "agenda_mobile",
             "action": "raid",
             "terms": {
@@ -728,22 +728,22 @@ FBDATA.rulerAgendas_451 = {
           },
           {
             "id": "observed_raid",
-            "label": "Record the actual completed transaction",
-            "detail": "Available only after the actual action succeeds. Records its outcome and adds no money, food or authority.",
+            "label": "Record the finished raid",
+            "detail": "Marks this step done once the raid on Sirmium is over.",
             "operation": "agenda_mobile_result"
           },
           {
             "id": "defer_raid",
-            "label": "Defer this review",
-            "detail": "Spend nothing and leave this stage pending. Return later or set the program aside.",
+            "label": "Leave the raid for later",
+            "detail": "Spends nothing. This step stays open.",
             "operation": "agenda_defer"
           }
         ]
       },
       {
         "id": "distribution",
-        "name": "Decide one actual receipt",
-        "text": "Share the oldest actual receipt by living member weight or retain it publicly. Food shares are consumed now. This resolves existing resources, without another story reward.",
+        "name": "Share or keep the takings",
+        "text": "Share the oldest undivided payment or spoils among the members by their weight, or keep it for the coalition. Shared food is eaten at once. Either choice completes this step.",
         "year": 451,
         "season": 0,
         "completion": {
@@ -752,8 +752,8 @@ FBDATA.rulerAgendas_451 = {
         "choices": [
           {
             "id": "commit_distribution",
-            "label": "Share by member weight",
-            "detail": "Distribute the oldest actual receipt once. Coin enters private purses; food allotments are consumed.",
+            "label": "Share the takings by member weight",
+            "detail": "Divides the oldest takings and raises the members’ support. Coin goes to their private purses and their food is eaten at once.",
             "operation": "agenda_mobile",
             "action": "distribute",
             "terms": {
@@ -763,8 +763,8 @@ FBDATA.rulerAgendas_451 = {
           },
           {
             "id": "keep_receipt",
-            "label": "Retain the receipt publicly",
-            "detail": "Resolve the oldest receipt without private payment or food allotments, with ordinary support consequences.",
+            "label": "Keep the takings for the coalition",
+            "detail": "Keeps the oldest takings in the coalition’s coin and food stores. The members get nothing and their support falls.",
             "operation": "agenda_mobile",
             "action": "distribute",
             "terms": {
@@ -774,22 +774,22 @@ FBDATA.rulerAgendas_451 = {
           },
           {
             "id": "observed_distribution",
-            "label": "Record the actual completed transaction",
-            "detail": "Available only after the actual action succeeds. Records its outcome and adds no money, food or authority.",
+            "label": "Record the division of takings",
+            "detail": "Marks this step done once takings have been shared or kept.",
             "operation": "agenda_mobile_result"
           },
           {
             "id": "defer_distribution",
-            "label": "Defer this review",
-            "detail": "Spend nothing and leave this stage pending. Return later or set the program aside.",
+            "label": "Leave the takings for later",
+            "detail": "Spends nothing. This step stays open.",
             "operation": "agenda_defer"
           }
         ]
       },
       {
         "id": "move",
-        "name": "Arrive at a seasonal ground",
-        "text": "Propose access here, assent in Mobile coalition and wait for the other members. Send the offer here and wait for outside acceptance. Every intervening county needs ordinary access. If the host was lost, use Mobile coalition to recruit from actual member pledges and pay the current public cost. Review departure here and let days pass. Only actual camp and host arrival completes the stage.",
+        "name": "Move the camp to Mursa",
+        "text": "Put access to Mursa to the members, add your assent in Mobile coalition, send the offer and wait for the holder to accept. Every ruler on the way must let you pass, and a lost host must be raised again in Mobile coalition. Then move the camp, which costs food; this step is done when the camp and host reach Mursa.",
         "year": 451,
         "season": 0,
         "completion": {
@@ -798,8 +798,8 @@ FBDATA.rulerAgendas_451 = {
         "choices": [
           {
             "id": "propose_access",
-            "label": "Propose access to the next ground",
-            "detail": "No permission is granted. Obtain member assent in Mobile coalition.",
+            "label": "Ask the members to seek Mursa access",
+            "detail": "Puts an access offer for Mursa to the members, replacing any pending proposal. Then add your assent in Mobile coalition.",
             "operation": "agenda_mobile_prepare",
             "action": "access",
             "terms": {
@@ -808,8 +808,8 @@ FBDATA.rulerAgendas_451 = {
           },
           {
             "id": "send_access",
-            "label": "Send the reviewed access offer",
-            "detail": "The outside holder must accept separately. The public treasury pays its finite price. Intervening counties need ordinary access.",
+            "label": "Offer to pay for Mursa access",
+            "detail": "Offers {money:6} for 90 days of access, paid from the coalition treasury if Mursa’s holder accepts.",
             "operation": "agenda_mobile",
             "action": "access",
             "terms": {
@@ -818,8 +818,8 @@ FBDATA.rulerAgendas_451 = {
           },
           {
             "id": "stay_ground",
-            "label": "Review staying at the present ground",
-            "detail": "No travel charge or arrival evidence. The movement goal remains pending.",
+            "label": "Keep the camp at Sirmium",
+            "detail": "Stays this season at no travel cost. The move to Mursa stays open.",
             "operation": "agenda_mobile",
             "action": "round",
             "terms": {
@@ -828,8 +828,8 @@ FBDATA.rulerAgendas_451 = {
           },
           {
             "id": "commit_move",
-            "label": "Review the seasonal departure",
-            "detail": "Spend the quoted camp food surcharge and use the actual route clock. Departure is not completion.",
+            "label": "Move the camp to Mursa",
+            "detail": "Sets out at once and spends camp food on a journey of at least 8 days. The step is done only on arrival.",
             "operation": "agenda_mobile",
             "action": "round",
             "terms": {
@@ -838,22 +838,22 @@ FBDATA.rulerAgendas_451 = {
           },
           {
             "id": "observed_move",
-            "label": "Record the actual completed transaction",
-            "detail": "Available only after the actual action succeeds. Records its outcome and adds no money, food or authority.",
+            "label": "Record the arrival at Mursa",
+            "detail": "Marks this step done once the camp and host have arrived.",
             "operation": "agenda_mobile_result"
           },
           {
             "id": "defer_move",
-            "label": "Defer this review",
-            "detail": "Spend nothing and leave this stage pending. Return later or set the program aside.",
+            "label": "Leave the move for later",
+            "detail": "Spends nothing. This step stays open.",
             "operation": "agenda_defer"
           }
         ]
       },
       {
         "id": "settlement",
-        "name": "Choose the following’s future",
-        "text": "The Mursa ground is this program’s settlement objective. Partial or final settlement needs actual presence, lawful owned land or a recognized land award, peace and exact member assent. An optional campaign can attempt to secure land but guarantees none. Stay mobile and defer leave this stage pending. Set the program aside closes the agenda without claiming settlement.",
+        "name": "Settle at Mursa",
+        "text": "Settle some or all of your people at Mursa. The camp must be there and at peace, the coalition must hold the land or a recognized award to it, and the members must agree.",
         "year": 451,
         "season": 0,
         "completion": {
@@ -862,8 +862,8 @@ FBDATA.rulerAgendas_451 = {
         "choices": [
           {
             "id": "propose_settlement",
-            "label": "Propose these terms to the members",
-            "detail": "No payment or outcome. Replaces the pending proposal. Supply only your own assent in Mobile coalition; other members decide separately.",
+            "label": "Propose settling fifty at Mursa",
+            "detail": "Asks the members to approve settling 50 people, replacing any pending proposal. Then add your assent in Mobile coalition.",
             "operation": "agenda_mobile_prepare",
             "action": "settle",
             "terms": {
@@ -874,8 +874,8 @@ FBDATA.rulerAgendas_451 = {
           },
           {
             "id": "commit_settlement",
-            "label": "Settle a partial group",
-            "detail": "Transfer fifty civilians at the actual camp county through existing land rights and assent. The remaining following stays mobile.",
+            "label": "Settle fifty people at Mursa",
+            "detail": "Moves 50 civilians into Mursa once the members agree. The rest of the following stays on the move.",
             "operation": "agenda_mobile",
             "action": "settle",
             "terms": {
@@ -886,8 +886,8 @@ FBDATA.rulerAgendas_451 = {
           },
           {
             "id": "propose_final",
-            "label": "Propose final settlement",
-            "detail": "Quotes every remaining person, including field fighters. Obtain exact member assent in Mobile coalition.",
+            "label": "Propose settling everyone at Mursa",
+            "detail": "Asks the members to approve settling all remaining people, fighters included, replacing any pending proposal. Then add your assent in Mobile coalition.",
             "operation": "agenda_mobile_prepare",
             "action": "settle",
             "terms": {
@@ -898,8 +898,8 @@ FBDATA.rulerAgendas_451 = {
           },
           {
             "id": "commit_final",
-            "label": "Review final settlement",
-            "detail": "Settle every remaining person under the following’s current rights and member decision. No outcome is recorded before it succeeds.",
+            "label": "Settle everyone at Mursa",
+            "detail": "Settles all remaining people, fighters included, once the members agree. The coalition stops wandering and becomes a settled realm.",
             "operation": "agenda_mobile",
             "action": "settle",
             "terms": {
@@ -910,20 +910,20 @@ FBDATA.rulerAgendas_451 = {
           },
           {
             "id": "stay_mobile",
-            "label": "Stay mobile",
-            "detail": "Spend nothing and leave settlement pending. Ordinary camp decisions remain available.",
+            "label": "Stay on the move",
+            "detail": "Keeps the following wandering for now. Spends nothing, and settlement stays open.",
             "operation": "agenda_defer"
           },
           {
             "id": "observed_settlement",
-            "label": "Record the actual completed transaction",
-            "detail": "Available only after the actual action succeeds. Records its outcome and adds no money, food or authority.",
+            "label": "Record the settlement of your people",
+            "detail": "Marks this step done once some of your people have settled.",
             "operation": "agenda_mobile_result"
           },
           {
             "id": "defer_settlement",
-            "label": "Defer this review",
-            "detail": "Spend nothing and leave this stage pending. Return later or set the program aside.",
+            "label": "Leave settlement for later",
+            "detail": "Spends nothing. This step stays open.",
             "operation": "agenda_defer"
           }
         ]
@@ -935,8 +935,8 @@ FBDATA.openingProfiles_451 = {
   "opening_attila_451": {
     "id": "opening_attila_451",
     "type": "opening_profile",
-    "title": "Learn the following’s real decisions",
-    "intro": "Optional goals observe completed actions and pay no rewards. Set any goal aside without changing the following.",
+    "title": "Attila’s first goals",
+    "intro": "Four goals follow your first tribute, raid, division of takings and march to Mursa.",
     "scenarioIds": [
       "attila_451"
     ],
@@ -950,8 +950,8 @@ FBDATA.openingProfiles_451 = {
     "goals": [
       {
         "id": "demand",
-        "name": "Receive one accepted demand",
-        "text": "In Deeds, open Lead the living following. Propose these exact terms here. In Mobile coalition, assent as your own member and wait for the other members to answer. Return here to send the demand. The outside court may refuse; only its actual public payment completes this stage.",
+        "name": "Make Sirmium pay tribute",
+        "text": "In Deeds, open From Sirmium to Mursa; this goal is done when Sirmium pays your demand.",
         "office": true,
         "criterion": {
           "kind": "mobile_transaction",
@@ -961,8 +961,8 @@ FBDATA.openingProfiles_451 = {
       },
       {
         "id": "raid",
-        "name": "Resolve one bounded raid",
-        "text": "In Deeds, open Lead the living following. An accepted demand reserves a finite tribute commitment. Wait for its thirty-day term to end before raiding. Propose the local sortie here, assent in Mobile coalition and wait for other members. Return to commit the reviewed sortie. It risks fighter losses and provides finite spoils, without occupation or land.",
+        "name": "Raid Sirmium",
+        "text": "In Deeds, open From Sirmium to Mursa; this goal is done when you have raided Sirmium after the tribute term ends.",
         "office": true,
         "criterion": {
           "kind": "mobile_transaction",
@@ -972,8 +972,8 @@ FBDATA.openingProfiles_451 = {
       },
       {
         "id": "distribution",
-        "name": "Decide one actual receipt",
-        "text": "In Deeds, open Lead the living following. Share the oldest actual receipt by living member weight or retain it publicly. Food shares are consumed now. This resolves existing resources, without another story reward.",
+        "name": "Share or keep the takings",
+        "text": "In Deeds, open From Sirmium to Mursa; this goal is done when you share or keep the oldest takings.",
         "office": true,
         "criterion": {
           "kind": "mobile_transaction",
@@ -983,8 +983,8 @@ FBDATA.openingProfiles_451 = {
       },
       {
         "id": "move",
-        "name": "Arrive at a seasonal ground",
-        "text": "In Deeds, open Lead the living following. Propose access here, assent in Mobile coalition and wait for the other members. Send the offer here and wait for outside acceptance. Every intervening county needs ordinary access. If the host was lost, use Mobile coalition to recruit from actual member pledges and pay the current public cost. Review departure here and let days pass. Only actual camp and host arrival completes the stage.",
+        "name": "Bring the camp to Mursa",
+        "text": "In Deeds, open From Sirmium to Mursa; this goal is done when your camp and host reach Mursa.",
         "office": true,
         "criterion": {
           "kind": "mobile_transaction",
@@ -998,8 +998,8 @@ FBDATA.openingProfiles_451 = {
   "opening_gallic_curialis_451": {
     "id": "opening_gallic_curialis_451",
     "type": "opening_profile",
-    "title": "Support the household through actual work",
-    "intro": "Optional goals add no rewards. War, public service and shelter retain separate authority and consent.",
+    "title": "A day’s earnings in Aurelianum",
+    "intro": "One goal: earn your household’s first pay from records work in Aurelianum.",
     "scenarioIds": [
       "gallic_curialis_451"
     ],
@@ -1012,8 +1012,8 @@ FBDATA.openingProfiles_451 = {
     "goals": [
       {
         "id": "earned",
-        "name": "Earn through records work",
-        "text": "Earn private income from a worked day of keeping records in Aurelianum.",
+        "name": "Earn a day’s pay keeping records",
+        "text": "In Deeds, choose records work in your household story; this goal is done when a day of it pays in Aurelianum.",
         "criterion": {
           "kind": "household_phase",
           "storyId": "gallic_curialis_track_451",
@@ -1028,8 +1028,8 @@ FBDATA.openingProfiles_451 = {
   "opening_gallic_colonus_451": {
     "id": "opening_gallic_colonus_451",
     "type": "opening_profile",
-    "title": "Support the household through actual work",
-    "intro": "Optional goals add no rewards. War, public service and shelter retain separate authority and consent.",
+    "title": "A day’s earnings in Arelate",
+    "intro": "One goal: earn your household’s first pay from fieldwork in Arelate.",
     "scenarioIds": [
       "gallic_colonus_451"
     ],
@@ -1042,8 +1042,8 @@ FBDATA.openingProfiles_451 = {
     "goals": [
       {
         "id": "earned",
-        "name": "Earn through ordinary work",
-        "text": "Complete the local opening only after ordinary work actually pays.",
+        "name": "Earn a day’s pay in the fields",
+        "text": "In Deeds, take up work in your household story; this goal is done when a day in the fields pays in Arelate.",
         "criterion": {
           "kind": "household_phase",
           "storyId": "gallic_colonus_track_451",
@@ -1058,8 +1058,8 @@ FBDATA.openingProfiles_451 = {
   "opening_federate_soldier_451": {
     "id": "opening_federate_soldier_451",
     "type": "opening_profile",
-    "title": "Support the household through actual work",
-    "intro": "Optional goals add no rewards. War, public service and shelter retain separate authority and consent.",
+    "title": "A day’s pay in Tolosa",
+    "intro": "One goal: earn your household’s first guard pay in Tolosa.",
     "scenarioIds": [
       "federate_soldier_451"
     ],
@@ -1072,8 +1072,8 @@ FBDATA.openingProfiles_451 = {
     "goals": [
       {
         "id": "earned",
-        "name": "Earn through ordinary work",
-        "text": "Complete the local opening only after ordinary work actually pays.",
+        "name": "Earn a day’s guard pay",
+        "text": "In Deeds, take up work in your household story; this goal is done when a day of guard duty pays in Tolosa.",
         "criterion": {
           "kind": "household_phase",
           "storyId": "federate_soldier_track_451",
@@ -1088,8 +1088,8 @@ FBDATA.openingProfiles_451 = {
   "opening_aetius_451": {
     "id": "opening_aetius_451",
     "type": "opening_profile",
-    "title": "Use the finite western warrant",
-    "intro": "Observe actual consent or loss of the original mandate. No extra office, money or host is awarded.",
+    "title": "Aetius’s first goal",
+    "intro": "One goal: decide what becomes of your service warrant from the western court.",
     "scenarioIds": [
       "aetius_451"
     ],
@@ -1102,8 +1102,8 @@ FBDATA.openingProfiles_451 = {
     "goals": [
       {
         "id": "service_decision",
-        "name": "Resolve a real mandate decision",
-        "text": "Complete an actual service-consent or recorded office-loss transaction.",
+        "name": "Settle your Ravenna court service",
+        "text": "In Deeds, open Aetius’s warrant at Ravenna; this goal is done when you consent to a paid service offer or accept the loss of your office.",
         "criterion": {
           "kind": "household_phase",
           "storyId": "aetius_service_track_451",
@@ -1119,8 +1119,8 @@ FBDATA.openingProfiles_451 = {
 };
 FBDATA.storyExpeditions_451 = {
   "western_objective_451": {
-    "name": "A western objective",
-    "desc": "The coalition may seek Aurelianum through an ordinary aggression review. Members must assent, the actual host must campaign and defenders may prevail. This opportunity grants no route, supplies, army, land or settlement."
+    "name": "The march on Aurelianum",
+    "desc": "In 451 the coalition can march on Aurelianum, held by the western court. The members must agree, and the host must take the city by force."
   }
 };
 });
