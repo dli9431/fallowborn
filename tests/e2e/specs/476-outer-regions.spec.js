@@ -23,6 +23,7 @@ dependsOnRuntime(__filename, [
   'js/authority.js', 'js/population.js', 'js/justice.js', 'js/technology.js',
   'js/climate.js', 'js/governments.js', 'js/settlement.js', 'js/events.js',
   'js/stories.js', 'js/story_courts.js', 'data/story_instances.js',
+  'js/story_government_selection.js', 'js/government_selection.js', 'js/government_civic.js',
   'js/save.js', 'js/save_v4.js', 'js/main.js'
 ]);
 
@@ -192,6 +193,42 @@ for (const scenario of ['federate_476','curialis_476']) {
         host:1, owner:'italy' });
     });
 }
+
+test('the Cashel succession card names the court and its claimants without a possession disclaimer',
+  async function ({ page }, testInfo) {
+    await start(page, testInfo);
+    const result = await page.evaluate(function () {
+      const s = FB.state, S = FB.governmentSelection, rid = 'cashel_local_476', id = 'cashel_recognition_476';
+      const ruler = FB.materializeRealmRuler(s, rid);
+      FB.treasuryCredit(s, rid, 100); FB.setCountySupport(s, 'cashel', -100);
+      FB.killChar(s, ruler);
+      const disputed = FB.stories.status(s, id), count = S.candidates(s, rid).length;
+      s.turn += 90; FB.setCountySupport(s, 'cashel', 40); S.ai(s, rid);
+      const settled = FB.stories.status(s, id);
+      // Present the civic branch from staged offices without adopting a second government.
+      const civic = FB.civicGovernment, row = civic.row, active = civic.active;
+      const offices = [{ vacancy:{ status:'open' } }, { vacancy:{ status:'open' } }];
+      let vacant, filled;
+      civic.row = function () { return { offices:offices }; };
+      civic.active = function () { return true; };
+      try {
+        vacant = FB.stories.status(s, id);
+        offices.forEach(function (office) { office.vacancy.status = 'resolved'; });
+        filled = FB.stories.status(s, id);
+      } finally { civic.row = row; civic.active = active; }
+      return { court:s.realms[rid].name, count:count, disputed:disputed, settled:settled,
+        vacant:[vacant.stage, vacant.lines], filled:[filled.stage, filled.lines] };
+    });
+    expect(result.court).toContain('Cashel');
+    expect(result.disputed.stage).toBe(result.court + '’s kingship is disputed');
+    expect(result.disputed.lines[0]).toBe(result.count + (result.count === 1 ? ' adult candidate.' : ' adult candidates.'));
+    expect(result.disputed.lines[1]).toMatch(/^Claimants with support: .+\.$/);
+    expect(result.disputed.lines).toHaveLength(2);
+    expect(result.settled.stage).toBe('The succession at ' + result.court + ' is settled');
+    expect(JSON.stringify([result.disputed, result.settled])).not.toContain('County possession follows');
+    expect(result.vacant).toEqual(['2 civic offices are vacant', []]);
+    expect(result.filled).toEqual(['All civic offices are filled', []]);
+  });
 
 test('local practice and provincial jurisdiction use baseline rights without research or population replacement',
   async function ({ page }, testInfo) {

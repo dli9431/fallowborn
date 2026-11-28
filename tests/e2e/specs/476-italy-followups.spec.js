@@ -11,6 +11,7 @@ dependsOnRuntime(__filename, [
   'js/story_courts.js','js/stories.js','js/starts.js','js/authority.js','js/treasury.js',
   'js/population.js','js/world.js','js/model.js','js/institutions.js','js/religion.js','js/events.js',
   'js/save.js','js/save_v4.js','js/ui_modals.js','js/main.js','js/technology.js','js/systems.js','js/settlement.js','js/federates.js',
+  'data/events_federate_life.js','js/schema.js','js/story_track.js','js/i18n.js','js/messages.js',
 ]);
 const { test, expect } = require('../support/fixture');
 const { startHistoricalGame } = require('../support/game/historical-start');
@@ -224,6 +225,178 @@ test('a court may decline the Sicilian agreement without affording tribute',asyn
       result:FB.state.stories[id].result,reason:FB.state.stories[id].reason};
   });
   expect(result).toEqual({unaffordable:true,declined:true,unchanged:true,result:'diverted',reason:'declined'});
+});
+
+test('the Sicilian agreement names its land, payment, status and specific blockers',async function ({page},testInfo) {
+  await startOdoacer(page,testInfo);
+  const result=await page.evaluate(function () {
+    const s=FB.state,id='sicilian_tribute_476',story=FB.stories.get(id),r=s.stories[id];
+    function names(ids) {return ids.map(function (pid) {return FB.world.byId[pid].name;}).join(', ');}
+    function blocked() {
+      const q=FB.stories.quote(s,id,'approve');
+      return [q.reason,story.blocker(s,r,q.reason)];
+    }
+    const expected={land:names(['messina','siracusa']),kept:names(['palermo']),palermo:FB.world.byId.palermo.name,
+      ravenna:FB.world.byId.ravenna.name,source:s.realms.aghlabids.name,recipient:s.realms.player.name,
+      tribute:FB.money(20),poor:FB.money(5)};
+    s.player.gold=100;
+    const early=blocked();
+    s.turn=270;
+    // Ravenna is not yet held. Taking it back later would leave the court landless.
+    const condition=blocked();
+    FB.transferProvince(s,'ravenna','player');
+    const choices=FB.stories.choices(s,id),status=FB.stories.status(s,id);
+    const allowed=FB.stories.quote(s,id,'approve'),stamp=JSON.parse(allowed.stamp);
+    // Present the same declaration from the granting court's side.
+    const definition=FB.stories.definition;
+    let granting;
+    FB.stories.definition=function (state,declaration) {
+      const out=JSON.parse(JSON.stringify(definition(state,declaration)));
+      if (out.id===id) {const actor=out.actor;out.actor=out.source;out.source=actor;}
+      return out;
+    };
+    try {
+      granting={choice:FB.stories.choices(s,id)[0],role:FB.stories.status(s,id).facts[0][1]};
+    } finally {FB.stories.definition=definition;}
+    FB.transferProvince(s,'palermo','player');
+    const territory=blocked();
+    FB.transferProvince(s,'palermo','aghlabids');
+    const atWar=FB.isRealmAtWar;
+    let war;
+    FB.isRealmAtWar=function (state,rid) {return rid==='aghlabids' || atWar(state,rid);};
+    try {war=blocked();} finally {FB.isRealmAtWar=atWar;}
+    s.date.year=478;
+    const late=blocked();
+    s.date.year=476;
+    const ruler=s.realms.aghlabids.ruler,generation=ruler.generation;
+    ruler.generation=FB.realmRulerGeneration(s,'aghlabids')+1;
+    const changed=blocked();
+    if (generation===undefined) delete ruler.generation; else ruler.generation=generation;
+    s.player.gold=5;
+    const poor=blocked(),now=FB.stories.status(s,id).facts[5];
+    return {expected:expected,early:early,choices:choices,status:status,
+      stamp:{allowed:allowed.allowed,reason:allowed.reason,fields:stamp.length,last:stamp[stamp.length-1]},
+      granting:granting,territory:territory,condition:condition,war:war,late:late,changed:changed,
+      poor:poor,now:now,bare:story.blocker()};
+  });
+  const e=result.expected;
+  expect(result.early).toEqual(['date','Opens in 476.']);
+  expect(result.choices).toEqual([
+    {id:'approve',label:'Take '+e.land+' for '+e.tribute+' a year',
+      detail:'You pay '+e.source+' '+e.tribute+' now and every 360 days; '+e.land+' become yours once both courts agree. '+
+        e.kept+' stays with '+e.source+'.'},
+    {id:'decline',label:'Refuse the agreement',detail:'No payment and no transfer; the offer closes.'}]);
+  expect(e.tribute).toContain('20');
+  expect(result.status.stage).toBe('Waiting for your answer');
+  expect(result.status.facts).toEqual([['Your role','Recipient'],['Counties',e.land],['Kept by '+e.source,e.kept],
+    ['Tribute',e.tribute+' every 360 days'],['Window','476 to 477'],['Now','Ready for your answer.']]);
+  expect(result.stamp).toEqual({allowed:true,reason:null,fields:9,last:true});
+  expect(result.granting).toEqual({role:'Grantor',choice:{id:'approve',
+    label:'Cede '+e.land+' for '+e.tribute+' a year',
+    detail:e.source+' pays you '+e.tribute+' now and every 360 days and takes '+e.land+
+      ' once both courts agree. You keep '+e.kept+'.'}});
+  expect(result.territory).toEqual(['territory',e.source+' must hold '+e.palermo+' directly.']);
+  expect(result.condition).toEqual(['condition',e.recipient+' must hold '+e.ravenna+'.']);
+  expect(result.war).toEqual(['war',e.source+' is at war.']);
+  expect(result.late).toEqual(['date','Closed after 477.']);
+  expect(result.changed).toEqual(['party_changed',e.source+' has a new ruler; the agreement lapsed.']);
+  const funds=e.recipient+' holds '+e.poor+'; the first payment is '+e.tribute+'.';
+  expect(result.poor).toEqual(['funds',funds]);
+  expect(result.now).toEqual(['Now','Waiting: '+funds]);
+  expect(result.bare).toBe('This agreement is no longer open to your court.');
+
+  await page.evaluate(function () {FB.ui.showStorySheet('sicilian_tribute_476');});
+  const facts=page.locator('#gm-body [data-story-facts="sicilian_tribute_476"]');
+  await expect(facts).toContainText('Recipient');
+  await expect(facts).toContainText(funds);
+  const approve=page.locator('#gm-body [data-story-choice="approve"]');
+  await expect(approve).toContainText('Take '+e.land+' for '+e.tribute+' a year');
+  // A refused choice stays reviewable: its review names the obstacle and offers no confirmation.
+  await expect(approve).toHaveAttribute('aria-disabled', 'true');
+  await approve.click({ force:true });
+  await expect(page.locator('#gm-body')).toContainText(funds);
+  await expect(page.locator('#gm-story-confirm')).toHaveCount(0);
+
+  const outcome=await page.evaluate(function () {
+    const s=FB.state,id='sicilian_tribute_476',story=FB.stories.get(id);
+    s.player.gold=100;
+    const declined=JSON.parse(JSON.stringify(s.stories[id]));
+    Object.assign(declined,{phase:'resolved',result:'diverted',reason:'declined',outcomeTurn:s.turn});
+    const ended=story.status(s,declined).stage;
+    const accepted=FB.stories.apply(s,id,'approve',FB.stories.quote(s,id,'approve'));
+    const waiting=FB.stories.status(s,id).stage;
+    story.day(s,s.stories[id]);
+    return {ended:ended,accepted:accepted,waiting:waiting,active:FB.stories.status(s,id).stage};
+  });
+  expect(outcome).toEqual({ended:'Ended: the offer was refused',accepted:true,
+    waiting:'Waiting for '+e.source+' to agree',active:e.recipient+' pays '+e.tribute+' a year for '+e.land});
+});
+
+test('the Norican evacuation names its route, prerequisite, review lines and refusals',async function ({page},testInfo) {
+  await startOdoacer(page,testInfo);
+  const result=await page.evaluate(function () {
+    const s=FB.state,id='norican_evacuation_476',story=FB.stories.get(id),r=s.stories[id];
+    s.date.year=488;s.turn=12*360;
+    FB.transferProvince(s,'ravenna','player');FB.transferProvince(s,'wien','player');
+    function blocked() {
+      const q=FB.stories.quote(s,id,'authorize');
+      return [q.reason,story.blocker(s,r,q.reason)];
+    }
+    const expected={from:FB.world.byId.wien.name,to:FB.world.byId.ravenna.name,court:s.realms.player.name,
+      title:FB.stories.get('rugian_frontier_476').title(s,s.stories.rugian_frontier_476)};
+    const choices=FB.stories.choices(s,id),waiting=blocked();
+    const event=FB.eventById('federate_departure_bundle'),context=FB.eventContextFor(s,event,{});
+    function details(action) {
+      const ctx=Object.assign({},context,{storyReviewSource:{storyId:id,choiceId:action}});
+      const option={review:{type:'civilian_migration',args:{action:action}}};
+      return FB.eventReviews.details(s,FB.eventReviews.quote(s,option,ctx));
+    }
+    const refused=details('authorize');
+    s.date.year=486;
+    const early=blocked();
+    s.date.year=494;
+    const late=blocked();
+    s.date.year=488;
+    Object.assign(s.stories.rugian_frontier_476,{phase:'resolved',result:'won',reason:'objective_secured',outcomeTurn:s.turn});
+    const person=s.chars[s.player.charId];
+    person.dead=true;
+    const ruler=blocked();
+    person.dead=false;
+    const atWar=FB.isRealmAtWar;
+    let war;
+    FB.isRealmAtWar=function () {return true;};
+    try {war=blocked();} finally {FB.isRealmAtWar=atWar;}
+    FB.transferProvince(s,'wien','rugi_476');
+    const route=blocked();
+    FB.transferProvince(s,'wien','player');
+    const ready=FB.stories.status(s,id).stage,allowed=details('authorize'),declining=details('decline');
+    const accepted=FB.stories.apply(s,id,'authorize',FB.stories.quote(s,id,'authorize'));
+    return {expected:expected,choices:choices,waiting:waiting,refused:refused,early:early,late:late,ruler:ruler,war:war,
+      route:route,ready:ready,allowed:allowed,declining:declining,accepted:accepted,moving:FB.stories.status(s,id).stage,
+      moved:r.routes[0].moved,planned:r.routes[0].planned,bare:story.blocker()};
+  });
+  const e=result.expected,prerequisite='Opens after '+e.title+' succeeds.';
+  expect(result.choices[0].label).toBe('Evacuate civilians from '+e.from+' to '+e.to);
+  expect(result.choices[0].detail).toContain('Each season up to 1000 people move, at most 60% of the community, at no cost.');
+  expect(result.choices[0].detail).toMatch(/It stops if you lose either [^{}]+ or go to war\.$/);
+  expect(result.choices[1]).toEqual({id:'decline',label:'Keep the civilians in '+e.from,
+    detail:'Nobody moves; the offer closes.'});
+  expect(result.waiting).toEqual(['condition',prerequisite]);
+  const share='Up to 60% of the community, at most 1000 people each season.';
+  const moves='Civilians move from '+e.from+' to '+e.to+'; no army moves.';
+  expect(result.refused).toEqual([moves,share,'No cost.',prerequisite]);
+  expect(result.early).toEqual(['date','Opens in 487.']);
+  expect(result.late).toEqual(['date','Closed after 493.']);
+  expect(result.ruler).toEqual(['ruler','Your court has no living ruler.']);
+  expect(result.war).toEqual(['war','You are at war.']);
+  expect(result.route).toEqual(['route','You must hold '+e.from+'.']);
+  expect(result.ready).toBe('Ready: civilians wait to leave '+e.from);
+  expect(result.allowed).toEqual([moves,share,'No cost.']);
+  expect(result.declining).toEqual(['Nobody leaves '+e.from+'.',share,'No cost.']);
+  expect(result.accepted).toBe(true);
+  expect(result.moved).toBe(1000);
+  expect(result.moving).toBe('1000 of '+result.planned+' moved to '+e.to);
+  expect(result.bare).toBe('This evacuation is no longer open to your court.');
 });
 
 test('agreement save validation rejects unearned payments and fabricated civilian arrivals before adoption',async function ({page},testInfo) {
