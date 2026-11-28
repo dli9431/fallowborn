@@ -521,45 +521,45 @@ FBDATA.storyCourts476 = {
     },
     "text": {
       "text1": "Accept Ravenna’s civic settlement",
-      "text2": "In Ravenna, use City dealings to obtain episcopal mediation and a ratified council agreement protecting civic courts, public order and Nicene worship. Adopt Roman civic government only while that agreement remains effective; no new territory is granted.",
-      "text3": "Retain the host’s government",
-      "text4": "Keep the federate government while civic demands remain unresolved. No new mandate, recognition or territory is granted.",
-      "text5": "Review paid service",
-      "text6": "Agree to {money:pay} per season for 361 days and request {money:arrears} in arrears from the western court. Both courts must consent. The veteran’s Classis settlement promise grants neither Ravenna nor an imperial office.",
-      "text7": "Contest Ravenna",
-      "text8": "Declare an ordinary campaign against the western court. Your existing host must win the objective; no civic recognition or office is granted by declaring war.",
-      "text9": "Keep the host outside the dispute",
-      "text10": "End this opening without pay, promises or a campaign. Use ordinary diplomacy and contract reviews for later dealings.",
+      "text2": "Your court rules Ravenna in Roman civic form for as long as the council’s agreement holds. Through City dealings, the bishop must first mediate and the council ratify terms protecting its courts, order and Nicene worship.",
+      "text3": "Keep the host’s own government",
+      "text4": "The host keeps its federate government, and Ravenna’s civic demands stay open.",
+      "text5": "Take the western court’s pay",
+      "text6": "The host serves the western court for {money:pay} a season for a year and claims {money:arrears} in back pay. The western court must agree.",
+      "text7": "Fight the western court for Ravenna",
+      "text8": "Declare war on the western court for Ravenna. Your host must take the city.",
+      "text9": "Keep the host out of the quarrel",
+      "text10": "The host takes no pay and makes no war over Ravenna, and this offer closes.",
       "text12": "The federate ruler and Ravenna",
-      "text13": "You decide for the host. Paid service, a campaign and a civic settlement are separate commitments, each using the ordinary authority rules.",
-      "text14": "Odoacer’s opening ended",
-      "text15": "The original ruler’s unfinished decision ended with death or succession. Existing wars and contracts continue through ordinary dealings.",
-      "text16": "Government settlement recorded",
-      "text17": "Ravenna is contested",
-      "text18": "Paid service agreed",
-      "text19": "Ravenna awaits civic terms",
-      "text20": "The host continues",
-      "text21": "Choose the host’s settlement",
-      "text22": "Review the living host and peaceful courts. Paid service requires thirty available in the western treasury, effective civic consent and a living bishop. Civic government requires surviving delegates, Nicene support and an effective Ravenna council agreement for courts, protection and tolerance, ratified through City dealings with episcopal mediation."
+      "text13": "Odoacer’s soldiers want land or pay. Take service with the western court, fight it for Ravenna, or keep the host out of the quarrel.",
+      "text14": "Odoacer no longer leads the host",
+      "text15": "Odoacer died or lost the host before deciding. Wars and contracts he already made still stand.",
+      "text16": "Ravenna’s government is settled",
+      "text17": "The host is at war with the western court for Ravenna",
+      "text18": "The host serves the western court for pay",
+      "text19": "The host holds Ravenna; the city awaits terms",
+      "text20": "The host goes on without a bargain at Ravenna",
+      "text21": "The host’s pay is in arrears at Ravenna",
+      "text22": "Not possible now: the host, the western court or Ravenna’s council has changed."
     },
     "choices": {
       "accept_civic_rule": {
         "id": "accept_civic_rule",
         "operation": "accept_civic_rule",
         "label": "Accept Ravenna’s civic settlement",
-        "detail": "In Ravenna, use City dealings to obtain episcopal mediation and a ratified council agreement protecting civic courts, public order and Nicene worship. Adopt Roman civic government only while that agreement remains effective; no new territory is granted."
+        "detail": "Your court rules Ravenna in Roman civic form for as long as the council’s agreement holds. Through City dealings, the bishop must first mediate and the council ratify terms protecting its courts, order and Nicene worship."
       },
       "retain_host_rule": {
         "id": "retain_host_rule",
         "operation": "retain_host_rule",
-        "label": "Retain the host’s government",
-        "detail": "Keep the federate government while civic demands remain unresolved. No new mandate, recognition or territory is granted."
+        "label": "Keep the host’s own government",
+        "detail": "The host keeps its federate government, and Ravenna’s civic demands stay open."
       },
       "accept_service": {
         "id": "accept_service",
         "operation": "accept_service",
-        "label": "Review paid service",
-        "detail": "Agree to {money:pay} per season for 361 days and request {money:arrears} in arrears from the western court. Both courts must consent. The veteran’s Classis settlement promise grants neither Ravenna nor an imperial office.",
+        "label": "Take the western court’s pay",
+        "detail": "The host serves the western court for {money:pay} a season for a year and claims {money:arrears} in back pay. The western court must agree.",
         "detailParams": {
           "pay": 10,
           "arrears": 30
@@ -568,14 +568,14 @@ FBDATA.storyCourts476 = {
       "contest_ravenna": {
         "id": "contest_ravenna",
         "operation": "contest_capital",
-        "label": "Contest Ravenna",
-        "detail": "Declare an ordinary campaign against the western court. Your existing host must win the objective; no civic recognition or office is granted by declaring war."
+        "label": "Fight the western court for Ravenna",
+        "detail": "Declare war on the western court for Ravenna. Your host must take the city."
       },
       "keep_host": {
         "id": "keep_host",
         "operation": "keep_host",
-        "label": "Keep the host outside the dispute",
-        "detail": "End this opening without pay, promises or a campaign. Use ordinary diplomacy and contract reviews for later dealings."
+        "label": "Keep the host out of the quarrel",
+        "detail": "The host takes no pay and makes no war over Ravenna, and this offer closes."
       }
     },
     "stages": {
@@ -722,11 +722,11 @@ FBDATA.storyCourts476 = {
     ],
     "text": {
       "text2": "Zeno’s Eastern Return",
-      "text3": "Zeno’s court is displaced in Isauria. The living commanders Illus and Trocundes can abandon Basiliscus while Constantinople remains eastern and the court is at peace.",
-      "text4": "Zeno returned",
-      "text5": "Return interrupted",
-      "text6": "The eastern court took another course",
-      "text7": "A displaced claimant"
+      "text3": "Zeno has fled to Isauria while Basiliscus rules in Constantinople. Within the year, if his generals Illus and Trocundes still live, they can desert Basiliscus and bring Zeno home, once the eastern court holds the city and is at peace.",
+      "text4": "Zeno is back in Constantinople",
+      "text5": "Zeno’s return fell through",
+      "text6": "Zeno stays in exile",
+      "text7": "Zeno waits in Isauria"
     },
     "news": {
       "message1": {
@@ -927,15 +927,15 @@ FBDATA.storyCourts476 = {
     "legacyStateField": "situation476",
     "text": {
       "text2": "The Western Imperial Office",
-      "text3": "Deposition, survival, rival recognition and restoration describe an office. Each mandate depends on living issuers and its authority scope; it grants no county.",
-      "text4": "Western office displaced",
-      "text5": "Western office survived",
-      "text6": "Western office restored",
-      "text7": "Nepos’s western claim",
-      "text8": "Western office vacant",
-      "text9": "Original mandate interrupted",
-      "text10": "A different western court",
-      "text11": "A contested western office"
+      "text3": "Romulus holds the western imperial office at Ravenna, while Nepos still claims it from Dalmatia. Whoever loses Ravenna loses the office, and a court that wins the city back can restore it.",
+      "text4": "The western emperor has lost Ravenna",
+      "text5": "Romulus keeps the western office",
+      "text6": "The western office is restored at Ravenna",
+      "text7": "Nepos claims the western office from Dalmatia",
+      "text8": "The western office stands vacant",
+      "text9": "The western mandate has lapsed",
+      "text10": "A new ruler leads the western court",
+      "text11": "Romulus holds a contested western office"
     },
     "news": {
       "message1": {
@@ -1132,7 +1132,7 @@ FBDATA.storyCourts476 = {
           "leave_city_service",
           "leave_dispute"
         ],
-        "name": "Service to the Ravenna council",
+        "name": "You serve the Ravenna council",
         "mechanic": "civic_service"
       },
       "church_service": {
@@ -1142,7 +1142,7 @@ FBDATA.storyCourts476 = {
           "leave_church_service",
           "leave_dispute"
         ],
-        "name": "Service to the Ravenna congregation",
+        "name": "You serve the Homoian congregation at Ravenna",
         "mechanic": "church_service"
       },
       "commission": {
@@ -1152,7 +1152,7 @@ FBDATA.storyCourts476 = {
           "keep_serving",
           "leave_dispute"
         ],
-        "name": "A disputed command",
+        "name": "The host needs a commander",
         "mechanic": "commission"
       },
       "contract": {
@@ -1161,7 +1161,7 @@ FBDATA.storyCourts476 = {
           "refuse_pay",
           "leave_dispute"
         ],
-        "name": "Arrears and service",
+        "name": "The soldiers demand their back pay",
         "mechanic": "contract"
       },
       "civic": {
@@ -1173,7 +1173,7 @@ FBDATA.storyCourts476 = {
           "demand_force",
           "leave_dispute"
         ],
-        "name": "Ravenna civic bargain",
+        "name": "Ravenna weighs the host’s bargain",
         "mechanic": "civic"
       },
       "recognition": {
@@ -1184,7 +1184,7 @@ FBDATA.storyCourts476 = {
           "forgo_recognition",
           "leave_dispute"
         ],
-        "name": "Imperial recognition",
+        "name": "The host seeks an emperor’s recognition",
         "mechanic": "recognition"
       },
       "court": {
@@ -1196,7 +1196,7 @@ FBDATA.storyCourts476 = {
           "demand_force_29",
           "leave_dispute"
         ],
-        "name": "The moving court",
+        "name": "The western court moves to Ticinum",
         "mechanic": "court"
       },
       "resolution": {
@@ -1205,21 +1205,21 @@ FBDATA.storyCourts476 = {
           "reject_ratification",
           "leave_dispute"
         ],
-        "name": "Ratify the settlement",
+        "name": "The terms are ready for ratification",
         "mechanic": "resolution"
       },
       "battle": {
         "choices": [
           "withdraw"
         ],
-        "name": "Contest for Ravenna",
+        "name": "The host marches on Ravenna",
         "mechanic": "battle"
       },
       "aftermath": {
         "choices": [
           "accept_aftermath"
         ],
-        "name": "Review the peace",
+        "name": "The fight for Ravenna is over",
         "mechanic": "aftermath"
       },
       "complete": {
@@ -1241,7 +1241,7 @@ FBDATA.storyCourts476 = {
             ]
           }
         ],
-        "name": "Situation concluded",
+        "name": "The Ravenna dispute is settled",
         "mechanic": "complete"
       }
     },
@@ -1250,79 +1250,79 @@ FBDATA.storyCourts476 = {
         "id": "leave_dispute",
         "operation": "leave_dispute",
         "label": "Leave the court dispute",
-        "detail": "End this political sequence. Your household and its current career survive; live contracts and existing offices retain their own terms."
+        "detail": "Your household steps out of the quarrel over Ravenna and keeps its career. Contracts and offices you hold keep their own terms."
       },
       "accept_delegate": {
         "id": "accept_delegate",
         "operation": "accept_delegate",
         "label": "Serve as the soldiers’ delegate",
-        "detail": "Gain a service role. No land, command, or civil jurisdiction changes hands."
+        "detail": "You speak for the soldiers in the quarrel over their pay, without command of the host."
       },
       "remain_service": {
         "id": "remain_service",
         "operation": "remain_service",
-        "label": "Remain an ordinary soldier",
-        "detail": "Keep your free household and continue to the command dispute without becoming delegate."
+        "label": "Stay in the ranks",
+        "detail": "Your household stays free, and you go on to the quarrel over who commands the host."
       },
       "refuse_involvement": {
         "id": "refuse_involvement",
         "operation": "refuse_involvement",
-        "label": "Refuse involvement",
-        "detail": "Leave the political sequence; ordinary livelihood and family play continue."
+        "label": "Stay out of the quarrel",
+        "detail": "Your household leaves the dispute and goes on with its work and family."
       },
       "seek_city_service": {
         "id": "seek_city_service",
         "operation": "seek_city_service",
         "label": "Serve the Ravenna council",
-        "detail": "Enter civic service as a clerk. The city delegate and senator remain separate actors; a later court appointment can grant Peace but no land or revenue."
+        "detail": "You become a clerk to Ravenna’s council. A later appointment from the western court can give you the city’s local Peace."
       },
       "seek_church_service": {
         "id": "seek_church_service",
         "operation": "seek_church_service",
-        "label": "Enter clerical service",
-        "detail": "Begin as a priestly clerk in the Homoian congregation. Church progression follows your faith’s ordinary path; episcopal mediation can lead to civic service."
+        "label": "Serve the Homoian congregation",
+        "detail": "You begin as a clerk in Ravenna’s Homoian congregation. Mediating with the Nicene bishop can open civic service."
       },
       "petition_city_office": {
         "id": "petition_city_office",
         "operation": "petition_city_office",
         "label": "Petition for Ravenna’s local court",
-        "detail": "Requires a living civic delegate, a Nicene majority and a western court holding Ravenna. A judicial appointment grants local Peace only; succession can require reaffirmation."
+        "detail": "The western court appoints you to Ravenna’s local Peace; a new ruler may have to confirm it. It needs a living civic delegate, a Nicene majority and the western court holding Ravenna."
       },
       "leave_city_service": {
         "id": "leave_city_service",
         "operation": "leave_city_service",
-        "label": "Continue as a clerk",
-        "detail": "Keep the civic career without acquiring a court office or county."
+        "label": "Stay a clerk of the council",
+        "detail": "You keep your civic career without a court office."
       },
       "mediate_communities": {
         "id": "mediate_communities",
         "operation": "mediate_communities",
         "label": "Mediate with the Nicene bishop",
-        "detail": "Requires both living bishops and a Homoian commission. The Nicene bishop recognizes your mediation; you may then petition the civic court."
+        "detail": "The Nicene bishop accepts you as mediator, and you can then petition the city court. Both bishops must be alive, and you need the Homoian commission."
       },
       "leave_church_service": {
         "id": "leave_church_service",
         "operation": "leave_church_service",
-        "label": "Continue in the congregation",
-        "detail": "Keep the clerical career and its ordinary faith progression without a civic office."
+        "label": "Stay in the congregation",
+        "detail": "You keep your clerical career without a civic office."
       },
       "seek_commission": {
         "id": "seek_commission",
         "operation": "seek_commission",
-        "label": "Seek the detachment commission",
-        "detail": "Peers acclaim you; Odoacer appoints you for 360 days to command this host only. No land, tax, or court follows."
+        "label": "Seek command of the host",
+        "detail": "Your fellow soldiers acclaim you, and Odoacer appoints you to command this host for 360 days, with no land or taxes."
       },
       "keep_serving": {
         "id": "keep_serving",
         "operation": "keep_serving",
         "label": "Keep serving without a command",
-        "detail": "Continue to the pay dispute as a free soldier."
+        "detail": "You go on to the quarrel over pay as a free soldier."
       },
       "offer_pay": {
         "id": "offer_pay",
         "operation": "offer_pay",
-        "label": "Offer a one-year service contract",
-        "detail": "Western treasury pays {money:immediate} now to the federate body, then {money:seasonal} at the next four seasonal settlements during the 360-day term. Your household receives {money:share} from each payment, included in that amount. Classis may be awarded later only by a separate reviewed grant.",
+        "label": "Offer the western court a year’s service",
+        "detail": "The western court pays the host {money:immediate} now, then {money:seasonal} in each of the next four seasons. Your household’s share is {money:share} of each payment. Classis can be granted to a veteran later, at ratification.",
         "detailParams": {
           "immediate": 30,
           "seasonal": 10,
@@ -1332,56 +1332,56 @@ FBDATA.storyCourts476 = {
       "refuse_pay": {
         "id": "refuse_pay",
         "operation": "refuse_pay",
-        "label": "Refuse these terms",
-        "detail": "No treasury transfer or contract. You can revise the civic proposal or contest Ravenna."
+        "label": "Refuse the western court’s terms",
+        "detail": "No money changes hands and no contract is made. You can still revise the civic proposal or fight for Ravenna."
       },
       "seek_mediation": {
         "id": "seek_mediation",
         "operation": "seek_mediation",
         "label": "Seek the bishop’s mediation",
-        "detail": "Promise protected Nicene worship. The bishop can support the bargain without converting your household or the city."
+        "detail": "Promise to protect Nicene worship, and the bishop can back the bargain. Neither your household nor the city changes faith."
       },
       "renegotiate_pay": {
         "id": "renegotiate_pay",
         "operation": "renegotiate_pay",
-        "label": "Reopen the service terms",
-        "detail": "Return to the western treasury with a reviewed pay proposal. Existing arrears are not forgiven."
+        "label": "Reopen the pay talks",
+        "detail": "Take a new pay offer to the western treasury. The back pay is still owed."
       },
       "revise_civic": {
         "id": "revise_civic",
         "operation": "revise_civic",
-        "label": "Revise the civic proposal",
-        "detail": "Replace a demand for force with a guarantee that Ravenna’s civic courts keep jurisdiction. No county or tax right is granted."
+        "label": "Promise Ravenna its own courts",
+        "detail": "Drop the demand for force and guarantee that Ravenna’s civic courts keep their jurisdiction."
       },
       "present_civic": {
         "id": "present_civic",
         "operation": "present_civic",
         "label": "Present the bargain to Ravenna",
-        "detail": "Requires an active paid contract, a living civic delegate, a Roman civic majority, and Nicene standing or episcopal mediation. Acceptance is scoped to Ravenna; civil courts remain with the city."
+        "detail": "Ravenna’s council can accept the bargain for the city, which keeps its own courts. It needs paid service in force, a living civic delegate, a Roman majority, and Nicene standing or the bishop’s mediation."
       },
       "demand_force": {
         "id": "demand_force",
         "operation": "demand_force",
-        "label": "Demand a settlement by force",
-        "detail": "Breach the bargain, march the real federate host on Ravenna, and face the western host. Victory does not itself grant civic or imperial recognition."
+        "label": "March on Ravenna",
+        "detail": "The bargain breaks, and the federate host marches on Ravenna to face the western host. Taking the city does not make Ravenna or an emperor recognize you."
       },
       "forgo_recognition": {
         "id": "forgo_recognition",
         "operation": "forgo_recognition",
         "label": "Proceed without imperial recognition",
-        "detail": "The contract and civic bargain may stand while rival imperial claims remain unresolved."
+        "detail": "The contract and the civic bargain can stand while the rival emperors’ claims stay open."
       },
       "escort_court": {
         "id": "escort_court",
         "operation": "escort_court",
         "label": "Escort the court to Ticinum",
-        "detail": "The western host follows the existing route from Ravenna to Pavia. Arrival changes the court’s location, not territorial ownership."
+        "detail": "The western host takes the court from Ravenna to Ticinum. Moving the court does not change who holds either city."
       },
       "court_maintenance": {
         "id": "court_maintenance",
         "operation": "court_maintenance",
-        "label": "Ask for court maintenance",
-        "detail": "After arrival, the western treasury pays {money:amount} once to the federate body for escort. This is separate from service pay.",
+        "label": "Ask the court to pay the escort",
+        "detail": "Once the court reaches Ticinum, the western treasury pays the host {money:amount} once for the escort, apart from service pay.",
         "detailParams": {
           "amount": 5
         }
@@ -1389,158 +1389,158 @@ FBDATA.storyCourts476 = {
       "move_to_ratification": {
         "id": "move_to_ratification",
         "operation": "move_to_ratification",
-        "label": "Review final settlement",
-        "detail": "Requires court arrival, active service pay, and Ravenna civic consent. No award is made by opening the review."
+        "label": "Put the settlement to ratification",
+        "detail": "The court must have reached Ticinum, service pay must be in force and Ravenna’s council must consent."
       },
       "demand_force_29": {
         "id": "demand_force",
         "operation": "demand_force",
         "label": "Break talks and march on Ravenna",
-        "detail": "The active service contract is breached. The two field hosts resolve the contest on the map."
+        "detail": "The service contract is broken, and the two hosts fight for Ravenna on the map."
       },
       "ratify": {
         "id": "ratify",
         "operation": "ratify",
-        "label": "Ratify the negotiated settlement",
-        "detail": "Confirm live pay, civic consent, court arrival, and any requested Classis grant. Romulus remains in western office; the federate host retains only its commissioned command."
+        "label": "Ratify the settlement",
+        "detail": "The pay, Ravenna’s consent, the court’s arrival and any Classis grant are confirmed. Romulus keeps the western office, and the host keeps only its commissioned command."
       },
       "reject_ratification": {
         "id": "reject_ratification",
         "operation": "reject_ratification",
-        "label": "Reject and contest Ravenna",
-        "detail": "Breach the agreement and let the field hosts decide Ravenna. Your household remains playable after either result."
+        "label": "Reject the terms and fight for Ravenna",
+        "detail": "The agreement breaks, and the two hosts decide Ravenna. Your household plays on whatever the result."
       },
       "withdraw": {
         "id": "withdraw",
         "operation": "withdraw",
         "label": "Withdraw the federate demand",
-        "detail": "End this contest without a county award. Your free household continues."
+        "detail": "The host gives up its demand on Ravenna, and your free household goes on."
       },
       "accept_aftermath": {
         "id": "accept_aftermath",
         "operation": "accept_aftermath",
-        "label": "Continue after the contest",
-        "detail": "Close the political sequence. Surviving people, communities, property, and the household remain in play."
+        "label": "Accept the outcome at Ravenna",
+        "detail": "The quarrel over Ravenna ends here. Your household and the city’s people, communities and property go on."
       },
       "adopt_civic_rule": {
         "id": "adopt_civic_rule",
         "operation": "adopt_civic_rule",
         "label": "Recognize Ravenna’s civic courts",
-        "detail": "Requires living city and Nicene church delegates. Record their local Peace and consent as customary rights; the federate government becomes Roman civic. No resident is converted."
+        "detail": "The host takes Roman civic government and confirms Ravenna’s local Peace and consent as customary rights. The city and Nicene church delegates must be alive; no one is made to convert."
       },
       "affirm_host_rule": {
         "id": "affirm_host_rule",
         "operation": "affirm_host_rule",
-        "label": "Keep federate government",
-        "detail": "The host keeps its political form. Ravenna’s civic rights remain contested; no automatic local consent follows conquest."
+        "label": "Keep the host’s federate government",
+        "detail": "The host keeps its form of rule, and Ravenna’s civic rights stay in dispute; conquest alone does not win the city’s consent."
       },
       "retire_western_office": {
         "id": "retire_western_office",
         "operation": "retire_contested_office",
         "label": "Leave the western office vacant",
-        "detail": "Seek an eastern commission for the federate polity. The western title remains vacant; no eastern territory transfers."
+        "detail": "Seek an eastern commission for the federate court and leave the western throne empty. No eastern land changes hands."
       },
       "restore_western_office": {
         "id": "restore_western_office",
         "operation": "restore_contested_office",
-        "label": "Restore Romulus’s western office",
-        "detail": "Requires Romulus alive and Ravenna back under the western court. Restore the office without granting new counties."
+        "label": "Restore Romulus to the western office",
+        "detail": "Romulus takes back the western office. He must be alive, and the western court must hold Ravenna again."
       },
       "back_commander": {
         "id": "back_odoacer",
         "operation": "back_commander",
         "label": "Back Odoacer as commander",
-        "detail": "Odoacer holds the scoped host commission. You may still serve as delegate."
+        "detail": "Odoacer takes command of the host. You can still serve as the soldiers’ delegate."
       },
       "petition_sitting_ruler": {
         "id": "petition_basiliscus",
         "operation": "seek_issuer_commission",
         "label": "Petition Basiliscus",
-        "detail": "The sitting eastern {term:emperor} may recognize federate service. His commission needs reaffirmation if his rule ends."
+        "detail": "Basiliscus, the sitting eastern {term:emperor}, may recognize the host’s service. If his rule ends, his successor must confirm it."
       },
       "back_returning_claimant": {
         "id": "back_zeno",
         "operation": "back_returning_claimant",
-        "label": "Back the displaced Zeno",
-        "detail": "A displaced claimant cannot issue an imperial commission now. If Zeno regains Constantinople alive, he can recognize the backed service claim."
+        "label": "Back Zeno in exile",
+        "detail": "Zeno cannot commission anyone from exile. If he regains Constantinople alive, he can recognize the host’s service."
       },
       "back_rival_claimant": {
         "id": "uphold_nepos",
         "operation": "back_rival_claimant",
         "label": "Uphold Julius Nepos",
-        "detail": "The Dalmatian claimant recognizes the federate body. This does not move a county or remove Romulus."
+        "detail": "Nepos recognizes the host from Dalmatia, and Romulus stays in office at Ravenna."
       },
       "request_settlement": {
         "id": "request_classis",
         "operation": "request_settlement",
-        "label": "Request a Classis allotment",
-        "detail": "Ask to grant the existing port settlement to a named veteran at ratification. The grant is reviewed again then; other holdings and residents remain."
+        "label": "Ask for land at Classis",
+        "detail": "Ask that a named veteran receive the port of Classis at ratification, when the grant is checked again. Its other landholders and residents stay."
       },
       "seek_minority_commission": {
         "id": "seek_homoian_commission",
         "operation": "seek_minority_commission",
         "label": "Seek the Homoian bishop’s commission",
-        "detail": "A living local bishop recognizes your service in Ravenna. This does not grant a county, office, or change anyone’s faith."
+        "detail": "Ravenna’s Homoian bishop recognizes your service. Your faith and everyone else’s stay as they are."
       },
       "recognize_rival_office": {
         "id": "recognize_nepos_west",
         "operation": "recognize_rival_office",
         "label": "Recognize Nepos for the western office",
-        "detail": "Requires Nepos alive in Dalmatia and a living Rome senator with civic consent. Senate and imperial recognition support his office without moving a county."
+        "detail": "The host and the Roman senate back Nepos as western emperor. Nepos must be alive in Dalmatia, and a living senator in Rome must give civic consent."
       }
     },
     "text": {
       "text1": "Soldiers seek a spokesman",
-      "text2": "Service to the Ravenna council",
-      "text3": "Service to the Ravenna congregation",
-      "text4": "A disputed command",
-      "text5": "Arrears and service",
-      "text6": "Ravenna civic bargain",
-      "text7": "Imperial recognition",
-      "text8": "The moving court",
-      "text9": "Ratify the settlement",
-      "text10": "Contest for Ravenna",
-      "text11": "Review the peace",
-      "text12": "Situation concluded",
+      "text2": "You serve the Ravenna council",
+      "text3": "You serve the Homoian congregation at Ravenna",
+      "text4": "The host needs a commander",
+      "text5": "The soldiers demand their back pay",
+      "text6": "Ravenna weighs the host’s bargain",
+      "text7": "The host seeks an emperor’s recognition",
+      "text8": "The western court moves to Ticinum",
+      "text9": "The terms are ready for ratification",
+      "text10": "The host marches on Ravenna",
+      "text11": "The fight for Ravenna is over",
+      "text12": "The Ravenna dispute is settled",
       "text13": "Western court: {location}.",
       "text14": "Ticinum",
       "text15": "displaced",
       "text16": "Ravenna",
-      "text17": "Federate contract: {status}; {money:amount} per season during its 360-day term.",
+      "text17": "Service pay: {status}, {money:amount} a season for 360 days.",
       "text18": "active",
       "text19": "breached",
       "text20": "expired",
       "text21": "offered",
-      "text22": "Federate contract: none.",
-      "text23": "Ravenna civic consent: recorded.",
-      "text24": "Ravenna civic consent: pending.",
-      "text25": "Your commission commands the federate host for this term only.",
-      "text26": "Classis allotment: granted to the veteran.",
-      "text27": "Classis allotment: requested, subject to the final grant review.",
-      "text28": "Imperial commission: recorded.",
-      "text29": "Zeno’s claim: backed, awaiting his return.",
-      "text30": "Imperial commission: none.",
-      "text31": "The host marches on the map. Its real battle and route determine control of Ravenna.",
-      "text32": "Negotiated outcome: the court and city retain their separate powers.",
-      "text33": "The household remains free to continue its story.",
-      "text34": "Ravenna’s local Peace: your court appointment is effective.",
-      "text35": "Ravenna’s local Peace: your former appointment needs a live mandate.",
-      "text36": "Ravenna civic rights: recorded separately from county ownership.",
-      "text37": "Federate government: Roman civic form with local courts.",
-      "text38": "Federate government: host form; city claims unresolved.",
-      "text39": "Western office: claimed by Nepos from Dalmatia.",
-      "text40": "Western office: vacant under an eastern commission.",
-      "text41": "Western office: restored to Romulus.",
-      "text42": "The courts agreed on service after you declined involvement.",
-      "text43": "The courts are fighting for Ravenna through an ordinary war.",
+      "text22": "Service pay: none agreed.",
+      "text23": "Ravenna’s council consents to the bargain.",
+      "text24": "Ravenna’s council has not yet consented.",
+      "text25": "You command the federate host until your commission ends.",
+      "text26": "The veteran holds the Classis allotment.",
+      "text27": "Classis allotment: requested, granted only at ratification.",
+      "text28": "An emperor has commissioned the host.",
+      "text29": "You back Zeno; he can commission the host once he returns.",
+      "text30": "No emperor has commissioned the host.",
+      "text31": "The host marches on Ravenna; the battle on the map decides who holds the city.",
+      "text32": "Settled by agreement: the western court and Ravenna keep their own powers.",
+      "text33": "Your household goes on with its life.",
+      "text34": "You keep Ravenna’s local Peace by court appointment.",
+      "text35": "Your appointment to Ravenna’s Peace has lapsed and needs a living mandate.",
+      "text36": "Ravenna’s civic rights are on record, whoever holds the city.",
+      "text37": "The host governs in Roman civic form, with Ravenna’s own courts.",
+      "text38": "The host keeps its own government; Ravenna’s claims stay open.",
+      "text39": "Nepos claims the western office from Dalmatia.",
+      "text40": "The western office is vacant, and the host serves under an eastern commission.",
+      "text41": "Romulus is restored to the western office.",
+      "text42": "After you stood aside, the western court took the host into paid service.",
+      "text43": "The host and the western court are at war over Ravenna.",
       "text44": "Theoderic’s campaign for Ravenna is underway.",
-      "text45": "The eastern African reconquest campaign is underway.",
-      "text46": "The eastern Italian reconquest campaign is underway.",
-      "text47": "The western treasury, appointer, host, or Classis allotment has changed. Review the current situation.",
-      "text48": "The civic delegate needs an active contract, protected local courts, and Nicene support or episcopal mediation.",
-      "text49": "Classis grant: about {money:income} yearly revenue to the veteran; {money:loss} leaves the western treasury. The veteran holds this one port, not Ravenna county.",
+      "text45": "The Eastern Roman Court’s campaign for Carthage is underway.",
+      "text46": "The Eastern Roman Court’s campaign for Ravenna is underway.",
+      "text47": "The western court can no longer pay, or the host, its appointer or the Classis grant has changed.",
+      "text48": "Ravenna’s delegate needs paid service in force, protected city courts, and Nicene support or the bishop’s mediation.",
+      "text49": "Classis grant: the veteran gains about {money:income} a year and the western treasury loses {money:loss}. He holds the port alone, not Ravenna.",
       "text51": "The Western Court, 476",
-      "text52": "Spring 476: court, soldiers, and city"
+      "text52": "In spring 476 the western court at Ravenna owes its federate soldiers their pay. As one of them, you can speak for the host, serve the city or its church, or stay out of the quarrel."
     },
     "news": {
       "message1": {
@@ -1833,25 +1833,25 @@ FBDATA.storyCourts476 = {
       "serve_council": {
         "id": "serve_council",
         "operation": "serve_council",
-        "label": "Accept the civic mandate",
-        "detail": "Register the mandate, fund station recognition and receive Ravenna’s local judicial appointment. A living western court, delegate and bishop and a Nicene majority are required."
+        "label": "Accept Ravenna’s judicial mandate",
+        "detail": "You pay to register and receive Ravenna’s local judicial appointment, rising to the next station. The western court, civic delegate and bishop must be alive, and most of Ravenna must be Nicene."
       },
       "keep_household": {
         "id": "keep_household",
         "operation": "keep_household",
-        "label": "Keep the household outside the dispute",
-        "detail": "Continue in curial work without payment, promotion or an appointment. Your family remains playable."
+        "label": "Keep to your curial work",
+        "detail": "Your household goes on without payment, promotion or appointment."
       }
     },
     "text": {
       "text1": "A civic household, 476",
-      "text2": "Council service can raise personal standing. The court’s mandate supplies local Peace; it leaves land, revenue and host command separate.",
+      "text2": "Your curial household serves Ravenna’s council while the host and the western court quarrel. The court can make you a judge, keeper of the city’s local Peace.",
       "text3": "Ravenna needs civic service",
       "text4": "The civic household continues",
-      "text5": "Your local judicial mandate is effective.",
-      "text6": "The former mandate has lapsed; standing grants no judicial power by itself.",
-      "text7": "Registration and recognition: {money:amount}, {prestige} prestige and {piety} piety. The mandate grants local Peace and the next station, with no county, revenue or host command.",
-      "text8": "An adult curialis at Ravenna needs an available judicial mandate, a living court, civic delegate and bishop, Nicene support, {money:amount} and {prestige} prestige before payment."
+      "text5": "You keep Ravenna’s local Peace by the court’s mandate.",
+      "text6": "Your mandate has lapsed; you no longer judge in Ravenna.",
+      "text7": "Cost: {money:amount}, {prestige} prestige and {piety} piety. You become a judge at Ravenna and rise to the next station.",
+      "text8": "You must be an adult curialis at Ravenna with {money:amount} and {prestige} prestige, and the court, civic delegate and bishop must be alive with Nicene support."
     },
     "news": {
       "message1": {
@@ -2034,7 +2034,7 @@ FBDATA.storyCourts476 = {
         "mechanic": "opening"
       },
       "claim": {
-        "name": "Recognition without Italy",
+        "name": "Recognized, but without Italy",
         "choices": [
           "restore_by_campaign",
           "confirm_restoration",
@@ -2044,7 +2044,7 @@ FBDATA.storyCourts476 = {
         "mechanic": "claim"
       },
       "campaign": {
-        "name": "Restoration depends on the armies",
+        "name": "Nepos’s armies march for Ravenna",
         "choices": [
           "confirm_restoration",
           "seek_recognition_2",
@@ -2053,12 +2053,12 @@ FBDATA.storyCourts476 = {
         "mechanic": "campaign"
       },
       "complete": {
-        "name": "The Dalmatian household continues",
+        "name": "Nepos rules on in Dalmatia",
         "choices": [],
         "mechanic": "complete"
       },
       "interrupted": {
-        "name": "The claimant’s opportunity ended",
+        "name": "Nepos’s claim has lapsed",
         "choices": [],
         "mechanic": "interrupted"
       }
@@ -2067,45 +2067,45 @@ FBDATA.storyCourts476 = {
       "seek_recognition": {
         "id": "seek_recognition",
         "operation": "seek_recognition",
-        "label": "Pursue western recognition",
-        "detail": "Seek current eastern recognition and Roman civic support for the western claim. A living eastern ruler and an effective Roman civic delegate are required. No payment or territorial transfer occurs."
+        "label": "Seek recognition of the western claim",
+        "detail": "The eastern court and Rome’s civic delegate back your claim to the west, at no cost. The eastern ruler and the delegate must be alive."
       },
       "seek_recognition_2": {
         "id": "seek_recognition",
         "operation": "seek_recognition",
-        "label": "Renew western recognition",
-        "detail": "If the former mandate has lapsed, seek recognition from the current eastern court and the Roman civic delegate. This creates no territorial award and costs no payment."
+        "label": "Renew recognition of the western claim",
+        "detail": "If your recognition has lapsed, ask the eastern court and Rome’s civic delegate again, at no cost."
       },
       "confirm_restoration": {
         "id": "confirm_restoration",
         "operation": "confirm_restoration",
-        "label": "Confirm the restored western mandate",
-        "detail": "Requires actual possession of Ravenna and living recognition. Creates an imperial appointment in your own court, with no additional land or fiscal power."
+        "label": "Take up the western office at Ravenna",
+        "detail": "Your court gains the western imperial office. You must hold Ravenna yourself and still be recognized."
       },
       "restore_by_campaign": {
         "id": "restore_by_campaign",
         "operation": "restore_by_campaign",
-        "label": "Campaign for Ravenna",
-        "detail": "Declare an ordinary war against Ravenna’s actual owner. Your armies must win the objective; military costs and risks follow the normal campaign rules."
+        "label": "Declare war for Ravenna",
+        "detail": "Declare war on whoever holds Ravenna. Your armies must take the city, at the usual cost and risk of war."
       },
       "retain_domain": {
         "id": "keep_dalmatia",
         "operation": "retain_domain",
         "label": "Continue ruling Dalmatia",
-        "detail": "Finish this opening without payment, a campaign or a new office. Existing claims and territory remain subject to ordinary rules."
+        "detail": "Set the western claim aside and rule Dalmatia. The claims and lands you hold stay as they are."
       }
     },
     "text": {
       "text1": "Nepos’s western claim",
-      "text2": "Review a living claim, then decide whether to pursue Ravenna through ordinary war. Eastern recognition and Roman civic support create no territorial award.",
+      "text2": "Julius Nepos rules Dalmatia but still claims the western throne Romulus holds at Ravenna. Win the eastern court’s and Rome’s recognition, then take Ravenna to be restored.",
       "text3": "Dalmatia and a contested office",
-      "text4": "Recognition without Italy",
-      "text5": "Restoration depends on the armies",
-      "text6": "The Dalmatian household continues",
-      "text7": "The claimant’s opportunity ended",
-      "text8": "Western mandate restored",
-      "text9": "Review Offices & Legitimacy for current issuers and effective mandates.",
-      "text10": "The original living claimant needs the current eastern ruler and Roman civic delegate for recognition. Restoration also requires actual possession of Ravenna; a campaign requires peaceful courts."
+      "text4": "Recognized, but without Italy",
+      "text5": "Nepos’s armies march for Ravenna",
+      "text6": "Nepos rules on in Dalmatia",
+      "text7": "Nepos’s claim has lapsed",
+      "text8": "Nepos is restored as western emperor",
+      "text9": "Offices & Legitimacy shows who recognizes your claim.",
+      "text10": "Nepos cannot take this step now; see Offices & Legitimacy for who recognizes the claim."
     },
     "news": {
       "message1": {
