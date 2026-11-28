@@ -200,6 +200,7 @@ for (const decision of ['accept_grantor','decline_grantor']) {
         const reviewed = FB.stories.quote(s, id, decision);
         const applied = FB.stories.apply(s, id, decision, reviewed);
         return { adopted:adopted, waiting:waiting, allowed:q.allowed, pure:pure,
+          closedStatus:FB.stories.status(s, id), closedBlocker:FB.stories.get(id).blocker(s, s.stories[id], 'closed'),
           stale:stale, untouched:untouched, applied:applied, result:s.stories[id].result,
           holder:s.holder.thessaloniki, owner:s.owner.thessaloniki,
           retained:s.player.provs.indexOf('thessaloniki') >= 0 };
@@ -209,8 +210,93 @@ for (const decision of ['accept_grantor','decline_grantor']) {
       expect(result.result).toBe(decision === 'accept_grantor' ? 'granted' : 'declined');
       expect(result.holder).toBe(decision === 'accept_grantor' ? 'thessalonica_latin_1204' : 'player');
       expect(result.retained).toBe(decision !== 'accept_grantor');
+      const accepted = decision === 'accept_grantor';
+      expect(result.closedStatus.stage).toBe('Partition of Thessalonica · ' + (accepted ? 'Granted' : 'Refused'));
+      expect(result.closedStatus.facts[5]).toEqual(['Now',
+        accepted ? 'Granted: Boniface of Montferrat rules Thessalonica.' : 'Refused.']);
+      expect(result.closedBlocker).toBe('This partition is settled.');
     });
 }
+
+test('a controlled grantor reads the named partition, its facts and each specific blocker',
+  async function ({ page }, testInfo) {
+    await begin(page, testInfo);
+    const result = await page.evaluate(function () {
+      const s = FB.state, id = 'thessalonica_partition_1204', story = FB.stories.get(id);
+      const rec = s.stories[id];
+      FBTEST1204.date(1205, 0, 1); FBTEST1204.win('latin_thessalonica_1204');
+      const observer = FB.stories.status(s, id).facts[0];
+      FBTEST1204.adopt('latin_1204');
+      const read = function (choice) {
+        const quote = FB.stories.quote(s, id, choice || 'accept_grantor');
+        return [quote.reason, quote.allowed ? null : story.blocker(s, rec, quote.reason)];
+      };
+      const before = JSON.stringify(s), rng = FB.getRngState(), uid = FB.getUidCounter();
+      const choices = FB.stories.choices(s, id), status = FB.stories.status(s, id);
+      const open = read(), review = story.review(s, rec, 'accept_grantor');
+      const codes = ['closed','date','actor_changed','beneficiary_dead','capital_lost','parent_unsettled',
+        'liege_missing','liege_rank','already_landed','player_recipient','captivity','war','liege_changed',
+        'not_held','protected','consent_power','not_party'].map(function (code) {
+          return story.blocker(s, rec, code);
+        });
+      const athens = FB.stories.get('athens_partition_1204');
+      const athensQuote = FB.stories.quote(s, 'athens_partition_1204', 'accept_grantor');
+      const parent = [athensQuote.reason, athens.blocker(s, s.stories.athens_partition_1204, athensQuote.reason),
+        FB.stories.status(s, 'athens_partition_1204').facts[3][1]];
+      const pure = before === JSON.stringify(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
+      s.holder.thessaloniki = 'venice_1204'; FB.invalidateRealmCache();
+      const held = read(), heldNow = FB.stories.status(s, id).facts[5];
+      s.holder.thessaloniki = 'player'; FB.invalidateRealmCache();
+      FBTEST1204.date(1204, 0, 1);
+      const early = read(), earlyStatus = FB.stories.status(s, id), earlyChoices = FB.stories.choices(s, id).length;
+      FBTEST1204.date(1205, 0, 1);
+      return { observer:observer, choices:choices, status:status, open:open, review:review, codes:codes,
+        parent:parent, pure:pure, held:held, heldNow:heldNow, early:early, earlyStatus:earlyStatus,
+        earlyChoices:earlyChoices, court:s.realms.player.name,
+        county:FB.world.byId.thessaloniki.name, capital:FB.world.byId.constantinople.name };
+    });
+    expect(result.pure).toBe(true);
+    expect(result.observer).toEqual(['Your role', 'Observer']);
+    expect(result.choices.map(function (choice) { return [choice.id, choice.label]; })).toEqual([
+      ['accept_grantor', 'Grant Thessalonica to Boniface of Montferrat'],
+      ['decline_grantor', 'Refuse the partition of Thessalonica']]);
+    expect(result.choices[0].detail).toContain('Boniface of Montferrat rules ' + result.county + ' as a ');
+    expect(result.choices[0].detail).toContain('You keep ' + result.capital + '.');
+    expect(result.choices[1].detail).toBe(result.county + ' stays with ' + result.court +
+      '. The offer closes for good.');
+    expect(result.status.stage).toBe('Partition of Thessalonica · Waiting');
+    expect(result.status.name).toBe(result.status.stage);
+    expect(result.status.lines).toEqual([]);
+    expect(result.status.facts).toEqual([['Your role', 'Grantor'], ['Counties', result.county],
+      ['Recipient', 'Boniface of Montferrat'], ['Overlord', result.court], ['Window', '1204 to 1206'],
+      ['Now', 'Waiting for ' + result.court + ' to agree.']]);
+    expect(JSON.stringify([result.status, result.earlyStatus])).not.toContain('Awaiting');
+    expect(result.open).toEqual([null, null]);
+    expect(result.review.slice(0, 2)).toEqual(['Recipient: Boniface of Montferrat.',
+      'Counties: ' + result.county + '.']);
+    expect(result.review[2]).toMatch(/: .+\.$/);
+    expect(result.review[2]).toContain(result.court);
+    expect(result.review[2]).not.toContain('property');
+    expect(new Set(result.codes).size).toBe(17);
+    result.codes.forEach(function (text) {
+      expect(typeof text).toBe('string'); expect(text).not.toMatch(/[{}]/);
+    });
+    expect(result.parent[0]).toBe('parent_unsettled');
+    expect(result.parent[1]).toBe('Waits until Thessalonica is granted.');
+    expect(result.parent[2]).toContain('of Thessalonica');
+    expect(result.held).toEqual(['not_held', result.court + ' must hold ' + result.county + ' directly.']);
+    expect(result.heldNow).toEqual(['Now', result.held[1]]);
+    expect(result.early).toEqual(['date', 'Opens in Summer 1204.']);
+    expect(result.earlyStatus.stage).toBe('Partition of Thessalonica · Not open yet');
+    expect(result.earlyStatus.facts[5]).toEqual(['Now', 'Opens in Summer 1204.']);
+    expect(result.earlyChoices).toBe(0);
+    await page.evaluate(function () { FB.ui.showStorySheet('thessalonica_partition_1204'); });
+    const facts = page.locator('#gm-body [data-story-facts="thessalonica_partition_1204"]');
+    await expect(facts).toContainText('Grantor');
+    await expect(page.locator('#gm-body [data-story-choice="accept_grantor"]'))
+      .toContainText('Grant Thessalonica to Boniface of Montferrat');
+    await expect(page.locator('#gm-body')).not.toContainText('Awaiting');
+  });
 
 for (const choice of ['call','decline']) {
   test('the current player pope can review the dated appeal: ' + choice, async function ({ page }, testInfo) {
