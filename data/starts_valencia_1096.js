@@ -7,14 +7,14 @@ FBDATA.startScenarios_valencia_1096 = [
     rulerRealmId:'valencia_1096', governmentForm:'territorial', fixedProvinceId:'valencia',
     characterName:'Rodrigo Diaz', sex:'m', startCulture:'iberian', startReligion:'catholic',
     name:'Rodrigo Diaz in Valencia',
-    desc:'Govern Valencia with Jimena and their children. Weigh household affairs, local administration and paid defense in a city already held.',
+    desc:'Hold Valencia, the city you took in 1094, with Jimena and your children, against the Almoravids to the south.',
     tier:4, profession:'noble', gold:80, prestige:80, piety:10,
     familyPresets:{ standard:{ name:'The Valencian household', diff:'about age 48 · named court family',
-      desc:'Adopt Rodrigo, Jimena, Diego, Cristina and Maria. Their working ages and shared Valencian residence are simulation choices.' } },
+      desc:'You, your wife Jimena, your son Diego and your daughters Cristina and Maria.' } },
     tracks:['valencia_agenda_1096','valencia_opening_profile_1096'],
     trackLocations:{ valencia_agenda_1096:['valencia'], valencia_opening_profile_1096:['valencia'] },
     onboarding:'ruler',
-    intro:'You are Rodrigo Diaz, ruling from Valencia with your existing household. The map represents the city’s lordship by one county; it also covers places outside Rodrigo’s historical control, including Murviedro. Review your family, funds and government, then choose your own priorities in Deeds. Your choices and ordinary campaigns determine what follows.' }
+    intro:'You are Rodrigo Diaz, lord of Valencia since you took the city in June 1094. Jimena and your children live with you, most of the city’s people are Muslims, and the Almoravids hold the lands to the south. Open your court agenda in Deeds.' }
 ];
 Array.prototype.push.apply(FBDATA.startScenarios, FBDATA.startScenarios_valencia_1096);
 FBDATA.bookmarks['1096'].startLocations.rodrigo_diaz_1096 = ['valencia'];
