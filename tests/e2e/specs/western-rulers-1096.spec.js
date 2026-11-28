@@ -8,7 +8,7 @@ const { startParityGame } = require('../support/game/parity');
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 
 dependsOnRuntime(__filename, [
-  'index.html','data/starts_western_rulers_1096.js','data/story_western_rulers_1096.js',
+  'index.html','data/starts_western_rulers_1096.js','data/story_western_rulers_1096.js','data/bookmark_1096_campaigns.js',
   'data/bookmark_1096_western_expeditions.js','data/bookmark_1096_mainz.js','data/mobile_confederations.js',
   'data/units.js','data/technology.js','data/political_institutions.js',
   'data/bookmark_1096_scaffold_a.js','data/bookmark_1096_scaffold_b.js','data/bookmark_1096.js','data/starts.js',
@@ -550,6 +550,109 @@ for (const width of [390,1280]) {
     expect(await page.evaluate(function () {return westernCase.owners();})).toBe(before);
   });
 }
+
+test('western agendas, goals, starts and expedition sheets name their places and people without disclaimers',async function ({page},info) {
+  await start(page,info,openings[0]);
+  expect(await page.evaluate(function () {
+    const banned=/grants? no |creates? no |Record (a |an )?(costless )?(priority|intention|preference)|Record attention|\bordinary\b|\bactual(ly)?\b|\bexisting\b|\boriginal\b|\bauthored\b|historical opportunity|political opportunity/i;
+    const labelWords=/\b(ordinary|actual|actually|existing|current|original|authored|declared)\b/i;
+    const lostApostrophe=/[A-Za-z]\?[A-Za-z]/,faults=[];
+    function check(owner,field,value,prose) {
+      if (typeof value!=='string' || !value) {faults.push(owner+' '+field+' is missing');return;}
+      if (lostApostrophe.test(value)) faults.push(owner+' '+field+' has a lost apostrophe');
+      if (value.indexOf('—')>=0) faults.push(owner+' '+field+' has an em dash');
+      if (/\bgold\b/i.test(value)) faults.push(owner+' '+field+' writes money as gold');
+      if (prose && banned.test(value)) faults.push(owner+' '+field+' uses banned wording');
+    }
+    function sentences(text) {return text.split(/[.!?](?:\s+|$)/).filter(Boolean).length;}
+    const agendas=FBDATA.rulerAgendas_western_1096,profiles=FBDATA.openingProfiles_western_1096,
+      expeditions=FBDATA.storyExpeditions_western_1096;
+    Object.keys(agendas).forEach(function (id) {
+      const d=agendas[id];check(id,'title',d.title,false);check(id,'intro',d.intro,true);
+      d.stages.forEach(function (stage) {
+        check(stage.id,'name',stage.name,false);check(stage.id,'text',stage.text,true);
+        stage.choices.forEach(function (c) {
+          check(c.id,'label',c.label,false);check(c.id,'detail',c.detail,true);
+          if (c.label.split(/\s+/).length>8) faults.push(c.id+' label is longer than eight words');
+          if (labelWords.test(c.label)) faults.push(c.id+' label uses a process word');
+          if (/^Record\b|\b(no|not|without)\b/i.test(c.detail)) faults.push(c.id+' detail lists what it does not do');
+        });
+      });
+    });
+    Object.keys(profiles).forEach(function (id) {
+      const d=profiles[id];check(id,'title',d.title,false);check(id,'intro',d.intro,true);
+      d.goals.forEach(function (g) {check(id+'.'+g.id,'name',g.name,false);check(id+'.'+g.id,'text',g.text,true);});
+      d.contacts.forEach(function (c) {check(id+'.'+c.id,'label',c.label,false);check(id+'.'+c.id,'text',c.text,true);});
+    });
+    Object.keys(expeditions).forEach(function (id) {
+      const d=expeditions[id],title=d.title || d.name,intro=d.intro || d.desc;
+      check(id,'title',title,false);check(id,'intro',intro,true);
+      if (/\b(optional|conditional|review)\b/i.test(title)) faults.push(id+' title uses a process word');
+      if (sentences(intro)>3) faults.push(id+' intro is longer than three sentences');
+    });
+    ['godfrey_1096','raymond_1096','bohemond_1096'].forEach(function (id) {
+      const sc=FBDATA.startScenarios.find(function (s) {return s.id===id;});
+      check(id,'desc',sc.desc,true);check(id,'intro',sc.intro,true);check(id,'family desc',sc.familyPresets.standard.desc,true);
+      if (sentences(sc.intro)>4) faults.push(id+' intro is longer than four sentences');
+      if (!/Open your court agenda in Deeds to begin\.$/.test(sc.intro)) faults.push(id+' intro does not say where to begin');
+    });
+    const call=FBDATA.bookmarkContent['1096'].campaigns.eastern_undertaking_1096;
+    check(call.id,'desc',call.desc,true);
+    const prep=expeditions.godfrey_preparation_1096;
+    return {faults:faults,call:call.name,
+      agendaTitles:Object.keys(agendas).map(function (id) {return agendas[id].title;}),
+      invariants:Object.keys(expeditions).map(function (id) {
+        const d=expeditions[id];
+        return [id,d.termDays || null,d.requires || null,d.registrationAfter || null,d.source && d.source.cohorts ? d.source.cohorts[0].count : null,
+          d.provisions ? d.provisions.targetDays : null,d.provider ? d.provider.realmId : null];
+      }),
+      formation:/Bouillon/.test(prep.intro) && /320 fighters and 320 others/.test(prep.intro) && /fourteen days of food/.test(prep.intro)};
+  })).toEqual({faults:[],call:'The Eastern Undertaking',
+    agendaTitles:['Godfrey: Bouillon and the road ahead','Raymond: Toulouse and future commitments','Bohemond: home lordships and new plans'],
+    invariants:[
+      ['godfrey_preparation_1096',270,null,null,640,14,'lower_lotharingia_1096'],
+      ['godfrey_program_1096',720,['godfrey_preparation_1096'],null,null,null,null],
+      ['raymond_preparation_1096',270,null,null,800,14,'toulouse_1096'],
+      ['raymond_program_1096',720,['raymond_preparation_1096'],null,null,null,null],
+      ['bohemond_preparation_1096',270,null,null,480,14,'bohemond_lordships_1096'],
+      ['bohemond_program_1096',720,['bohemond_preparation_1096'],null,null,null,null],
+      ['raymond_assurance_1096',null,['raymond_preparation_1096'],'raymond_preparation_1096',null,null,null]],
+    formation:true});
+
+  // Deeds sheets: the formation intro, the reserve goal and the relations stage.
+  const formation=await page.evaluate(function () {
+    FB.ui.showStorySheet('godfrey_preparation_1096');
+    return document.querySelector('#gm-body .gm-body-text > p').textContent;
+  });
+  expect(formation.split(/[.!?](?:\s+|$)/).filter(Boolean).length).toBeLessThanOrEqual(3);
+  expect(formation).toContain('Bouillon');
+  expect(formation).toContain('320 fighters and 320 others');
+  expect(formation).toContain('fourteen days of food');
+
+  const reserve=await page.evaluate(function () {
+    FB.ui.closeModal();FB.ui.showStorySheet('opening_godfrey_1096');
+    return {name:FB.T('Keep {money:100} in reserve'),text:FB.T('Complete when your purse holds {money:100}.'),money:FB.money(100)};
+  });
+  expect(reserve.name).toContain(reserve.money);
+  await expect(page.locator('#gm-body [data-story-facts]')).toContainText(reserve.name);
+  await expect(page.locator('#gm-body [data-story-facts]')).toContainText(reserve.text);
+  await expect(page.locator('#gm-body')).not.toContainText('{money');
+
+  expect(await page.evaluate(function () {
+    FB.ui.closeModal();
+    const s=FB.state,id='godfrey_agenda_1096',d=FB.stories.get(id).declaration;
+    const applied=d.stages.slice(0,6).map(function (stage) {
+      stageRulerDate(s,{year:stage.year,season:stage.season,day:1});
+      const c=stage.choices.find(function (choice) {return choice.operation==='agenda_priority';});
+      return FB.stories.apply(s,id,c.id,FB.stories.quote(s,id,c.id));
+    });
+    stageRulerDate(s,{year:1097,season:0,day:1});
+    FB.ui.showStorySheet(id);
+    return {applied:applied,offered:FB.stories.choices(s,id).map(function (c) {return c.id;}).filter(function (c) {return c!=='agenda_stop_program';})};
+  })).toEqual({applied:Array(6).fill(true),offered:['godfrey_keep_relations']});
+  await expect(page.locator('#gm-body')).toContainText('Alexios will expect the leaders who reach Constantinople');
+  await expect(page.locator('#gm-body [data-story-choice="godfrey_keep_relations"]')).toContainText('Leave the oath until you meet Alexios');
+});
 
 test('Raymond’s original-party assurance waits for formation and differs from restitution and supreme-command context',async function ({page},info) {
   await expedition(page,info,openings[1]);
