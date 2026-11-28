@@ -121,36 +121,65 @@ test('Syagrius retains conditional Clovis gates and observes a divergent source 
     const s = FB.state, id = 'syagrius_agenda_476', campaign = s.stories.clovis_syagrius_476;
     function apply(c) { return FB.stories.apply(s,id,c,FB.stories.quote(s,id,c)); }
     apply('syagrius_keep_receipts'); s.date.year = 477; apply('syagrius_keep_independence');
-    const premature = FB.stories.quote(s,id,'syagrius_face_challenge').allowed;
+    // The defending court forwards no campaign choice; its removed rows are never quoted.
+    const retired = ['syagrius_face_challenge','syagrius_leave_challenge'];
+    const premature = retired.some(function (c) { return FB.stories.quote(s,id,c).allowed; });
     s.date.year = 486;
-    const inherited = FB.stories.quote(s,id,'syagrius_face_challenge').allowed;
+    const inherited = retired.some(function (c) { return FB.stories.quote(s,id,c).allowed; });
+    const offered = FB.stories.choices(s,id).map(function (c) { return c.id; });
     // Clovis has not inherited. Stage the source's own divergent target boundary.
     FB.transferProvince(s,'laon','aquitaine');
     FB.stories.get('clovis_syagrius_476').day(s,campaign);
     const wars = JSON.stringify(s.wars), owner = JSON.stringify(s.owner);
     const observed = apply('syagrius_record_challenge'), concluded = apply('syagrius_record_result');
-    return { premature:premature, inherited:inherited, observed:observed, concluded:concluded,
+    return { premature:premature, inherited:inherited, offered:offered, observed:observed, concluded:concluded,
       result:campaign.result, status:s.stories[id].status, unchanged:wars === JSON.stringify(s.wars) && owner === JSON.stringify(s.owner) };
   });
-  expect(result).toEqual({ premature:false, inherited:false, observed:true, concluded:true, result:'diverted', status:'agenda_complete', unchanged:true });
+  expect(result).toEqual({ premature:false, inherited:false, offered:['syagrius_record_challenge','syagrius_keep_policy','agenda_stop_program'],
+    observed:true, concluded:true, result:'diverted', status:'agenda_complete', unchanged:true });
+});
+
+test('Odoacer offers no campaign choice for the Amal opportunity and keeps its outcome record', async function ({ page }, info) {
+  await start(page, info, 'odoacer_476');
+  const result = await page.evaluate(function () {
+    const d = FB.stories.get('odoacer_agenda_476').declaration;
+    const stage = d.stages.find(function (st) { return st.id === 'odoacer_amal_opportunity'; });
+    return { rows:stage.choices.map(function (c) { return c.id; }), retired:stage.retiredChoiceIds,
+      refused:stage.retiredChoiceIds.every(function (c) { return !FB.stories.quote(FB.state,'odoacer_agenda_476',c).allowed; }) };
+  });
+  expect(result).toEqual({ rows:['odoacer_record_campaign','odoacer_keep_defense'],
+    retired:['odoacer_face_campaign','odoacer_leave_campaign'], refused:true });
 });
 
 for (const choice of ['syagrius_face_challenge','syagrius_leave_challenge']) {
-  test('Syagrius delegates the live campaign choice once: ' + choice, async function ({ page }, info) {
+  test('a Syagrius save holding the retired ' + choice + ' restores with that stage decided', async function ({ page }, info) {
     await start(page,info,'syagrius_476');
     const result = await page.evaluate(function (choice) {
       const s = FB.state, id = 'syagrius_agenda_476', source = 'clovis_syagrius_476';
       function apply(c) { return FB.stories.apply(s,id,c,FB.stories.quote(s,id,c)); }
       apply('syagrius_keep_receipts'); s.date.year = 477; apply('syagrius_keep_independence');
       FB.assignRealmRulerCharacter(s,'franks_476',s.stories.western_court_476.clovisId,{replaceAuthored:true});
-      s.date.year = 486; FB.stories.get(source).day(s,s.stories[source]);
-      const owner = s.owner.laon, q = FB.stories.quote(s,id,choice), accepted = FB.stories.apply(s,id,choice,q);
-      const repeated = FB.stories.apply(s,id,choice,q), rec = s.stories[source], bytes = JSON.stringify([rec,s.stories[id]]);
-      FB.save.restore(JSON.parse(FB.save.serialize()));
-      return { accepted:accepted, repeated:repeated, phase:rec.phase, noAward:owner === FB.state.owner.laon,
-        retained:bytes === JSON.stringify([FB.state.stories[source],FB.state.stories[id]]) };
+      s.date.year = 486;
+      const owner = s.owner.laon, face = choice === 'syagrius_face_challenge';
+      // The defending court no longer decides; the attack starts on the source's own day.
+      if (face) FB.stories.get(source).day(s,s.stories[source]);
+      const started = !face || s.stories[source].phase === 'started' && s.stories[source].playerDecision === null;
+      // Rebuild the shape the earlier forwarded choice wrote: the agenda decision and its source decision.
+      const saved = JSON.parse(FB.save.serialize()), t = saved.state.stories[id], rec = saved.state.stories[source];
+      t.decisions.push({ stageId:'syagrius_frankish_challenge', choiceId:choice, turn:s.turn }); t.step++;
+      rec.playerDecision = face ? 'campaign' : 'declined'; rec.playerDecisionGeneration = FB.realmRulerGeneration(s,'player');
+      if (!face) Object.assign(rec, { phase:'resolved', result:'diverted', reason:'player_declined', outcomeTurn:s.turn });
+      const wire = JSON.stringify([t,rec]);
+      FB.save.restore(saved);
+      const live = FB.state, r = live.stories[id], story = FB.stories.get(id);
+      const restored = wire === JSON.stringify([r,live.stories[source]]), step = r.step;
+      const name = story.status(live,r).name, next = FB.stories.choices(live,id).map(function (c) { return c.id; });
+      const resumed = FB.stories.apply(live,id,'syagrius_keep_domain',FB.stories.quote(live,id,'syagrius_keep_domain'));
+      return { started:started, restored:restored, step:step, name:name, next:next, resumed:resumed,
+        status:live.stories[id].status, noAward:owner === live.owner.laon };
     },choice);
-    expect(result).toEqual({ accepted:true, repeated:false, phase:choice === 'syagrius_face_challenge' ? 'started' : 'resolved', noAward:true, retained:true });
+    expect(result).toEqual({ started:true, restored:true, step:3, name:'The surviving domain',
+      next:['syagrius_record_result','syagrius_keep_domain','agenda_stop_program'], resumed:true, status:'agenda_complete', noAward:true });
   });
 }
 

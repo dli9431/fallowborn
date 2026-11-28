@@ -598,30 +598,49 @@ test('malformed Odoacer interruption saves reject without replacing live state',
   expect(result).toEqual([true,true,true,true,true]);
 });
 
-for (const choice of ['face_campaign','leave_campaign']) {
-  test('Syagrius reviews the Frankish opportunity: ' + choice, async function ({ page }, testInfo) {
+test('Syagrius is informed of the Frankish challenge, which starts without his decision', async function ({ page }, testInfo) {
+  await start(page, testInfo, STARTS[2]);
+  const result = await page.evaluate(function () {
+    const s = FB.state, w = s.stories.western_court_476, id = 'clovis_syagrius_476';
+    FB.assignRealmRulerCharacter(s, 'franks_476', w.clovisId, { replaceAuthored:true });
+    s.date.year = 486;
+    const owner = s.owner.laon, rec = s.stories[id];
+    const choices = FB.stories.choices(s, id).length;
+    const face = FB.stories.quote(s, id, 'face_campaign'), leave = FB.stories.quote(s, id, 'leave_campaign');
+    const refused = !FB.stories.apply(s, id, 'face_campaign', face) && !FB.stories.apply(s, id, 'leave_campaign', leave);
+    FB.stories.get(id).day(s, rec);
+    const war = FB.ordinaryWarById(s, rec.warId), bytes = JSON.stringify(rec);
+    FB.save.restore(JSON.parse(FB.save.serialize()));
+    return { choices:choices, face:face.allowed, leave:leave.allowed, refused:refused, phase:rec.phase,
+      decision:rec.playerDecision, attacker:war && war.attacker, defender:war && war.defender,
+      announced:!!war && war.defenseAnnounced === true, noAward:owner === FB.state.owner.laon,
+      durable:bytes === JSON.stringify(FB.state.stories[id]) };
+  });
+  expect(result).toEqual({ choices:0, face:false, leave:false, refused:true, phase:'started', decision:null,
+    attacker:'franks_476', defender:'player', announced:true, noAward:true, durable:true });
+});
+
+for (const decision of ['campaign','declined']) {
+  test('a Syagrius save holding an earlier defender ' + decision + ' decision restores unchanged', async function ({ page }, testInfo) {
     await start(page, testInfo, STARTS[2]);
-    const result = await page.evaluate(function (choice) {
+    const result = await page.evaluate(function (decision) {
       const s = FB.state, w = s.stories.western_court_476, id = 'clovis_syagrius_476';
       FB.assignRealmRulerCharacter(s, 'franks_476', w.clovisId, { replaceAuthored:true });
       s.date.year = 486;
-      const owner = s.owner.laon, rec = s.stories[id];
-      FB.stories.get(id).day(s, rec);
-      const deferred = rec.phase === 'pending' && !rec.warId;
-      const choices = FB.stories.choices(s, id).map(function (row) { return row.id; });
-      const q = FB.stories.quote(s, id, choice);
-      const accepted = FB.stories.apply(s, id, choice, q);
-      const war = FB.ordinaryWarById(s, rec.warId), bytes = JSON.stringify(rec);
-      const replay = FB.stories.apply(s, id, choice, q);
-      FB.save.restore(JSON.parse(FB.save.serialize()));
-      return { deferred:deferred, choices:choices, accepted:accepted, replay:replay,
-        phase:rec.phase, defender:war && war.defender, noAward:owner === FB.state.owner.laon,
-        durable:bytes === JSON.stringify(FB.state.stories[id]) };
-    }, choice);
-    expect(result).toMatchObject({ deferred:true, choices:['face_campaign','leave_campaign'],
-      accepted:true, replay:false, phase:choice === 'face_campaign' ? 'started' : 'resolved',
-      noAward:true, durable:true });
-    if (choice === 'face_campaign') expect(result.defender).toBe('player');
+      // The earlier defender choice either let the war start or closed the opportunity.
+      if (decision === 'campaign') FB.stories.get(id).day(s, s.stories[id]);
+      const saved = JSON.parse(FB.save.serialize()), rec = saved.state.stories[id];
+      rec.playerDecision = decision; rec.playerDecisionGeneration = FB.realmRulerGeneration(s, 'player');
+      if (decision === 'declined') Object.assign(rec, { phase:'resolved', result:'diverted', reason:'player_declined', outcomeTurn:s.turn });
+      const wire = JSON.stringify(rec), owner = s.owner.laon;
+      FB.save.restore(saved);
+      const restored = wire === JSON.stringify(FB.state.stories[id]);
+      FB.stories.get(id).day(FB.state, FB.state.stories[id]);
+      const war = FB.ordinaryWarBetween(FB.state, 'franks_476', 'player');
+      return { restored:restored, kept:wire === JSON.stringify(FB.state.stories[id]),
+        choices:FB.stories.choices(FB.state, id).length, war:!!war, noAward:owner === FB.state.owner.laon };
+    }, decision);
+    expect(result).toEqual({ restored:true, kept:true, choices:0, war:decision === 'campaign', noAward:true });
   });
 }
 

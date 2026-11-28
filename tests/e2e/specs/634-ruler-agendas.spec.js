@@ -231,25 +231,42 @@ test('Umar delegates independent frontier decisions to ordinary war with its act
   await roundTrip(page);
 });
 
-test('Heraclius faces the Syrian opportunity as its actual defender without a grant or historical victory',async function ({page},info) {
+test('Heraclius is informed of the Syrian attack as its defender without a grant or historical victory',async function ({page},info) {
   await start(page,info,'heraclius_634');
   expect(await page.evaluate(function () {
-    const s = FB.state, id = 'heraclius_court_agenda_634';
+    const s = FB.state, id = 'heraclius_court_agenda_634', retired = ['heraclius_face_syria','heraclius_decline_syria'];
     const appointments = FB.stories.quote(s,id,'heraclius_observe_appointments');
     const officeTruth = appointments.allowed === (appointments.facts.source.rows.length > 0);
     RA.choose(id,'heraclius_keep_administration'); RA.choose(id,'heraclius_keep_accounts');
     RA.permit('syrian_front_634');
-    const q = FB.stories.quote(s,id,'heraclius_face_syria'), owner = JSON.stringify(s.owner), population = JSON.stringify(s.population);
-    const funds = [s.player.gold,s.realms.player.treasury.gold], applied = FB.stories.apply(s,id,'heraclius_face_syria',q);
+    const offered = FB.stories.choices(s,id).map(function (c) { return c.id; });
+    const refused = retired.every(function (c) { return !FB.stories.quote(s,id,c).allowed; });
+    const source = FB.stories.choices(s,'syrian_front_634').length;
+    const owner = JSON.stringify(s.owner), population = JSON.stringify(s.population);
+    const funds = [s.player.gold,s.realms.player.treasury.gold];
+    // The attacker's own day declares; the defending court takes no decision.
+    FB.stories.get('syrian_front_634').day(s,s.stories.syrian_front_634);
     const r = s.stories.syrian_front_634, w = FB.ordinaryWarById(s,r.warId);
-    return {officeTruth:officeTruth,allowed:q.allowed,applied:applied,attacker:w.attacker,defender:w.defender,
-      phase:r.phase,result:r.result,deadline:r.deadline === r.startedTurn+360,
+    return {officeTruth:officeTruth,offered:offered,refused:refused,source:source,attacker:w && w.attacker,defender:w && w.defender,
+      phase:r.phase,result:r.result,decision:r.playerDecision,deadline:r.deadline === r.startedTurn+360,
       unchanged:owner === JSON.stringify(s.owner) && population === JSON.stringify(s.population) &&
         JSON.stringify(funds) === JSON.stringify([s.player.gold,s.realms.player.treasury.gold]),
-      unrelated:s.stories.iraqi_front_634.playerDecision === null,finish:RA.choose(id,'heraclius_finish_court')};
-  })).toEqual({officeTruth:true,allowed:true,applied:true,attacker:'rashidun_634',defender:'player',phase:'started',result:null,
-    deadline:true,unchanged:true,unrelated:true,finish:true});
+      unrelated:s.stories.iraqi_front_634.playerDecision === null};
+  })).toEqual({officeTruth:true,offered:['heraclius_record_syria','heraclius_keep_syria','agenda_stop_program'],refused:true,source:0,
+    attacker:'rashidun_634',defender:'player',phase:'started',result:null,decision:null,deadline:true,unchanged:true,unrelated:true});
   await roundTrip(page);
+  // A save written while the agenda still forwarded the defender choice restores that stage as decided.
+  expect(await page.evaluate(function () {
+    const id = 'heraclius_court_agenda_634', saved = JSON.parse(FB.save.serialize());
+    const t = saved.state.stories[id], rec = saved.state.stories.syrian_front_634;
+    t.decisions.push({stageId:'syrian_defense',choiceId:'heraclius_face_syria',turn:FB.state.turn}); t.step++;
+    rec.playerDecision = 'campaign'; rec.playerDecisionGeneration = FB.realmRulerGeneration(FB.state,'player');
+    const wire = JSON.stringify([t,rec]);
+    FB.save.restore(saved);
+    const s = FB.state, r = s.stories[id];
+    return {restored:wire === JSON.stringify([r,s.stories.syrian_front_634]),step:r.step,
+      name:FB.stories.get(id).status(s,r).name,finish:RA.choose(id,'heraclius_finish_court'),status:s.stories[id].status};
+  })).toEqual({restored:true,step:3,name:'Continue from Constantinople',finish:true,status:'agenda_complete'});
 });
 
 for (const who of ['umar','heraclius']) {
@@ -262,7 +279,8 @@ for (const who of ['umar','heraclius']) {
       const before = RA.resources(s), rng = FB.getRngState(), uid = FB.getUidCounter(), t = s.stories[id];
       const initial = story.status(s,t).lines;
       const pure = before === RA.resources(s) && rng === FB.getRngState() && uid === FB.getUidCounter();
-      const old = FB.stories.quote(s,id,who === 'umar' ? 'umar_decline_syria' : 'heraclius_decline_syria');
+      // Heraclius defends Syria, so his stale review is the outcome record quoted before the diversion.
+      const old = FB.stories.quote(s,id,who === 'umar' ? 'umar_decline_syria' : 'heraclius_record_syria');
       FB.transferProvince(s,'damascus','sasanian_634');
       FB.stories.get('syrian_front_634').day(s,s.stories.syrian_front_634);
       const lines = story.status(s,t).lines, unchanged = RA.resources(s);

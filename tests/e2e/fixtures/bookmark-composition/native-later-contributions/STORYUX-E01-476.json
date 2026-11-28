@@ -1,0 +1,15 @@
+{
+  "description": "The Odoacer and Syagrius agendas no longer forward defender campaign choices. The removed ids stay listed as retired choices so saves that hold them restore as decided stages.",
+  "changes": [
+    {
+      "file": "data/story_ruler_agendas.js",
+      "before": "        choices:[\n          { id:'odoacer_face_campaign', label:'Face the existing campaign', detail:'Authorize only the source campaign. The program grants no victory or second host.', operation:'agenda_story_choice', storyId:'theoderic_italy_476', choiceId:'face_campaign' },\n          { id:'odoacer_leave_campaign', label:'Close this opportunity for ordinary diplomacy', detail:'Use the source campaign’s decline. Ordinary relations and independent wars remain available.', operation:'agenda_story_choice', storyId:'theoderic_italy_476', choiceId:'leave_campaign' },\n",
+      "after": "        retiredChoiceIds:['odoacer_face_campaign','odoacer_leave_campaign'],\n        choices:[\n"
+    },
+    {
+      "file": "data/story_ruler_agendas.js",
+      "before": "        choices:[\n          { id:'syagrius_face_challenge', label:'Face the existing challenge', detail:'Use the campaign’s current authorization. Real war determines its outcome.', operation:'agenda_story_choice', storyId:'clovis_syagrius_476', choiceId:'face_campaign' },\n          { id:'syagrius_leave_challenge', label:'Use ordinary diplomacy instead', detail:'Close only the authored campaign opportunity through its own decline.', operation:'agenda_story_choice', storyId:'clovis_syagrius_476', choiceId:'leave_campaign' },\n",
+      "after": "        retiredChoiceIds:['syagrius_face_challenge','syagrius_leave_challenge'],\n        choices:[\n"
+    }
+  ]
+}

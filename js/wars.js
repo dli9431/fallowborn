@@ -1160,14 +1160,19 @@
       FB.realmCampaignAI(state, rid);
     });
   };
-  FB.realmCampaignAI = function (state, rid) {
-    const r = state.realms[rid];
-    if (rid === 'player' || !r || !r.alive || !r.ruler || !FB.realmRank.isTerritorial(r, state)) return;
+  /* Attacking ordinary wars plus an active great holy war, the count an AI
+     court's war policy compares with maximumCommitments. */
+  FB.realmAttackCommitments = function (state, rid) {
     const holy = state.greatHolyWar;
     const holyCommitment = holy && holy.phase === 'active' && ['attackers', 'defenders'].some(function (camp) {
       return (holy.participants[camp] || []).some(function (p) { return p.realm === rid; });
     });
-    const commitments = FB.realmWars(state, rid).filter(function (w) { return w.attacker === rid; }).length + (holyCommitment ? 1 : 0);
+    return FB.realmWars(state, rid).filter(function (w) { return w.attacker === rid; }).length + (holyCommitment ? 1 : 0);
+  };
+  FB.realmCampaignAI = function (state, rid) {
+    const r = state.realms[rid];
+    if (rid === 'player' || !r || !r.alive || !r.ruler || !FB.realmRank.isTerritorial(r, state)) return;
+    const commitments = FB.realmAttackCommitments(state, rid);
     const policy = FB.aiDecisions.parameters(state,rid,'war');
     if (commitments >= policy.maximumCommitments || !FB.chance(FB.governments.call(state, rid, 'ai', 'goals', {}).warChance)) return;
     const seen = Object.create(null), candidates = [];

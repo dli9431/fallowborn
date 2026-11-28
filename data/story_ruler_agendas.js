@@ -114,9 +114,8 @@ FBDATA.rulerAgendas = {
         ] },
       { id:'odoacer_amal_opportunity', name:'The Amal opportunity', year:488, season:0,
         text:'The existing Italian campaign depends on its living parties, commission and actual target. Review its current decision or record the source’s divergent conclusion.',
+        retiredChoiceIds:['odoacer_face_campaign','odoacer_leave_campaign'],
         choices:[
-          { id:'odoacer_face_campaign', label:'Face the existing campaign', detail:'Authorize only the source campaign. The program grants no victory or second host.', operation:'agenda_story_choice', storyId:'theoderic_italy_476', choiceId:'face_campaign' },
-          { id:'odoacer_leave_campaign', label:'Close this opportunity for ordinary diplomacy', detail:'Use the source campaign’s decline. Ordinary relations and independent wars remain available.', operation:'agenda_story_choice', storyId:'theoderic_italy_476', choiceId:'leave_campaign' },
           { id:'odoacer_record_campaign', label:'Record the actual campaign conclusion', detail:'Observe its won, failed, diverted or interrupted result without recreating the opportunity.', operation:'agenda_story_fact', storyId:'theoderic_italy_476', stateField:'result', values:['won','failed','diverted','interrupted'] },
           { id:'odoacer_keep_defense', label:'Retain present defensive arrangements', detail:'Conclude the personal program without forcing the campaign or a historical death. Its own card and ordinary armies keep their current rules.', operation:'agenda_priority' }
         ] }
@@ -138,9 +137,8 @@ FBDATA.rulerAgendas = {
         ] },
       { id:'syagrius_frankish_challenge', name:'The Frankish challenge', year:486, season:0,
         text:'The challenge needs the correct living rulers, inheritance and possession of Soissons. Its date alone causes no invasion or defeat.',
+        retiredChoiceIds:['syagrius_face_challenge','syagrius_leave_challenge'],
         choices:[
-          { id:'syagrius_face_challenge', label:'Face the existing challenge', detail:'Use the campaign’s current authorization. Real war determines its outcome.', operation:'agenda_story_choice', storyId:'clovis_syagrius_476', choiceId:'face_campaign' },
-          { id:'syagrius_leave_challenge', label:'Use ordinary diplomacy instead', detail:'Close only the authored campaign opportunity through its own decline.', operation:'agenda_story_choice', storyId:'clovis_syagrius_476', choiceId:'leave_campaign' },
           { id:'syagrius_record_challenge', label:'Record the actual challenge conclusion', detail:'Observe the world story’s own result, including changed inheritance or ownership.', operation:'agenda_story_fact', storyId:'clovis_syagrius_476', stateField:'result', values:['won','failed','diverted','interrupted'] },
           { id:'syagrius_keep_policy', label:'Retain ordinary policy', detail:'Make no campaign decision here. The source card and ordinary diplomacy remain available.', operation:'agenda_priority' }
         ] },

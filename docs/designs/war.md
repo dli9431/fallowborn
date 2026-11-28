@@ -27,6 +27,10 @@ Realm adoption remaps the live attacker, defender, cause enemy and objective ene
 Conditional stories opting into ordinary_declaration retain the same war preview,
 public consent, government objective, frontier, truce, alliance, pact and war-law
 checks. The story may wait or close while an ordinary war continues independently.
+Story campaigns run alongside other wars. A war of either court against a third court
+never delays one; only an existing ordinary war between the same pair does, and an AI
+actor also waits at its war policy's maximumCommitments. A defending player takes no
+story decision and is informed through the ordinary defense announcement.
 Player registration can be refused by a public-command wrapper; aggression costs,
 declaration news and muster now follow successful registration, leaving a refused
 start unspent. AI story declarations use the ordinary realm aggression writer and
@@ -593,7 +597,9 @@ enter saves or change RNG consumption, campaign ordering, or fast-forward budget
 The player can fight different opponents concurrently. One ordinary campaign is
 allowed per opposing pair, and its objectives cannot grow after declaration. AI
 rulers consider campaigns seasonally, with at most two offensive commitments including
-holy-war participation. Personal player and AI vassal campaigns do not mobilize their
+holy-war participation. FB.realmAttackCommitments counts those commitments (attacking
+ordinary wars plus an active great holy war) against the war policy's
+maximumCommitments, for seasonal planning and dated story campaigns alike. Personal player and AI vassal campaigns do not mobilize their
 attacking liege. Foreign land is defended by its sovereign; internal wars involve the
 opposing vassal subtrees. Ancestor/descendant conquest is excluded; independence and
 peace enforcement retain dedicated political actions.
