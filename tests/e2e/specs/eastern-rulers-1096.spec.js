@@ -390,3 +390,79 @@ test('Alexios records actual current service once and rejects a review after tha
   });
   expect(result).toEqual({source:true,stale:true,pure:true,absent:true,fallback:true,accepted:true,repeated:false,unchanged:true});
 });
+
+test('Alexios and Kilij Arslan court, goal and start text names the western armies and Nicaea plainly',async function ({page},info) {
+  await openGame(page,info);
+  const result = await page.evaluate(function () {
+    const processWords = /\b(ordinary|actual|actually|existing|current|original|authored|declared)\b/i;
+    const disclaimers = /grants? no |creates? no |Record (a |an )?(costless )?(priority|intention|preference)|Record attention|\bordinary\b|\bactual(ly)?\b|\bexisting\b|\boriginal\b|\bauthored\b|historical opportunity|political opportunity/i;
+    const lostApostrophe = /[A-Za-z]\?[A-Za-z]/;
+    const limit = 'These priorities shape your court’s story; orders, payments and wars go through Rank & Realm, Land and the map.';
+    const faults = [];
+    let checked = 0;
+    function prose(where,value) {
+      checked++;
+      if (!value || disclaimers.test(value) || lostApostrophe.test(value)) faults.push(where + ': ' + value);
+    }
+    function label(where,value) {
+      checked++;
+      if (!value || value.trim().split(/\s+/).length > 8 || processWords.test(value) || lostApostrophe.test(value)) faults.push(where + ': ' + value);
+    }
+    FBDATA.startScenarios_eastern_rulers_1096.forEach(function (start) {
+      prose(start.id + ' desc',start.desc);
+      prose(start.id + ' intro',start.intro);
+      prose(start.id + ' family',start.familyPresets.standard.desc);
+      if (!start.intro.endsWith('Open your court agenda in Deeds.')) faults.push(start.id + ' beginning');
+    });
+    const agendas = {alexios_agenda_1096:FBDATA.storyInstances.alexios_agenda_1096,rum_agenda_1096:FBDATA.storyInstances.rum_agenda_1096};
+    Object.keys(agendas).forEach(function (id) {
+      const d = agendas[id];
+      prose(id + ' intro',d.intro);
+      if (!d.intro.endsWith(limit)) faults.push(id + ' limit sentence');
+      d.stages.forEach(function (st) {
+        prose(st.id + ' text',st.text);
+        if (lostApostrophe.test(st.name)) faults.push(st.id + ' name: ' + st.name);
+        st.choices.forEach(function (c) { label(c.id + ' label',c.label); prose(c.id + ' detail',c.detail); });
+      });
+    });
+    const profiles = {opening_alexios_1096:FBDATA.storyInstances.opening_alexios_1096,opening_rum_1096:FBDATA.storyInstances.opening_rum_1096};
+    Object.keys(profiles).forEach(function (id) {
+      const p = profiles[id];
+      prose(id + ' intro',p.intro);
+      p.goals.forEach(function (g) {
+        prose(g.id + ' text',g.text);
+        if (lostApostrophe.test(g.name) || processWords.test(g.name)) faults.push(g.id + ' name: ' + g.name);
+      });
+      p.contacts.forEach(function (c) {
+        prose(c.id + ' text',c.text);
+        if (lostApostrophe.test(c.label)) faults.push(c.id + ' label: ' + c.label);
+      });
+    });
+    const passage = agendas.alexios_agenda_1096.stages.find(function (st) { return st.id === 'alexios_passage'; });
+    return {faults:faults,checked:checked,
+      passageArmies:/western armies/i.test(passage.text),passageCrossing:/Bosporus|Asia/.test(passage.text),
+      passageLabels:passage.choices.map(function (c) { return c.label.trim().split(/\s+/).length <= 8; }),
+      names:FBDATA.startScenarios_eastern_rulers_1096.map(function (s) { return s.name; }),
+      titles:[agendas.alexios_agenda_1096.title,agendas.rum_agenda_1096.title],
+      operations:agendas.alexios_agenda_1096.stages.concat(agendas.rum_agenda_1096.stages).map(function (st) {
+        return st.choices.map(function (c) { return c.operation + (c.recordKind ? ':' + c.recordKind : ''); }).join(',');
+      })};
+  });
+  expect(result.faults).toEqual([]);
+  // Two starts, two eight-stage agendas with 34 choices and two profiles with six goals and two contacts.
+  expect(result.checked).toBeGreaterThan(100);
+  expect(result.passageArmies).toBe(true);
+  expect(result.passageCrossing).toBe(true);
+  expect(result.passageLabels).toEqual([true,true]);
+  expect(result.names).toEqual(['Alexios at Constantinople','Kilij Arslan at Nicaea']);
+  expect(result.titles).toEqual(['Alexios: court, frontier and passage','Kilij Arslan: Nicaea and the frontier']);
+  // The public records, the four-review finish/extend fork and the final close keep their operations.
+  expect(result.operations).toEqual([
+    'agenda_public_record:agenda_appointments,agenda_priority','agenda_priority,agenda_priority','agenda_priority,agenda_priority',
+    'agenda_finish,agenda_priority,agenda_finish','agenda_public_record:agenda_appointments,agenda_priority',
+    'agenda_priority,agenda_priority','agenda_priority,agenda_priority','agenda_priority,agenda_finish',
+    'agenda_priority,agenda_priority','agenda_priority,agenda_priority','agenda_priority,agenda_priority',
+    'agenda_finish,agenda_priority,agenda_finish','agenda_priority,agenda_priority','agenda_priority,agenda_priority',
+    'agenda_priority,agenda_priority','agenda_priority,agenda_finish'
+  ]);
+});
