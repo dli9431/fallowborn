@@ -5,55 +5,55 @@ window.FBDATA = window.FBDATA || {};
 FBDATA.rulerAgendas_800 = {
   charlemagne_agenda_800:{ id:'charlemagne_agenda_800', type:'ruler_agenda', subjectRealmId:'carolingian_800',
     title:'Charlemagne: court and empire',
-    intro:'Review current people, government and commitments. Ordinary source decisions control every grant, agreement and succession.',
+    intro:'As Charlemagne, decide where your court turns between your coronation and the sharing of your inheritance. These priorities shape your court’s story; orders, payments and wars go through Rank & Realm, Land and the map.',
     stages:[
-      { id:'ca_household', name:'The living household', year:800, season:3,
-        text:'Review the family and your present residence. The opening court roster is incomplete and no relative moves because of this review.', choices:[
-          { id:'ca_review_household', label:'Prioritize the living family', detail:'Record attention without creating kin, moving court or appointing an adviser.', operation:'agenda_priority' },
-          { id:'ca_keep_household', label:'Retain present arrangements', detail:'Leave the current household and residence to ordinary choices.', operation:'agenda_priority' }] },
-      { id:'ca_government', name:'Provincial obligations', year:801, season:0,
-        text:'Consider present obligations across the counties you actually govern. No general oath or tax follows from a priority.', choices:[
-          { id:'ca_review_government', label:'Prioritize current obligations', detail:'Review ordinary government without imposing a new levy or policy.', operation:'agenda_priority' },
-          { id:'ca_keep_government', label:'Retain present policy', detail:'Leave provincial decisions open.', operation:'agenda_priority' }] },
-      { id:'ca_learning', name:'Learning and church support', year:802, season:0,
-        text:'Review available learning and church activity at the living court. No institution or research completes here.', choices:[
-          { id:'ca_review_learning', label:'Consider ordinary learning', detail:'Record attention without a building, appointment or conversion.', operation:'agenda_priority' },
-          { id:'ca_keep_learning', label:'Retain commitments', detail:'Keep actual study and church decisions separate.', operation:'agenda_priority' }] },
-      { id:'ca_frontiers', name:'The living frontiers', year:802, season:1,
-        text:'Consult current defense and diplomacy before any new undertaking. A campaign may expire or change with the world.', choices:[
-          { id:'ca_review_frontiers', label:'Prioritize available defenses', detail:'Raise no host, spend no money and promise no victory.', operation:'agenda_priority' },
-          { id:'ca_keep_frontiers', label:'Retain commitments', detail:'Leave armies and treaties to their current source decisions.', operation:'agenda_priority' }] },
-      { id:'ca_inheritance', name:'Family prospects', year:806, season:0,
-        text:'Review the living family and any current settlement opportunity. This review signs no agreement and designates no heir.', choices:[
-          { id:'ca_review_inheritance', label:'Prioritize a current settlement review', detail:'Use the separate source decision for any actual designation, grant or agreement.', operation:'agenda_priority' },
-          { id:'ca_keep_inheritance', label:'Retain present arrangements', detail:'Keep succession and existing property under ordinary rules.', operation:'agenda_priority' },
-          { id:'ca_finish', label:'Conclude these reviews', detail:'End the personal program without a settlement.', operation:'agenda_finish' }] }
+      { id:'ca_household', name:'Your sons and household', year:800, season:3,
+        text:'You are at Rome after your coronation. Your son Charles is with you; Louis rules Aquitaine and Pippin rules Italy.', choices:[
+          { id:'ca_review_household', label:'Keep Charles at your side', detail:'You turn to Charles and your own household.', operation:'agenda_priority' },
+          { id:'ca_keep_household', label:'Trust Louis and Pippin with their courts', detail:'You turn to Aquitaine and Italy, where Louis and Pippin rule.', operation:'agenda_priority' }] },
+      { id:'ca_government', name:'Governing your lands', year:801, season:0,
+        text:'In 801 your court turns to the government of the lands you rule from Aachen.', choices:[
+          { id:'ca_review_government', label:'Put justice in your lands first', detail:'You turn to how your lands are governed and what your people owe.', operation:'agenda_priority' },
+          { id:'ca_keep_government', label:'Leave local business to your counts', detail:'You turn elsewhere and trust your counts with business in their lands.', operation:'agenda_priority' }] },
+      { id:'ca_learning', name:'Learning and the church', year:802, season:0,
+        text:'In 802 your court weighs how strongly to back scholars and churches.', choices:[
+          { id:'ca_review_learning', label:'Champion learning at your court', detail:'You turn to scholars, schools and the copying of books.', operation:'agenda_priority' },
+          { id:'ca_keep_learning', label:'Put the churches before the scholars', detail:'You turn to the clergy and the churches under your protection.', operation:'agenda_priority' }] },
+      { id:'ca_frontiers', name:'Spain and the north', year:802, season:1,
+        text:'In 802 your frontiers face the Emirate of Córdoba in Spain and the Danes in the north.', choices:[
+          { id:'ca_review_frontiers', label:'Watch the Spanish and Danish frontiers', detail:'You turn to the defense of your lands against Córdoba and the Danes.', operation:'agenda_priority' },
+          { id:'ca_keep_frontiers', label:'Seek quiet on both frontiers', detail:'You turn to envoys and peaceful dealings with Córdoba and the Danes.', operation:'agenda_priority' }] },
+      { id:'ca_inheritance', name:'Your sons’ inheritance', year:806, season:0,
+        text:'In 806 your court asks how Charles, Louis and Pippin will share your inheritance.', choices:[
+          { id:'ca_review_inheritance', label:'Make your sons’ shares the priority', detail:'You turn to the inheritance of Charles, Louis and Pippin.', operation:'agenda_priority' },
+          { id:'ca_keep_inheritance', label:'Leave the succession to custom', detail:'You turn to your own rule and leave your sons’ shares open.', operation:'agenda_priority' },
+          { id:'ca_finish', label:'Close your court agenda', detail:'Ends your court agenda after this last review.', operation:'agenda_finish' }] }
     ] },
   louis_agenda_800:{ id:'louis_agenda_800', type:'ruler_agenda', subjectRealmId:'aquitaine',
     title:'Louis: the Aquitanian court',
-    intro:'Review the current subordinate court and household. These priorities grant no imperial authority or automatic inheritance.',
+    intro:'As Louis, decide where your court at Bordeaux turns while you rule Aquitaine under your father Charlemagne. These priorities shape your court’s story; orders, payments and wars go through Rank & Realm, Land and the map.',
     stages:[
-      { id:'la_household', name:'The Aquitanian household', year:800, season:3,
-        text:'Review your living family and actual residence under the imperial court. The campaign consort is not a named historical spouse.', choices:[
-          { id:'la_review_household', label:'Prioritize the existing household', detail:'Create no spouse, child or independent crown.', operation:'agenda_priority' },
-          { id:'la_keep_household', label:'Retain present arrangements', detail:'Leave the household and allegiance as they stand.', operation:'agenda_priority' }] },
-      { id:'la_resources', name:'Current resources', year:801, season:0,
-        text:'Consider the Aquitanian holdings and obligations that actually remain. Public and private accounts keep their own rules.', choices:[
-          { id:'la_review_resources', label:'Prioritize an account of current means', detail:'Collect no extra tax and confiscate no estate.', operation:'agenda_priority' },
-          { id:'la_keep_resources', label:'Retain commitments', detail:'Leave funds and holdings to ordinary decisions.', operation:'agenda_priority' }] },
-      { id:'la_frontier', name:'Frontier obligations', year:801, season:1,
-        text:'Review present defense and diplomacy. The imperial court owns its own campaign opportunities.', choices:[
-          { id:'la_review_frontier', label:'Consider available defenses', detail:'Order no travel, host or imperial campaign.', operation:'agenda_priority' },
-          { id:'la_keep_frontier', label:'Retain arrangements', detail:'Leave war and diplomacy to their actual parties.', operation:'agenda_priority' }] },
-      { id:'la_father', name:'The surviving overlord', year:802, season:0,
-        text:'Review current relations and duties to the living overlord. A family tie gives no command of his treasury or armies.', choices:[
-          { id:'la_review_father', label:'Prioritize current obligations', detail:'Record attention without an audience or imperial order.', operation:'agenda_priority' },
-          { id:'la_keep_father', label:'Retain arrangements', detail:'Keep actual allegiance and authority unchanged.', operation:'agenda_priority' }] },
-      { id:'la_inheritance', name:'Family prospects', year:806, season:0,
-        text:'Review the living family and any available source agreement. No death, accession or release from allegiance is scheduled.', choices:[
-          { id:'la_review_inheritance', label:'Prioritize a current family review', detail:'Any real settlement needs its own current source approval.', operation:'agenda_priority' },
-          { id:'la_keep_inheritance', label:'Retain present arrangements', detail:'Leave succession to the living court and ordinary rules.', operation:'agenda_priority' },
-          { id:'la_finish', label:'Conclude these reviews', detail:'End the personal program without changing the dynasty.', operation:'agenda_finish' }] }
+      { id:'la_household', name:'Your household at Bordeaux', year:800, season:3,
+        text:'Your sons Lothair and Pippin live with you at Bordeaux under your father’s rule.', choices:[
+          { id:'la_review_household', label:'Put Lothair and Pippin first', detail:'You turn to the upbringing of your young sons.', operation:'agenda_priority' },
+          { id:'la_keep_household', label:'Put the Aquitanian court first', detail:'You turn to your court at Bordeaux and the people who serve it.', operation:'agenda_priority' }] },
+      { id:'la_resources', name:'Your means in Aquitaine', year:801, season:0,
+        text:'In 801 you weigh what Aquitaine can spare for your court and its duties.', choices:[
+          { id:'la_review_resources', label:'Put Aquitaine’s revenue first', detail:'You turn to the income and stores of your lands.', operation:'agenda_priority' },
+          { id:'la_keep_resources', label:'Put your father’s demands first', detail:'You turn to meeting what you owe Charlemagne.', operation:'agenda_priority' }] },
+      { id:'la_frontier', name:'The Spanish frontier', year:801, season:1,
+        text:'In 801 your southern frontier faces the Emirate of Córdoba at Barcelona, where your father’s court decides on war.', choices:[
+          { id:'la_review_frontier', label:'Watch the road to Barcelona', detail:'You turn to the defense of your lands facing Córdoba.', operation:'agenda_priority' },
+          { id:'la_keep_frontier', label:'Seek quiet beyond the Pyrenees', detail:'You turn to calm on the Spanish frontier and business at home.', operation:'agenda_priority' }] },
+      { id:'la_father', name:'Your father’s authority', year:802, season:0,
+        text:'In 802 you weigh your duty to your father Charlemagne against Aquitaine’s own needs.', choices:[
+          { id:'la_review_father', label:'Put your duty to Charlemagne first', detail:'You turn to your obligations to your father’s court.', operation:'agenda_priority' },
+          { id:'la_keep_father', label:'Put Aquitaine’s own affairs first', detail:'You turn to the needs of your own people.', operation:'agenda_priority' }] },
+      { id:'la_inheritance', name:'Your family’s future', year:806, season:0,
+        text:'In 806 your family looks to the sharing of Charlemagne’s inheritance and to your own sons.', choices:[
+          { id:'la_review_inheritance', label:'Put your share of the inheritance first', detail:'You turn to Aquitaine’s place in your father’s settlement.', operation:'agenda_priority' },
+          { id:'la_keep_inheritance', label:'Put your own sons’ future first', detail:'You turn to what Lothair and Pippin will hold after you.', operation:'agenda_priority' },
+          { id:'la_finish', label:'Close your court agenda', detail:'Ends your court agenda after this last review.', operation:'agenda_finish' }] }
     ] }
 };
 

@@ -90,6 +90,70 @@ test('800 declarations preserve the effective world and have five bounded priori
     agendas:[['ruler_agenda','carolingian_800',5,true,true],['ruler_agenda','aquitaine',5,true,true]], pure:true });
 });
 
+test('800 Carolingian agendas, starts and story descriptions say what is going on', async function ({ page }, info) {
+  await beginRuler(page, info, rulers[0], true);
+  const facts = await page.evaluate(function () {
+    const banned = /grants? no |creates? no |Record (a |an )?(costless )?(priority|intention|preference)|Record attention|\bordinary\b|\bactual(ly)?\b|\bexisting\b|\boriginal\b|\bauthored\b|historical opportunity|political opportunity/i;
+    const labelBanned = /\b(ordinary|actual|actually|existing|current|original|authored|declared)\b/i;
+    const failures = [], counts = { labels:0, prose:0 };
+    function field(where, value) {
+      if (typeof value !== 'string' || !value) failures.push(where + ' is missing');
+      else if (/[A-Za-z]\?[A-Za-z]/.test(value)) failures.push(where + ' has a stray question mark');
+      return typeof value === 'string' ? value : '';
+    }
+    function prose(where, value, sentences) {
+      const text = field(where, value);
+      counts.prose++;
+      if (banned.test(text)) failures.push(where + ' has banned wording: ' + text);
+      if (sentences && text.split(/[.!?](?:\s|$)/).filter(Boolean).length > sentences)
+        failures.push(where + ' is longer than ' + sentences + ' sentences');
+    }
+    function label(where, value) {
+      const text = field(where, value);
+      counts.labels++;
+      if (text.split(/\s+/).length > 8 || labelBanned.test(text)) failures.push(where + ' label: ' + text);
+    }
+    const limit = 'These priorities shape your court’s story; orders, payments and wars go through Rank & Realm, Land and the map.';
+    ['charlemagne_agenda_800','louis_agenda_800'].forEach(function (id) {
+      const agenda = FBDATA.rulerAgendas_800[id];
+      prose(id + '.intro', agenda.intro);
+      if (agenda.intro.slice(-limit.length) !== limit) failures.push(id + '.intro lacks the limit sentence');
+      agenda.stages.forEach(function (stage) {
+        field(stage.id + '.name', stage.name);
+        prose(stage.id + '.text', stage.text);
+        stage.choices.forEach(function (choice) {
+          label(choice.id + '.label', choice.label);
+          prose(choice.id + '.detail', choice.detail, 2);
+        });
+      });
+    });
+    FBDATA.startScenarios_rulers_800.forEach(function (start) {
+      prose(start.id + '.desc', start.desc, 2);
+      prose(start.id + '.intro', start.intro, 4);
+      prose(start.id + '.family', start.familyPresets.standard.desc);
+      if (!/Open your court agenda in Deeds\.$/.test(start.intro)) failures.push(start.id + '.intro lacks a first step');
+    });
+    const declarations = ['barcelona_800','danish_friesland_800','abbasid_anatolia_800','italian_lagoon_800']
+      .map(function (id) { return FBDATA.storyCampaigns800[id]; })
+      .concat(['divisio_800','ordinatio_800','gifts_800','recognition_800','verdun_800']
+        .map(function (id) { return FBDATA.storySettlements800[id]; }));
+    declarations.forEach(function (def) { prose(def.id + '.desc', def.desc, 2); });
+    const s = FB.state, agenda = FB.stories.get('charlemagne_agenda_800');
+    return { failures:failures, counts:counts, barcelona:FBDATA.storyCampaigns800.barcelona_800.desc,
+      sheet:agenda.status(s, s.stories.charlemagne_agenda_800).lines,
+      details:FB.stories.choices(s, 'charlemagne_agenda_800').map(function (row) { return row.detail; }) };
+  });
+  // 22 choices; 2 intros, 10 stage texts, 22 details, 6 start fields and 9 descriptions.
+  expect(facts.failures).toEqual([]);
+  expect(facts.counts).toEqual({ labels:22, prose:49 });
+  expect(facts.barcelona).toContain('Frankish court');
+  expect(facts.barcelona).toContain('Louis of Aquitaine');
+  expect(facts.barcelona).not.toContain('Aquitanian court');
+  expect(facts.sheet[0]).toBe('You are at Rome after your coronation. Your son Charles is with you; Louis rules Aquitaine and Pippin rules Italy.');
+  expect(facts.details).toEqual(expect.arrayContaining(['You turn to Charles and your own household.',
+    'You turn to Aquitaine and Italy, where Louis and Pippin rule.']));
+});
+
 for (const row of rulers) {
   for (const code of [false,true]) {
     test(row.id + ' adopts the existing ruler through ' + (code ? 'a code' : 'the picker'), async function ({ page }, info) {
