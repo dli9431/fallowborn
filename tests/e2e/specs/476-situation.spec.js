@@ -25,6 +25,7 @@ dependsOnRuntime(__filename, [
 ]);
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
+const { startParityGame } = require('../support/game/parity');
 
 const CARD = '[data-story-card="federate_track_476"]';
 
@@ -202,6 +203,81 @@ test('shared story sheet Back returns to the choice list and Close to the Deeds 
     expect(await page.evaluate(function () {
       return FB.state.stories.federate_track_476.phase;
     })).toBe('delegate');
+  });
+
+test('476 court and track text reads as events and the Odoacer court sheet shows it',
+  async function ({ page }, testInfo) {
+    await startParityGame(page, testInfo, { bookmark:'476', scenario:'odoacer_476', declaredOpening:true });
+    const ids = ['western_court_476', 'zeno_return_476', 'western_office_476',
+      'federate_track_476', 'curialis_track_476', 'nepos_track_476'];
+    const defs = await page.evaluate(function (ids) {
+      return ids.map(function (id) {
+        const def = FBDATA.storyCourts476[id], stages = def.stages || {};
+        return { id:id, text:def.text, choices:def.choices || {},
+          stageNames:Object.keys(stages).map(function (key) { return stages[key].name; })
+            .filter(function (name) { return name !== undefined; }) };
+      });
+    }, ids);
+    function keys(from, to, skip) {
+      const out = [];
+      for (let n = from; n <= to; n++) if ((skip || []).indexOf(n) < 0) out.push('text' + n);
+      return out;
+    }
+    // The text key set is part of the engine contract and stays unchanged.
+    expect(defs.map(function (def) { return Object.keys(def.text); })).toEqual([
+      keys(1, 22, [11]), keys(2, 7), keys(2, 11), keys(1, 52, [50]), keys(1, 8), keys(1, 10)]);
+    const banned = /grants? no |creates? no |Record (a |an )?(costless )?(priority|intention|preference)|Record attention|\bordinary\b|\bactual(ly)?\b|\bexisting\b|\boriginal\b|\bauthored\b|historical opportunity|political opportunity/i;
+    const placeholders = {};
+    for (const def of defs) {
+      const choices = Object.keys(def.choices).map(function (key) { return def.choices[key]; });
+      const fields = Object.keys(def.text).map(function (key) { return [key, def.text[key]]; })
+        .concat(def.stageNames.map(function (name) { return ['stage', name]; }))
+        .concat(choices.map(function (row) { return [row.id + '.detail', row.detail]; }));
+      for (const row of choices) {
+        expect(row.label.split(/\s+/).length, def.id + ' ' + row.label).toBeLessThanOrEqual(8);
+        expect(row.label, def.id).not.toMatch(
+          /\b(ordinary|actual|actually|existing|current|original|authored|declared)\b/i);
+        fields.push([row.id + '.label', row.label]);
+      }
+      for (const field of fields) {
+        expect(field[1], def.id + ' ' + field[0]).not.toMatch(banned);
+        expect(field[1], def.id + ' ' + field[0]).not.toMatch(/[A-Za-z]\?[A-Za-z]/);
+        expect(field[1], def.id + ' ' + field[0]).not.toContain('—');
+        const tokens = field[1].match(/\{[^}]+\}/g);
+        if (tokens) placeholders[def.id + ' ' + field[0]] = tokens;
+      }
+    }
+    // Every placeholder the engine supplies stays where it was, and none is added.
+    expect(placeholders).toEqual({
+      'western_court_476 text6':['{money:pay}', '{money:arrears}'],
+      'western_court_476 accept_service.detail':['{money:pay}', '{money:arrears}'],
+      'federate_track_476 text13':['{location}'],
+      'federate_track_476 text17':['{status}', '{money:amount}'],
+      'federate_track_476 text49':['{money:income}', '{money:loss}'],
+      'federate_track_476 offer_pay.detail':['{money:immediate}', '{money:seasonal}', '{money:share}'],
+      'federate_track_476 court_maintenance.detail':['{money:amount}'],
+      'federate_track_476 petition_basiliscus.detail':['{term:emperor}'],
+      'curialis_track_476 text7':['{money:amount}', '{prestige}', '{piety}'],
+      'curialis_track_476 text8':['{money:amount}', '{prestige}']
+    });
+    // Duplicated text keys stay equal to the choice and stage fields they mirror.
+    const court = defs[0], federate = defs[3], curialis = defs[4], nepos = defs[5];
+    expect(keys(1, 10).map(function (key) { return court.text[key]; })).toEqual(
+      ['accept_civic_rule', 'retain_host_rule', 'accept_service', 'contest_ravenna', 'keep_host']
+        .reduce(function (out, key) {
+          return out.concat([court.choices[key].label, court.choices[key].detail]);
+        }, []));
+    expect(keys(1, 12).map(function (key) { return federate.text[key]; })).toEqual(federate.stageNames);
+    expect(keys(3, 4).map(function (key) { return curialis.text[key]; })).toEqual(curialis.stageNames);
+    expect(keys(3, 7).map(function (key) { return nepos.text[key]; })).toEqual(nepos.stageNames);
+
+    await page.evaluate(function () { FB.ui.showStorySheet('western_court_476'); });
+    await expect(page.locator('#gm-title')).toHaveText('The federate ruler and Ravenna');
+    await expect(page.locator('#gm-body .gm-body-text > p').first()).toHaveText(
+      'Odoacer’s soldiers want land or pay. Take service with the western court, fight it for Ravenna, or keep the host out of the quarrel.');
+    await expect(page.locator('#gm-body h3').first()).toHaveText('The host’s pay is in arrears at Ravenna');
+    await expect(page.locator('[data-story-choice] b')).toHaveText([
+      'Take the western court’s pay', 'Fight the western court for Ravenna', 'Keep the host out of the quarrel']);
   });
 
 test('negotiation uses scoped command, treasury, civic consent and saved contract',
@@ -603,9 +679,9 @@ test('declining involvement leaves AI courts bound by pay and city rights',
     expect(result.contract).toBe('active');
     expect(result.westernGold).toBe(90);
     expect(result.rights).toBe(2);
-    expect(result.status).toContain('Ravenna civic consent: recorded.');
+    expect(result.status).toContain('Ravenna’s council consents to the bargain.');
     expect(result.status).toContain(
-      'The courts agreed on service after you declined involvement.');
+      'After you stood aside, the western court took the host into paid service.');
     expect(result.householdAfter).toBe(result.householdBefore);
   });
 

@@ -101,7 +101,7 @@ test('world status sheets retain their originating card and registration remains
     await start(page, testInfo);
     const affairs = await openStoryAffairs(page);
     await page.locator('#gm-body [data-story-card="zeno_return_476"]').click();
-    await expect(page.locator('#genmodal')).toContainText('A displaced claimant');
+    await expect(page.locator('#genmodal')).toContainText('Zeno waits in Isauria');
     await expect(page.locator('[data-story-choice]')).toHaveCount(0);
     await page.keyboard.press('Escape');
     await expect(page.locator('#gm-body [data-story-card="zeno_return_476"]')).toBeVisible();
